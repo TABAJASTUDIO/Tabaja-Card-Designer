@@ -796,112 +796,263 @@ status("V5.0 VECTOR TEST — stable engine kept, vector PDF added.");
 if (isLoggedIn()) showApp(); else showLogin();
 
 
-// ===== V6 BETA: Employee Card Builder (additive only) =====
-const V6_TEMPLATE_KEY = "tabaja_card_designer_v6_template";
+// ===== V6.1 BETA: Employee Card Builder — working canvas generator =====
+const V61_TEMPLATE_KEY = "tabaja_card_designer_v61_template";
 let builderPhotoData = "";
 let builderLogoData = "";
 
-function readBuilderFile(input, setter) {
+function builderStatus(message) { status(message); }
+
+function readBuilderFile(input, onDone) {
   const file = input.files && input.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = () => setter(String(reader.result || ""));
+  reader.onerror = () => builderStatus("Could not read the selected image.");
+  reader.onload = () => onDone(String(reader.result || ""));
   reader.readAsDataURL(file);
 }
 
-$("builderPhoto").onchange = e => readBuilderFile(e.target, v => { builderPhotoData = v; status("Employee photo ready."); });
-$("builderLogo").onchange = e => readBuilderFile(e.target, v => { builderLogoData = v; status("Company logo ready."); });
+$("builderPhoto").addEventListener("change", e => readBuilderFile(e.target, value => {
+  builderPhotoData = value;
+  builderStatus("Employee photo ready — press Generate / Update Card.");
+}));
+$("builderLogo").addEventListener("change", e => readBuilderFile(e.target, value => {
+  builderLogoData = value;
+  builderStatus("Company logo ready — press Generate / Update Card.");
+}));
 
-function roleObject(role) { return canvas.getObjects().find(o => o.role === role); }
-function fitTextObject(obj, maxWidth) {
-  obj.scaleX = 1;
-  if ((obj.width || 1) > maxWidth) obj.scaleX = maxWidth / obj.width;
-  obj.setCoords();
+function builderObject(role) {
+  return canvas.getObjects().find(object => object.role === role) || null;
 }
-function setOrCreateText(role, text, defaults) {
-  let obj = roleObject(role);
-  if (!obj) {
-    obj = new fabric.IText(text || "", Object.assign({ role, fontFamily:"Arial", fill:"#111111", originX:"left", originY:"top" }, defaults));
-    canvas.add(obj);
+
+function builderAddOrUpdateRect(role, props) {
+  let object = builderObject(role);
+  if (!object) {
+    object = new fabric.Rect(Object.assign({ role, selectable: false, evented: false }, props));
+    canvas.add(object);
+  } else object.set(props);
+  object.setCoords();
+  return object;
+}
+
+function builderAddOrUpdateText(role, text, props) {
+  let object = builderObject(role);
+  const value = text || "";
+  if (!object) {
+    object = new fabric.Textbox(value, Object.assign({
+      role,
+      fontFamily: "Arial",
+      editable: true,
+      splitByGrapheme: false,
+      lineHeight: 1.05
+    }, props));
+    canvas.add(object);
   } else {
-    obj.set({ text: text || "" });
+    object.set(Object.assign({ text: value }, props));
   }
-  fitTextObject(obj, defaults.maxWidth || W * 0.55);
-  return obj;
+  object.setCoords();
+  return object;
 }
-function setOrCreateImage(role, dataUrl, defaults) {
-  return new Promise(resolve => {
-    if (!dataUrl) return resolve(roleObject(role));
-    fabric.Image.fromURL(dataUrl, img => {
-      const old = roleObject(role);
-      const keep = old ? { left:old.left, top:old.top, scaleX:old.scaleX, scaleY:old.scaleY, angle:old.angle, originX:old.originX, originY:old.originY } : defaults;
-      if (old) canvas.remove(old);
-      img.set(Object.assign({ role, originX:"center", originY:"center" }, keep));
-      if (!old) {
-        const s = Math.min((defaults.maxW || W*.25)/img.width, (defaults.maxH || H*.45)/img.height);
-        img.scale(s);
-      }
-      rememberImage(img);
-      canvas.add(img);
-      resolve(img);
-    }, { crossOrigin:"anonymous" });
+
+function fitBuilderText(object, maxFontSize, minFontSize = 12) {
+  object.set({ fontSize: maxFontSize, scaleX: 1, scaleY: 1 });
+  object.initDimensions();
+  while ((object.height > object.heightLimit || object.width > object.widthLimit) && object.fontSize > minFontSize) {
+    object.set({ fontSize: object.fontSize - 1 });
+    object.initDimensions();
+  }
+  object.setCoords();
+}
+
+function imageFromDataUrl(dataUrl) {
+  return new Promise((resolve, reject) => {
+    if (!dataUrl) return resolve(null);
+    fabric.Image.fromURL(dataUrl, image => image ? resolve(image) : reject(new Error("Image could not be loaded.")), { crossOrigin: "anonymous" });
   });
 }
+
+async function builderAddOrUpdateImage(role, dataUrl, box) {
+  const old = builderObject(role);
+  if (!dataUrl) return old;
+  const image = await imageFromDataUrl(dataUrl);
+  const saved = old ? {
+    left: old.left, top: old.top, angle: old.angle || 0,
+    originX: old.originX || "center", originY: old.originY || "center"
+  } : null;
+  if (old) canvas.remove(old);
+  const scale = Math.min(box.width / image.width, box.height / image.height);
+  image.set({
+    role,
+    left: saved ? saved.left : box.left + box.width / 2,
+    top: saved ? saved.top : box.top + box.height / 2,
+    originX: "center", originY: "center",
+    angle: saved ? saved.angle : 0,
+    scaleX: scale, scaleY: scale
+  });
+  rememberImage(image);
+  canvas.add(image);
+  image.setCoords();
+  return image;
+}
+
+function ensureBuilderPlaceholder(role, box, label) {
+  let object = builderObject(role);
+  if (!object) {
+    object = new fabric.Rect({
+      role, left: box.left, top: box.top, width: box.width, height: box.height,
+      rx: 22, ry: 22, fill: "#e9eef5", stroke: "#9eb1c5", strokeWidth: 3,
+      strokeDashArray: [12, 8], selectable: false, evented: false
+    });
+    canvas.add(object);
+  } else object.set({ left: box.left, top: box.top, width: box.width, height: box.height });
+  let text = builderObject(role + "Label");
+  if (!text) {
+    text = new fabric.Text(label, {
+      role: role + "Label", left: box.left + box.width / 2, top: box.top + box.height / 2,
+      originX: "center", originY: "center", fontFamily: "Arial", fontSize: 22,
+      fill: "#607286", selectable: false, evented: false
+    });
+    canvas.add(text);
+  } else text.set({ left: box.left + box.width / 2, top: box.top + box.height / 2, text: label });
+}
+
+function removeBuilderPlaceholder(role) {
+  [role, role + "Label"].forEach(r => {
+    const object = builderObject(r);
+    if (object) canvas.remove(object);
+  });
+}
+
 function ensurePoweredBy() {
-  let p = roleObject("poweredBy");
-  const text = "Powered by Tabaja Solution";
-  if (!p) {
-    p = new fabric.Text(text, { role:"poweredBy", left:W/2, top:H-18, originX:"center", originY:"center", fontFamily:"Arial", fontSize:13, fontWeight:"bold", fill:"#555555", selectable:false, evented:false, excludeFromExport:false });
-    canvas.add(p);
-  } else {
-    p.set({ text, selectable:false, evented:false, left:Math.min(Math.max(p.left||W/2,30),W-30), top:Math.min(p.top||H-18,H-12) });
-  }
-  canvas.bringToFront(p);
+  let footer = builderObject("poweredBy");
+  const footerProps = {
+    text: "Powered by Tabaja Solution",
+    left: W / 2, top: H - 22, width: W - 80,
+    originX: "center", originY: "center", textAlign: "center",
+    fontFamily: "Arial", fontSize: orientation === "landscape" ? 14 : 13,
+    fontWeight: "bold", fill: "#526273", selectable: false, evented: false
+  };
+  if (!footer) {
+    footer = new fabric.Textbox(footerProps.text, Object.assign({ role: "poweredBy" }, footerProps));
+    canvas.add(footer);
+  } else footer.set(footerProps);
+  canvas.bringToFront(footer);
+  footer.setCoords();
+  return footer;
 }
+
 async function generateEmployeeCard() {
-  const landscape = orientation === "landscape";
-  const company = $("builderCompany").value.trim();
-  const name = $("builderName").value.trim();
-  const job = $("builderJob").value.trim();
-  const phone = $("builderPhone").value.trim();
-  const email = $("builderEmail").value.trim();
-  const website = $("builderWebsite").value.trim();
-  const tx = landscape ? W*.38 : W*.12;
-  setOrCreateText("employeeCompany", company, { left:tx, top:H*.14, fontSize:30, fontWeight:"bold", fill:"#174a7a", maxWidth:landscape?W*.52:W*.76 });
-  setOrCreateText("employeeName", name, { left:tx, top:H*.36, fontSize:44, fontWeight:"bold", fill:"#111111", maxWidth:landscape?W*.55:W*.76 });
-  setOrCreateText("employeeJob", job, { left:tx, top:H*.49, fontSize:27, fill:"#355b7d", maxWidth:landscape?W*.52:W*.76 });
-  setOrCreateText("employeePhone", phone, { left:tx, top:H*.64, fontSize:21, fill:"#222222", maxWidth:landscape?W*.52:W*.76 });
-  setOrCreateText("employeeEmail", email, { left:tx, top:H*.72, fontSize:18, fill:"#333333", maxWidth:landscape?W*.52:W*.76 });
-  setOrCreateText("employeeWebsite", website, { left:tx, top:H*.79, fontSize:18, fill:"#333333", maxWidth:landscape?W*.52:W*.76 });
-  await setOrCreateImage("employeePhoto", builderPhotoData, { left:landscape?W*.20:W*.50, top:landscape?H*.52:H*.35, maxW:landscape?W*.25:W*.46, maxH:landscape?H*.58:H*.34 });
-  await setOrCreateImage("companyLogo", builderLogoData, { left:landscape?W*.82:W*.50, top:landscape?H*.16:H*.10, maxW:landscape?W*.23:W*.42, maxH:H*.18 });
-  ensurePoweredBy();
-  canvas.requestRenderAll();
-  saveCurrentSide();
-  status("Employee card generated. Move any item once, then Update keeps its position.");
+  try {
+    builderStatus("Generating employee card...");
+    const landscape = orientation === "landscape";
+    const company = $("builderCompany").value.trim() || "COMPANY NAME";
+    const name = $("builderName").value.trim() || "EMPLOYEE NAME";
+    const job = $("builderJob").value.trim() || "Job Title";
+    const phone = $("builderPhone").value.trim();
+    const email = $("builderEmail").value.trim();
+    const website = $("builderWebsite").value.trim();
+
+    // Visible professional base so Generate always produces an obvious card.
+    builderAddOrUpdateRect("builderBackground", { left: 0, top: 0, width: W, height: H, fill: "#ffffff" });
+    builderAddOrUpdateRect("builderAccent", landscape
+      ? { left: 0, top: 0, width: W * 0.31, height: H, fill: "#123e66" }
+      : { left: 0, top: 0, width: W, height: H * 0.25, fill: "#123e66" });
+    builderAddOrUpdateRect("builderLine", landscape
+      ? { left: W * 0.31, top: 0, width: 10, height: H, fill: "#2f9bdd" }
+      : { left: 0, top: H * 0.25, width: W, height: 10, fill: "#2f9bdd" });
+
+    const photoBox = landscape
+      ? { left: W * 0.055, top: H * 0.20, width: W * 0.20, height: H * 0.55 }
+      : { left: W * 0.27, top: H * 0.09, width: W * 0.46, height: H * 0.28 };
+    const logoBox = landscape
+      ? { left: W * 0.77, top: H * 0.07, width: W * 0.17, height: H * 0.15 }
+      : { left: W * 0.30, top: H * 0.30, width: W * 0.40, height: H * 0.12 };
+
+    if (builderPhotoData) {
+      removeBuilderPlaceholder("employeePhotoPlaceholder");
+      await builderAddOrUpdateImage("employeePhoto", builderPhotoData, photoBox);
+    } else if (!builderObject("employeePhoto")) ensureBuilderPlaceholder("employeePhotoPlaceholder", photoBox, "EMPLOYEE PHOTO");
+
+    if (builderLogoData) {
+      removeBuilderPlaceholder("companyLogoPlaceholder");
+      await builderAddOrUpdateImage("companyLogo", builderLogoData, logoBox);
+    } else if (!builderObject("companyLogo")) ensureBuilderPlaceholder("companyLogoPlaceholder", logoBox, "LOGO");
+
+    const textLeft = landscape ? W * 0.36 : W * 0.10;
+    const textWidth = landscape ? W * 0.57 : W * 0.80;
+    const companyTop = landscape ? H * 0.12 : H * 0.45;
+
+    const companyObj = builderAddOrUpdateText("employeeCompany", company, {
+      left: textLeft, top: companyTop, width: textWidth, heightLimit: H * 0.10, widthLimit: textWidth,
+      fontSize: landscape ? 29 : 28, fontWeight: "bold", fill: "#17547f", textAlign: "left"
+    });
+    fitBuilderText(companyObj, landscape ? 29 : 28, 16);
+
+    const nameObj = builderAddOrUpdateText("employeeName", name, {
+      left: textLeft, top: companyTop + H * 0.17, width: textWidth, heightLimit: H * 0.18, widthLimit: textWidth,
+      fontSize: landscape ? 48 : 42, fontWeight: "bold", fill: "#111820", textAlign: "left"
+    });
+    fitBuilderText(nameObj, landscape ? 48 : 42, 20);
+
+    const jobObj = builderAddOrUpdateText("employeeJob", job, {
+      left: textLeft, top: companyTop + H * 0.34, width: textWidth, heightLimit: H * 0.10, widthLimit: textWidth,
+      fontSize: landscape ? 28 : 25, fontWeight: "normal", fill: "#2c6e9d", textAlign: "left"
+    });
+    fitBuilderText(jobObj, landscape ? 28 : 25, 15);
+
+    const contactLines = [phone && "Tel: " + phone, email && "Email: " + email, website && "Web: " + website].filter(Boolean);
+    builderAddOrUpdateText("employeeContacts", contactLines.join("\n") || "", {
+      left: textLeft, top: companyTop + H * 0.48, width: textWidth, heightLimit: H * 0.25, widthLimit: textWidth,
+      fontSize: landscape ? 19 : 18, fill: "#263746", lineHeight: 1.35, textAlign: "left"
+    });
+
+    ensurePoweredBy();
+
+    // Keep the structural background behind editable content.
+    ["builderBackground", "builderAccent", "builderLine"].forEach(role => {
+      const object = builderObject(role);
+      if (object) canvas.sendToBack(object);
+    });
+    ensurePoweredBy();
+    canvas.discardActiveObject();
+    canvas.requestRenderAll();
+    saveCurrentSide();
+    builderStatus("Employee card generated successfully — you can move and resize every employee element.");
+  } catch (error) {
+    console.error("V6.1 Employee Builder error:", error);
+    builderStatus("Generate failed: " + (error.message || error));
+    alert("Generate Card failed:\n" + (error.message || error));
+  }
 }
-$("generateEmployeeBtn").onclick = generateEmployeeCard;
-$("replacePhotoBtn").onclick = () => $("builderPhoto").click();
-$("saveTemplateBtn").onclick = () => {
-  ensurePoweredBy(); saveCurrentSide();
-  localStorage.setItem(V6_TEMPLATE_KEY, snapshot());
-  status("Template saved on this device.");
-};
-$("loadTemplateBtn").onclick = async () => {
-  const saved = localStorage.getItem(V6_TEMPLATE_KEY);
-  if (!saved) return alert("No saved template on this device.");
-  await loadSnapshot(saved); ensurePoweredBy(); saveCurrentSide();
-  status("Template loaded. Enter new employee details and press Generate / Update.");
+
+$("generateEmployeeBtn").addEventListener("click", generateEmployeeCard);
+$("replacePhotoBtn").addEventListener("click", () => $("builderPhoto").click());
+
+$("saveTemplateBtn").addEventListener("click", () => {
+  ensurePoweredBy();
+  saveCurrentSide();
+  localStorage.setItem(V61_TEMPLATE_KEY, snapshot());
+  builderStatus("Template saved on this device.");
+});
+
+$("loadTemplateBtn").addEventListener("click", async () => {
+  const saved = localStorage.getItem(V61_TEMPLATE_KEY);
+  if (!saved) return alert("No saved V6.1 template on this device.");
+  await loadSnapshot(saved);
+  ensurePoweredBy();
+  saveCurrentSide();
+  builderStatus("Template loaded — enter the next employee details and press Generate / Update Card.");
+});
+
+// Protect the mandatory footer from deletion.
+const v61OriginalDeleteHandler = $("deleteBtn").onclick;
+$("deleteBtn").onclick = () => {
+  const selected = canvas.getActiveObjects();
+  if (selected.some(object => object.role === "poweredBy")) {
+    builderStatus("Powered by Tabaja Solution is protected.");
+    return;
+  }
+  if (typeof v61OriginalDeleteHandler === "function") v61OriginalDeleteHandler();
 };
 
-// Protect the mandatory footer from normal deletion.
-const oldDeleteHandler = $("deleteBtn").onclick;
-$("deleteBtn").onclick = () => {
-  const protectedSelected = canvas.getActiveObjects().some(o => o.role === "poweredBy");
-  if (protectedSelected) return status("Powered by Tabaja Solution is protected.");
-  oldDeleteHandler();
-};
-canvas.on("after:render", () => {
-  const p = roleObject("poweredBy");
-  if (p) { p.selectable = false; p.evented = false; }
-});
+builderStatus("V6.1 BETA ready — fill employee details and press Generate / Update Card.");
