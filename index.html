@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Tabaja Card Designer V6.1 BETA</title>
-  <link rel="stylesheet" href="style.css?v=6.1-beta.1">
+  <title>Tabaja Card Designer V6.2 BETA</title>
+  <link rel="stylesheet" href="style.css?v=6.2-beta.1">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
@@ -30,7 +30,7 @@
   <div id="appShell" class="app-shell hidden">
     <header>
       <div>
-        <h1>Tabaja Card Designer V6.1 BETA</h1>
+        <h1>Tabaja Card Designer V6.2 BETA</h1>
         <small>Professional CR80 PVC Card Designer • Powered by Tabaja Solution</small>
       </div>
       <div class="top-actions">
@@ -90,6 +90,36 @@
 
       <aside class="properties">
 
+        <div class="builder-panel background-panel">
+          <h3>🎨 Card Background</h3>
+          <label>Solid Color</label>
+          <div class="background-color-row">
+            <input id="cardBgSolidColor" type="color" value="#ffffff">
+            <button id="applySolidBackgroundBtn">Apply Color</button>
+          </div>
+
+          <label>Gradient Colors</label>
+          <div class="background-gradient-colors">
+            <input id="cardBgGradient1" type="color" value="#0d3155">
+            <input id="cardBgGradient2" type="color" value="#1684e8">
+          </div>
+          <label>Gradient Direction</label>
+          <select id="cardBgGradientDirection">
+            <option value="horizontal">Left → Right</option>
+            <option value="vertical">Top → Bottom</option>
+            <option value="diagonal">Diagonal ↘</option>
+            <option value="diagonalReverse">Diagonal ↙</option>
+          </select>
+          <button class="background-full-button" id="applyGradientBackgroundBtn">Apply Gradient</button>
+
+          <div class="builder-actions background-actions">
+            <button id="transparentBackgroundBtn">Transparent</button>
+            <button id="cardBackgroundImageBtn">Image</button>
+          </div>
+          <button class="background-full-button" id="resetWhiteBackgroundBtn">Reset White</button>
+          <p class="builder-note">The background stays behind every element and is included in PNG, PDF and printing.</p>
+        </div>
+
         <div class="builder-panel">
           <h3>Employee Card Builder</h3>
           <label>Company Name</label><input id="builderCompany" placeholder="Company name">
@@ -141,6 +171,6 @@
     </main>
   </div>
 
-  <script src="app.js?v=6.1-beta.1"></script>
+  <script src="app.js?v=6.2-beta.1"></script>
 </body>
 </html>

@@ -1056,3 +1056,69 @@ $("deleteBtn").onclick = () => {
 };
 
 builderStatus("V6.1 BETA ready — fill employee details and press Generate / Update Card.");
+
+// ===== V6.2 BETA: Card Background Studio =====
+function removeBackgroundImageObjects() {
+  const objects = canvas.getObjects().filter(object => object.role === "background" || object.role === "cardBackgroundImage");
+  objects.forEach(object => canvas.remove(object));
+}
+
+function finishCardBackground(message) {
+  canvas.discardActiveObject();
+  canvas.requestRenderAll();
+  saveCurrentSide();
+  status(message);
+}
+
+function applySolidCardBackground(color) {
+  removeBackgroundImageObjects();
+  canvas.setBackgroundColor(color, () => finishCardBackground("Solid card background applied."));
+}
+
+function gradientCoordinates(direction) {
+  if (direction === "vertical") return { x1: 0, y1: 0, x2: 0, y2: H };
+  if (direction === "diagonal") return { x1: 0, y1: 0, x2: W, y2: H };
+  if (direction === "diagonalReverse") return { x1: W, y1: 0, x2: 0, y2: H };
+  return { x1: 0, y1: 0, x2: W, y2: 0 };
+}
+
+function applyGradientCardBackground() {
+  removeBackgroundImageObjects();
+  const color1 = $("cardBgGradient1").value;
+  const color2 = $("cardBgGradient2").value;
+  const direction = $("cardBgGradientDirection").value;
+  const gradient = new fabric.Gradient({
+    type: "linear",
+    gradientUnits: "pixels",
+    coords: gradientCoordinates(direction),
+    colorStops: [
+      { offset: 0, color: color1 },
+      { offset: 1, color: color2 }
+    ]
+  });
+  canvas.setBackgroundColor(gradient, () => finishCardBackground("Gradient card background applied."));
+}
+
+function applyTransparentCardBackground() {
+  removeBackgroundImageObjects();
+  canvas.setBackgroundColor("rgba(0,0,0,0)", () => finishCardBackground("Transparent card background applied. White PVC will remain visible when printed."));
+}
+
+$("applySolidBackgroundBtn").addEventListener("click", () => applySolidCardBackground($("cardBgSolidColor").value));
+$("applyGradientBackgroundBtn").addEventListener("click", applyGradientCardBackground);
+$("transparentBackgroundBtn").addEventListener("click", applyTransparentCardBackground);
+$("resetWhiteBackgroundBtn").addEventListener("click", () => {
+  $("cardBgSolidColor").value = "#ffffff";
+  applySolidCardBackground("#ffffff");
+});
+$("cardBackgroundImageBtn").addEventListener("click", () => chooseImage("background"));
+
+// Keep the original quick color control synchronized with the new background panel.
+$("cardBgSolidColor").addEventListener("input", event => {
+  $("cardColor").value = event.target.value;
+});
+$("cardColor").addEventListener("input", event => {
+  $("cardBgSolidColor").value = event.target.value;
+});
+
+status("V6.2 BETA ready — Employee Builder + Card Background Studio.");
