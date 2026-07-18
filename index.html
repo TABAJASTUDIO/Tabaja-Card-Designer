@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tabaja Card Designer</title>
   <link rel="stylesheet" href="styles/style.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
 </head>
 <body>
   <header class="topbar">
@@ -28,9 +29,21 @@
       <button id="addImageBtn">Add Image</button>
       <button id="addLogoBtn">Add Logo</button>
       <button id="backgroundBtn">Background</button>
-      <button disabled>QR Code</button>
-      <button disabled>Barcode</button>
-      <button disabled>NFC</button>
+      <button id="addQrBtn">QR Code</button>
+<input id="cardLink" type="text" placeholder="Enter QR link" />
+
+<button id="addBarcodeBtn">Barcode</button>
+<input id="barcodeValue" type="text" placeholder="Enter barcode value" />
+
+<button id="duplicateBtn">Duplicate</button>
+
+<button id="nfcBtn">NFC</button>
+<button id="frontObjBtn">Bring to Front</button>
+<button id="backObjBtn">Send to Back</button>
+<button id="deleteBtn">Delete Selected</button>
+<button id="clearBtn">Clear Card</button>
+<button id="centerHBtn">Center Horizontal</button>
+<button id="centerVBtn">Center Vertical</button>
     </aside>
 
     <section class="editor">
@@ -41,17 +54,15 @@
       </div>
 
       <div class="canvas-wrapper">
-        <div id="cardCanvas" class="card-canvas">
-          <div class="placeholder">
-            <h2>Tabaja Card Designer</h2>
-            <p>Start by adding text, image, logo or background.</p>
-          </div>
-        </div>
+        <canvas id="cardCanvas" class="card-canvas"></canvas>
       </div>
     </section>
 
     <aside class="sidebar right">
       <h3>Properties</h3>
+      <div id="selectedText">No object selected</div>
+      <div id="statusText">Ready</div>
+      <div id="nfcSupport">Checking NFC support...</div>
 
       <label>
         Card Background
@@ -74,11 +85,12 @@
   </main>
 
   <input id="imageInput" type="file" accept="image/*" hidden />
-
+<input id="logoInput" type="file" accept="image/*" hidden />
+<input id="backgroundInput" type="file" accept="image/*" hidden />
   <footer>
     Powered by Tabaja Solution
   </footer>
 
-  <script src="scripts/app.js"></script>
+  <script src="scripts/app.js?v=20260718-2"></script>
 </body>
 </html>
