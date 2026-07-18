@@ -1,4 +1,4 @@
-# Tabaja Card Designer V4.2
+# Tabaja Card Designer V4.3
 
 Production update built on the original GitHub project.
 
@@ -21,15 +21,21 @@ Production update built on the original GitHub project.
 Upload `index.html`, `app.js`, and `style.css` to the repository root.
 The old `scripts` and `styles` folders are not used by this version.
 
-## V4.2 print repair
+## V4.3 print repair
 - Print Current and Print Front + Back now create a print-ready CR80 PDF.
 - Both sides are flattened to full-colour JPEG with a solid white base.
 - A small bleed is applied only to printing to prevent a white strip at the card edge.
 - Cache-busting version tags ensure GitHub Pages loads the new CSS and JavaScript.
 
 
-## V4.2 fixes
+## V4.3 fixes
 - Direct print dialog without opening a blob/PDF tab
 - Exact CR80 print page with bleed to remove the lower white strip
 - Back Fill Card stretches artwork exactly to the card without cropping
 - Front Fill Card behaviour remains unchanged
+
+
+## V4.3 Print Size Fix
+- Print page now uses the exact canvas pixel size instead of millimetres.
+- Fixes cards appearing small inside the Zebra custom pixel page.
+- Front and Back Fill Card behaviour remains unchanged.

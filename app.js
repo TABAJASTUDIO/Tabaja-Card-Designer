@@ -574,7 +574,12 @@ async function printSides(list) {
     const images = [];
     for (const side of list) images.push(await exportSide(side, "jpeg", 1));
 
-    const c = CARD[orientation];
+    // Edge/Zebra exposes the custom card page in pixels (for example 1006×640).
+    // Use the exact exported canvas pixel dimensions for the print page so the
+    // image fills the whole driver page instead of sitting as an 85.6 mm box
+    // inside a much larger pixel-defined sheet.
+    const pageW = W;
+    const pageH = H;
     const frame = document.createElement("iframe");
     frame.setAttribute("aria-hidden", "true");
     frame.style.position = "fixed";
@@ -598,13 +603,13 @@ async function printSides(list) {
 <meta charset="utf-8">
 <title>Tabaja Card Print</title>
 <style>
-  @page { size: ${c.mmW}mm ${c.mmH}mm; margin: 0; }
+  @page { size: ${pageW}px ${pageH}px; margin: 0; }
   * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-  html, body { width: ${c.mmW}mm; margin: 0 !important; padding: 0 !important; background: white; }
+  html, body { width: ${pageW}px; height: ${pageH}px; margin: 0 !important; padding: 0 !important; background: white; }
   .card-page {
     position: relative;
-    width: ${c.mmW}mm;
-    height: ${c.mmH}mm;
+    width: ${pageW}px;
+    height: ${pageH}px;
     margin: 0;
     padding: 0;
     overflow: hidden;
@@ -615,10 +620,10 @@ async function printSides(list) {
   .card-page:last-child { page-break-after: auto; break-after: auto; }
   .card-page img {
     position: absolute;
-    left: -0.30mm;
-    top: -0.30mm;
-    width: calc(100% + 0.60mm);
-    height: calc(100% + 0.60mm);
+    left: -2px;
+    top: -2px;
+    width: calc(100% + 4px);
+    height: calc(100% + 4px);
     margin: 0;
     padding: 0;
     display: block;
