@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tabaja Card Designer</title>
+  <link rel="stylesheet" href="styles/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <strong>Tabaja Card Designer</strong>
+      <span>PVC ID Card Designer for Zebra ZC300</span>
+    </div>
+
+    <div class="top-actions">
+      <button id="newBtn">New</button>
+      <button id="saveBtn">Save</button>
+      <button id="exportBtn">Export PNG</button>
+      <button id="printBtn">Print</button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <aside class="sidebar left">
+      <h3>Tools</h3>
+      <button id="addTextBtn">Add Text</button>
+      <button id="addImageBtn">Add Image</button>
+      <button id="addLogoBtn">Add Logo</button>
+      <button id="backgroundBtn">Background</button>
+      <button disabled>QR Code</button>
+      <button disabled>Barcode</button>
+      <button disabled>NFC</button>
+    </aside>
+
+    <section class="editor">
+      <div class="editor-toolbar">
+        <button id="frontBtn" class="active">Front</button>
+        <button id="backBtn">Back</button>
+        <span>Card Size: 85.60 × 53.98 mm</span>
+      </div>
+
+      <div class="canvas-wrapper">
+        <div id="cardCanvas" class="card-canvas">
+          <div class="placeholder">
+            <h2>Tabaja Card Designer</h2>
+            <p>Start by adding text, image, logo or background.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="sidebar right">
+      <h3>Properties</h3>
+
+      <label>
+        Card Background
+        <input id="bgColor" type="color" value="#ffffff" />
+      </label>
+
+      <label>
+        Text Color
+        <input id="textColor" type="color" value="#111111" />
+      </label>
+
+      <label>
+        Font Size
+        <input id="fontSize" type="number" value="24" min="8" max="72" />
+      </label>
+
+      <button id="deleteBtn">Delete Selected</button>
+      <button id="clearBtn">Clear Card</button>
+    </aside>
+  </main>
+
+  <input id="imageInput" type="file" accept="image/*" hidden />
+
+  <footer>
+    Powered by Tabaja Solution
+  </footer>
+
+  <script src="scripts/app.js"></script>
+</body>
+</html>
