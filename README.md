@@ -45,3 +45,8 @@ The old `scripts` and `styles` folders are not used by this version.
 - Browser direct printing was removed because Edge exposes Zebra CR80 stock as a pixel-sized page and scales the artwork down.
 - Print buttons now generate an exact CR80 PDF using a physical PDF MediaBox of 85.60 × 53.98 mm.
 - Open the downloaded PDF and print with Actual size / 100%.
+
+
+## V4.5 final print bleed
+- Added 0.80 mm bleed on all four sides for print output only.
+- Design canvas, Fill Card, rotate, front/back, and exact CR80 PDF sizing are unchanged.

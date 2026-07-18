@@ -598,8 +598,9 @@ async function printSides(list) {
 function buildPrintJpegPdf(images, pxW, pxH, mmW, mmH) {
   const pageW = mmW * 72 / 25.4;
   const pageH = mmH * 72 / 25.4;
-  // 0.30 mm bleed removes a possible thin unprinted strip caused by driver rounding.
-  const bleed = 0.30 * 72 / 25.4;
+  // 0.80 mm print bleed slightly enlarges the artwork beyond every card edge
+  // to remove the last thin white strip without changing the design canvas.
+  const bleed = 0.80 * 72 / 25.4;
   const drawW = pageW + bleed * 2;
   const drawH = pageH + bleed * 2;
   const objects = [];
@@ -684,5 +685,5 @@ canvas.setBackgroundColor("#ffffff", canvas.renderAll.bind(canvas));
 sides.front = snapshot();
 sides.back = snapshot();
 updateCardInfo();
-status("V4.4 ready — exact CR80 PDF print active.");
+status("V4.5 ready — CR80 print with 0.8 mm bleed active.");
 if (isLoggedIn()) showApp(); else showLogin();
