@@ -3,94 +3,163 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tabaja Card Designer</title>
+  <title>Tabaja Card Designer V3 Production</title>
+
   <link rel="stylesheet" href="styles/style.css" />
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
 </head>
 <body>
   <header class="topbar">
     <div class="brand">
-      <strong>Tabaja Card Designer</strong>
-      <span>PVC ID Card Designer for Zebra ZC300</span>
+      <strong>Tabaja Card Designer V3</strong>
+      <span>Professional CR80 PVC Card Designer • Powered by Tabaja Solution</span>
     </div>
 
     <div class="top-actions">
       <button id="newBtn">New</button>
       <button id="saveBtn">Save</button>
-      <button id="exportBtn">Export PNG</button>
-      <button id="printBtn">Print</button>
+      <button id="openBtn">Open Project</button>
+      <button id="exportPngBtn">Export PNG</button>
+      <button id="exportPdfBtn">Export PDF</button>
+      <button id="printBtn" class="primary">Print</button>
     </div>
   </header>
 
-  <main class="workspace">
-    <aside class="sidebar left">
-      <h3>Tools</h3>
+  <main class="layout">
+    <aside class="sidebar">
+      <h2>Tools</h2>
+
       <button id="addTextBtn">Add Text</button>
       <button id="addImageBtn">Add Image</button>
       <button id="addLogoBtn">Add Logo</button>
-      <button id="backgroundBtn">Background</button>
-      <button id="addQrBtn">QR Code</button>
-<input id="cardLink" type="text" placeholder="Enter QR link" />
+      <button id="backgroundBtn">Background Image</button>
+      <button id="qrBtn">QR Code</button>
+      <button id="barcodeBtn">Barcode</button>
+      <button id="duplicateBtn">Duplicate</button>
+      <button id="nfcBtn">NFC Link</button>
 
-<button id="addBarcodeBtn">Barcode</button>
-<input id="barcodeValue" type="text" placeholder="Enter barcode value" />
+      <div class="divider"></div>
 
-<button id="duplicateBtn">Duplicate</button>
+      <button id="bringFrontBtn">Bring to Front</button>
+      <button id="sendBackBtn">Send to Back</button>
+      <button id="centerHBtn">Center Horizontal</button>
+      <button id="centerVBtn">Center Vertical</button>
+      <button id="deleteBtn" class="danger">Delete Selected</button>
+      <button id="clearBtn">Clear Side</button>
 
-<button id="nfcBtn">NFC</button>
-<button id="frontObjBtn">Bring to Front</button>
-<button id="backObjBtn">Send to Back</button>
-<button id="deleteBtn">Delete Selected</button>
-<button id="clearBtn">Clear Card</button>
-<button id="centerHBtn">Center Horizontal</button>
-<button id="centerVBtn">Center Vertical</button>
+      <input id="imageInput" type="file" accept="image/*" hidden />
+      <input id="logoInput" type="file" accept="image/*" hidden />
+      <input id="backgroundInput" type="file" accept="image/*" hidden />
+      <input id="projectInput" type="file" accept=".tabaja,.json,application/json" hidden />
     </aside>
 
-    <section class="editor">
-      <div class="editor-toolbar">
-        <button id="frontBtn" class="active">Front</button>
-        <button id="backBtn">Back</button>
-        <span>Card Size: 85.60 × 53.98 mm</span>
+    <section class="workspace">
+      <div class="workspace-toolbar">
+        <div class="tabs">
+          <button id="frontTab" class="active">Front</button>
+          <button id="backTab">Back</button>
+        </div>
+
+        <div class="workspace-meta">
+          <span>CR80 • 85.60 × 53.98 mm • 300 DPI</span>
+        </div>
       </div>
 
-      <div class="canvas-wrapper">
-        <canvas id="cardCanvas" class="card-canvas"></canvas>
+      <div id="dropZone" class="stage">
+        <div class="card-shell">
+          <canvas id="cardCanvas" width="1011" height="638"></canvas>
+        </div>
+      </div>
+
+      <div class="bottom-toolbar">
+        <button id="undoBtn">Undo</button>
+        <button id="redoBtn">Redo</button>
+        <button id="zoomOutBtn">−</button>
+        <button id="zoomResetBtn">100%</button>
+        <button id="zoomInBtn">+</button>
       </div>
     </section>
 
-    <aside class="sidebar right">
-      <h3>Properties</h3>
-      <div id="selectedText">No object selected</div>
-      <div id="statusText">Ready</div>
-      <div id="nfcSupport">Checking NFC support...</div>
+    <aside class="properties">
+      <h2>Properties</h2>
 
       <label>
-        Card Background
-        <input id="bgColor" type="color" value="#ffffff" />
+        Text
+        <input id="textValue" type="text" placeholder="Selected text" />
       </label>
 
       <label>
-        Text Color
+        Font size
+        <input id="fontSize" type="number" min="8" max="180" value="34" />
+      </label>
+
+      <label>
+        Font family
+        <select id="fontFamily">
+          <option>Arial</option>
+          <option>Verdana</option>
+          <option>Tahoma</option>
+          <option>Georgia</option>
+          <option>Times New Roman</option>
+        </select>
+      </label>
+
+      <label>
+        Text color
         <input id="textColor" type="color" value="#111111" />
       </label>
 
+      <div class="two-col">
+        <button id="boldBtn">Bold</button>
+        <button id="italicBtn">Italic</button>
+      </div>
+
       <label>
-        Font Size
-        <input id="fontSize" type="number" value="24" min="8" max="72" />
+        Background color
+        <input id="backgroundColor" type="color" value="#ffffff" />
       </label>
 
-      <button id="deleteBtn">Delete Selected</button>
-      <button id="clearBtn">Clear Card</button>
+      <label>
+        Opacity
+        <input id="opacity" type="range" min="0.1" max="1" step="0.05" value="1" />
+      </label>
+
+      <label>
+        Rotation
+        <input id="rotation" type="range" min="-180" max="180" step="1" value="0" />
+      </label>
+
+      <div class="info">
+        <strong>How to use</strong>
+        <span>Select any object, then drag, resize or rotate it.</span>
+        <span>You can also drop an image directly onto the card.</span>
+      </div>
+
+      <div class="info">
+        <strong>Zebra ZC300</strong>
+        <span>Print opens the system print window.</span>
+        <span>Select CR80, Scale 100%, Margins None.</span>
+      </div>
     </aside>
   </main>
 
-  <input id="imageInput" type="file" accept="image/*" hidden />
-<input id="logoInput" type="file" accept="image/*" hidden />
-<input id="backgroundInput" type="file" accept="image/*" hidden />
-  <footer>
-    Powered by Tabaja Solution
-  </footer>
+  <div id="printArea"></div>
 
-  <script src="scripts/app.js?v=20260718-2"></script>
+  <div id="promptModal" class="modal">
+    <div class="modal-card">
+      <h3 id="promptTitle">Enter value</h3>
+      <input id="promptInput" type="text" />
+      <div class="modal-actions">
+        <button id="promptCancel">Cancel</button>
+        <button id="promptOk" class="primary">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="scripts/app.js"></script>
 </body>
 </html>
