@@ -386,7 +386,7 @@ $("newBtn").onclick = async () => {
 
 $("saveBtn").onclick = () => {
   saveCurrentSide();
-  const project = { version: "4.0", orientation, front: sides.front, back: sides.back, currentSide };
+  const project = { version: "4.1", orientation, front: sides.front, back: sides.back, currentSide };
   downloadBlob(new Blob([JSON.stringify(project)], { type: "application/json" }), "Tabaja-Card-Project.tabaja");
 };
 
@@ -545,68 +545,96 @@ $("pdfBtn").onclick = async () => {
 async function printSides(list) {
   try {
     saveCurrentSide();
-    const imgs = [];
 
-    // Flatten every side to JPEG for reliable full-colour printing.
-    // This avoids Windows/Edge printer drivers rendering transparent PNG areas as black.
-    for (const side of list) imgs.push(await exportSide(side, "jpeg", 1));
+    // Render every side on a solid white canvas and flatten to high-quality JPEG.
+    // This prevents transparent pixels from being interpreted as black by some
+    // Windows / Edge / Zebra driver combinations.
+    const jpegBytes = [];
+    for (const side of list) {
+      const jpeg = await exportSide(side, "jpeg", 1);
+      jpegBytes.push(dataUrlToBytes(jpeg));
+    }
 
     const c = CARD[orientation];
-    const w = window.open("", "_blank", "width=1000,height=800");
-    if (!w) return alert("Allow pop-ups for printing.");
+    const pdfBytes = buildPrintJpegPdf(jpegBytes, W, H, c.mmW, c.mmH);
+    const blob = new Blob([pdfBytes], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+    const printWindow = window.open(url, "_blank");
 
-    const pages = imgs.map((src, index) =>
-      `<section class="page page-${index + 1}"><img alt="Card side ${index + 1}" src="${src}"></section>`
-    ).join("");
+    if (!printWindow) {
+      downloadBlob(blob, `Tabaja-Card-PRINT-${list.join("-")}-${orientation}.pdf`);
+      alert("The print-ready PDF was downloaded. Open it and print at Actual size / 100% with margins set to None.");
+    } else {
+      status(list.length === 2
+        ? "Print-ready Front + Back PDF opened. Print at Actual size / 100%, margins None."
+        : "Print-ready card PDF opened. Print at Actual size / 100%, margins None.");
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    }
+  } catch (e) {
+    alert("Print preparation failed: " + e.message);
+  }
+}
 
-    w.document.open();
-    w.document.write(`<!doctype html>
-<html>
-<head>
-<meta charset="utf-8">
-<title>Tabaja Card Print</title>
-<style>
-  @page { size: ${c.mmW}mm ${c.mmH}mm; margin: 0; }
-  * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-  html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
-  body { width: ${c.mmW}mm; }
-  .page {
-    position: relative;
-    width: ${c.mmW}mm !important;
-    height: ${c.mmH}mm !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    background: #fff !important;
-    line-height: 0;
-    page-break-after: always;
-    break-after: page;
+function buildPrintJpegPdf(images, pxW, pxH, mmW, mmH) {
+  const pageW = mmW * 72 / 25.4;
+  const pageH = mmH * 72 / 25.4;
+  // 0.30 mm bleed removes a possible thin unprinted strip caused by driver rounding.
+  const bleed = 0.30 * 72 / 25.4;
+  const drawW = pageW + bleed * 2;
+  const drawH = pageH + bleed * 2;
+  const objects = [];
+  const addObj = bytes => { objects.push(bytes); return objects.length; };
+  const pagesId = 2;
+  const pageIds = [];
+
+  addObj(asciiBytes("<< /Type /Catalog /Pages 2 0 R >>"));
+  addObj(asciiBytes("PAGES_PLACEHOLDER"));
+
+  images.forEach((imgBytes, i) => {
+    const imageId = addObj(concatBytes([
+      asciiBytes(`<< /Type /XObject /Subtype /Image /Width ${pxW} /Height ${pxH} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${imgBytes.length} >>\nstream\n`),
+      imgBytes,
+      asciiBytes("\nendstream")
+    ]));
+
+    const content = asciiBytes(
+      `q\n${drawW.toFixed(3)} 0 0 ${drawH.toFixed(3)} ${(-bleed).toFixed(3)} ${(-bleed).toFixed(3)} cm\n/Im${i + 1} Do\nQ`
+    );
+    const contentId = addObj(concatBytes([
+      asciiBytes(`<< /Length ${content.length} >>\nstream\n`),
+      content,
+      asciiBytes("\nendstream")
+    ]));
+
+    const pageId = addObj(asciiBytes(
+      `<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 ${pageW.toFixed(3)} ${pageH.toFixed(3)}] /CropBox [0 0 ${pageW.toFixed(3)} ${pageH.toFixed(3)}] /Resources << /XObject << /Im${i + 1} ${imageId} 0 R >> >> /Contents ${contentId} 0 R >>`
+    ));
+    pageIds.push(pageId);
+  });
+
+  objects[1] = asciiBytes(`<< /Type /Pages /Kids [${pageIds.map(id => `${id} 0 R`).join(" ")}] /Count ${pageIds.length} >>`);
+
+  const header = asciiBytes("%PDF-1.4\n%âãÏÓ\n");
+  const bodyParts = [header];
+  const offsets = [0];
+  let offset = header.length;
+
+  objects.forEach((obj, i) => {
+    offsets.push(offset);
+    const prefix = asciiBytes(`${i + 1} 0 obj\n`);
+    const suffix = asciiBytes("\nendobj\n");
+    bodyParts.push(prefix, obj, suffix);
+    offset += prefix.length + obj.length + suffix.length;
+  });
+
+  const xrefOffset = offset;
+  let xref = `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  for (let i = 1; i <= objects.length; i++) {
+    xref += String(offsets[i]).padStart(10, "0") + " 00000 n \n";
   }
-  .page:last-child { page-break-after: auto; break-after: auto; }
-  .page img {
-    position: absolute;
-    inset: 0;
-    width: 100% !important;
-    height: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    display: block !important;
-    object-fit: fill !important;
-  }
-</style>
-</head>
-<body>${pages}
-<script>
-  Promise.all(Array.from(document.images).map(img => {
-    if (img.complete) return Promise.resolve();
-    return new Promise(resolve => { img.onload = resolve; img.onerror = resolve; });
-  })).then(() => setTimeout(() => { window.focus(); window.print(); }, 700));
-<\/script>
-</body>
-</html>`);
-    w.document.close();
-    status(list.length === 2 ? "Front and back ready for full-colour printing." : "Current side ready for printing.");
-  } catch (e) { alert("Print failed: " + e.message); }
+  xref += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+  bodyParts.push(asciiBytes(xref));
+  return concatBytes(bodyParts);
 }
 
 $("printBtn").onclick = () => printSides([currentSide]);
@@ -636,5 +664,5 @@ canvas.setBackgroundColor("#ffffff", canvas.renderAll.bind(canvas));
 sides.front = snapshot();
 sides.back = snapshot();
 updateCardInfo();
-status("V4.0 ready.");
+status("V4.1 ready — print repair active.");
 if (isLoggedIn()) showApp(); else showLogin();

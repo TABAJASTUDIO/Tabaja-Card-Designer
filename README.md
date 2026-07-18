@@ -1,4 +1,4 @@
-# Tabaja Card Designer V4.0
+# Tabaja Card Designer V4.1
 
 Production update built on the original GitHub project.
 
@@ -20,3 +20,9 @@ Production update built on the original GitHub project.
 
 Upload `index.html`, `app.js`, and `style.css` to the repository root.
 The old `scripts` and `styles` folders are not used by this version.
+
+## V4.1 print repair
+- Print Current and Print Front + Back now create a print-ready CR80 PDF.
+- Both sides are flattened to full-colour JPEG with a solid white base.
+- A small bleed is applied only to printing to prevent a white strip at the card edge.
+- Cache-busting version tags ensure GitHub Pages loads the new CSS and JavaScript.
