@@ -952,8 +952,12 @@ async function generateEmployeeCard() {
     const email = $("builderEmail").value.trim();
     const website = $("builderWebsite").value.trim();
 
-    // Visible professional base so Generate always produces an obvious card.
-    builderAddOrUpdateRect("builderBackground", { left: 0, top: 0, width: W, height: H, fill: "#ffffff" });
+    // V6.3: keep the selected canvas background visible.
+    // This transparent structural layer replaces the old forced white rectangle.
+    builderAddOrUpdateRect("builderBackground", {
+      left: 0, top: 0, width: W, height: H, fill: "rgba(0,0,0,0)",
+      selectable: false, evented: false
+    });
     builderAddOrUpdateRect("builderAccent", landscape
       ? { left: 0, top: 0, width: W * 0.31, height: H, fill: "#123e66" }
       : { left: 0, top: 0, width: W, height: H * 0.25, fill: "#123e66" });
@@ -1057,7 +1061,7 @@ $("deleteBtn").onclick = () => {
 
 builderStatus("V6.1 BETA ready — fill employee details and press Generate / Update Card.");
 
-// ===== V6.2 BETA: Card Background Studio =====
+// ===== V6.3 BETA: Locked Card Background =====
 function removeBackgroundImageObjects() {
   const objects = canvas.getObjects().filter(object => object.role === "background" || object.role === "cardBackgroundImage");
   objects.forEach(object => canvas.remove(object));
@@ -1121,4 +1125,4 @@ $("cardColor").addEventListener("input", event => {
   $("cardBgSolidColor").value = event.target.value;
 });
 
-status("V6.2 BETA ready — Employee Builder + Card Background Studio.");
+status("V6.3 BETA ready — Employee Builder preserves the selected Card Background.");

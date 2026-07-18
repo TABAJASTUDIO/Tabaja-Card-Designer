@@ -5,5 +5,5 @@ header{display:flex;justify-content:space-between;gap:20px;align-items:center;pa
 
 .builder-panel{padding:14px;border:1px solid #344052;border-radius:12px;background:#151b23;margin-bottom:18px}.builder-panel h3{margin:0 0 10px;color:#66b7ff}.builder-panel label{margin-top:9px;font-size:12px}.builder-panel input{padding:8px}.builder-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}.builder-actions button{padding:9px 7px;font-size:12px}.builder-note{font-size:11px;line-height:1.4;color:#9eabc0;margin:10px 0 0}
 
-/* V6.2 Card Background panel */
+/* V6.3 Locked Card Background panel */
 .background-panel h3{display:flex;align-items:center;gap:6px}.background-color-row{display:grid;grid-template-columns:62px 1fr;gap:8px;align-items:center}.background-color-row input,.background-gradient-colors input{height:40px;padding:3px;cursor:pointer}.background-gradient-colors{display:grid;grid-template-columns:1fr 1fr;gap:8px}.background-full-button{width:100%;margin-top:9px}.background-actions{grid-template-columns:1fr 1fr}.background-panel select{margin-bottom:0}
