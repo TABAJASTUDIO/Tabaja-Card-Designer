@@ -472,6 +472,8 @@ function concatBytes(parts) {
 }
 
 function buildJpegPdf(images, pxW, pxH, mmW, mmH) {
+  const pageW = mmW * 72 / 25.4;
+  const pageH = mmH * 72 / 25.4;
   const objects = [];
   const addObj = bytes => { objects.push(bytes); return objects.length; };
   const pagesId = 2;
@@ -489,14 +491,14 @@ function buildJpegPdf(images, pxW, pxH, mmW, mmH) {
     ]));
     imageIds.push(imageId);
 
-    const content = asciiBytes(`q\n${mmW.toFixed(3)} 0 0 ${mmH.toFixed(3)} 0 0 cm\n/Im${i + 1} Do\nQ`);
+    const content = asciiBytes(`q\n${pageW.toFixed(3)} 0 0 ${pageH.toFixed(3)} 0 0 cm\n/Im${i + 1} Do\nQ`);
     const contentId = addObj(concatBytes([
       asciiBytes(`<< /Length ${content.length} >>\nstream\n`), content, asciiBytes("\nendstream")
     ]));
     contentIds.push(contentId);
 
     const pageId = addObj(asciiBytes(
-      `<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 ${mmW.toFixed(3)} ${mmH.toFixed(3)}] /Resources << /XObject << /Im${i + 1} ${imageId} 0 R >> >> /Contents ${contentId} 0 R >>`
+      `<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 ${pageW.toFixed(3)} ${pageH.toFixed(3)}] /Resources << /XObject << /Im${i + 1} ${imageId} 0 R >> >> /Contents ${contentId} 0 R >>`
     ));
     pageIds.push(pageId);
   });
@@ -544,15 +546,67 @@ async function printSides(list) {
   try {
     saveCurrentSide();
     const imgs = [];
-    for (const side of list) imgs.push(await exportSide(side, "png", 1));
+
+    // Flatten every side to JPEG for reliable full-colour printing.
+    // This avoids Windows/Edge printer drivers rendering transparent PNG areas as black.
+    for (const side of list) imgs.push(await exportSide(side, "jpeg", 1));
+
     const c = CARD[orientation];
-    const w = window.open("", "_blank");
+    const w = window.open("", "_blank", "width=1000,height=800");
     if (!w) return alert("Allow pop-ups for printing.");
-    const pages = imgs.map(x => `<div class="page"><img src="${x}" alt="Card side"></div>`).join("");
-    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Tabaja Card Print</title><style>@page{size:${c.mmW}mm ${c.mmH}mm;margin:0}html,body{margin:0;padding:0;background:#fff}.page{width:${c.mmW}mm;height:${c.mmH}mm;page-break-after:always;break-after:page;overflow:hidden}.page:last-child{page-break-after:auto;break-after:auto}.page img{width:${c.mmW}mm;height:${c.mmH}mm;display:block;object-fit:fill}</style></head><body>${pages}<script>Promise.all([...document.images].map(i=>i.decode?i.decode():new Promise(r=>{i.onload=r;i.onerror=r}))).then(()=>setTimeout(()=>window.print(),500));<\/script></body></html>`);
+
+    const pages = imgs.map((src, index) =>
+      `<section class="page page-${index + 1}"><img alt="Card side ${index + 1}" src="${src}"></section>`
+    ).join("");
+
+    w.document.open();
+    w.document.write(`<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Tabaja Card Print</title>
+<style>
+  @page { size: ${c.mmW}mm ${c.mmH}mm; margin: 0; }
+  * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
+  body { width: ${c.mmW}mm; }
+  .page {
+    position: relative;
+    width: ${c.mmW}mm !important;
+    height: ${c.mmH}mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    background: #fff !important;
+    line-height: 0;
+    page-break-after: always;
+    break-after: page;
+  }
+  .page:last-child { page-break-after: auto; break-after: auto; }
+  .page img {
+    position: absolute;
+    inset: 0;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
+    object-fit: fill !important;
+  }
+</style>
+</head>
+<body>${pages}
+<script>
+  Promise.all(Array.from(document.images).map(img => {
+    if (img.complete) return Promise.resolve();
+    return new Promise(resolve => { img.onload = resolve; img.onerror = resolve; });
+  })).then(() => setTimeout(() => { window.focus(); window.print(); }, 700));
+<\/script>
+</body>
+</html>`);
     w.document.close();
-    status(list.length === 2 ? "Front and back sent to print." : "Current side sent to print.");
-  } catch (e) { alert("Print preparation failed: " + e.message); }
+    status(list.length === 2 ? "Front and back ready for full-colour printing." : "Current side ready for printing.");
+  } catch (e) { alert("Print failed: " + e.message); }
 }
 
 $("printBtn").onclick = () => printSides([currentSide]);
