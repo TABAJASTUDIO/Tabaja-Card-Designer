@@ -1,14 +1,22 @@
-# Tabaja Card Designer V3.1.2 Fixed
+# Tabaja Card Designer V4.0
 
-Fixes:
-- Export PDF uses the correct `window.jspdf.jsPDF` namespace.
-- Fill Card covers the full CR80 card.
-- Fit Inside displays the complete selected image.
-- Crop Mode clips the selected image to the card and lets you drag/resize it.
-- Save/Open, PNG export and printing are included.
+Production update built on the original GitHub project.
 
-Upload these four files to the repository root:
-- index.html
-- app.js
-- style.css
-- README.md
+## Login
+- Username: `admin`
+- Password: `Tabaja@2026`
+
+## Included
+- Login, Keep me signed in, Logout
+- Landscape and Portrait CR80 card design
+- Front and Back sides
+- Export PNG at 1011×638 or 638×1011
+- Built-in PDF export without jsPDF
+- High-quality Print Current and Print Front + Back
+- Fill Card, Fit Inside, Crop Mode, Reset Image
+- Rotate selected image 90 degrees
+- Save/Open project with orientation
+- QR, barcode and NFC link tools
+
+Upload `index.html`, `app.js`, and `style.css` to the repository root.
+The old `scripts` and `styles` folders are not used by this version.

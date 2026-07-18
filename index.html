@@ -3,91 +3,117 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Tabaja Card Designer V3.1.2</title>
+  <title>Tabaja Card Designer V4.0</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
 </head>
 <body>
-  <header>
-    <div>
-      <h1>Tabaja Card Designer V3.1.2</h1>
-      <small>Professional CR80 PVC Card Designer • Powered by Tabaja Solution</small>
-    </div>
-    <div class="top-actions">
-      <button id="newBtn">New</button>
-      <button id="saveBtn">Save</button>
-      <button id="openBtn">Open Project</button>
-      <button id="pngBtn">Export PNG</button>
-      <button id="pdfBtn">Export PDF</button>
-      <button class="primary" id="printBtn">Print Current</button>
-      <button class="primary" id="printBothBtn">Print Front + Back</button>
-    </div>
-  </header>
+  <section id="loginScreen" class="login-screen">
+    <form id="loginForm" class="login-card" autocomplete="on">
+      <div class="login-brand">TABAJA</div>
+      <h2>Card Designer Login</h2>
+      <p>Sign in to open the card designer.</p>
+      <label for="loginUser">Username</label>
+      <input id="loginUser" name="username" autocomplete="username" required>
+      <label for="loginPassword">Password</label>
+      <input id="loginPassword" name="password" type="password" autocomplete="current-password" required>
+      <label class="remember"><input id="rememberLogin" type="checkbox"> Keep me signed in</label>
+      <button class="primary login-button" type="submit">Login</button>
+      <div id="loginError" class="login-error" aria-live="polite"></div>
+    </form>
+  </section>
 
-  <main>
-    <aside class="tools">
-      <h3>Tools</h3>
-      <button id="addTextBtn">Add Text</button>
-      <button id="addImageBtn">Add Image</button>
-      <button id="addLogoBtn">Add Logo</button>
-      <button id="backgroundBtn">Background Image</button>
-      <button id="fillBtn">Fill Card</button>
-      <button id="fitBtn">Fit Inside</button>
-      <button id="cropBtn">Crop Mode</button>
-      <button id="resetImageBtn">Reset Image</button>
-      <button id="qrBtn">QR Code</button>
-      <button id="barcodeBtn">Barcode</button>
-      <button id="duplicateBtn">Duplicate</button>
-      <button id="nfcBtn">NFC Link</button>
-      <hr>
-      <button id="frontBtn" class="active">Front</button>
-      <button id="backBtn">Back</button>
-      <hr>
-      <button id="deleteBtn">Delete Selected</button>
-      <input id="imageInput" type="file" accept="image/*" hidden>
-      <input id="projectInput" type="file" accept=".tabaja,.json" hidden>
-    </aside>
+  <div id="appShell" class="app-shell hidden">
+    <header>
+      <div>
+        <h1>Tabaja Card Designer V4.0</h1>
+        <small>Professional CR80 PVC Card Designer • Powered by Tabaja Solution</small>
+      </div>
+      <div class="top-actions">
+        <button id="newBtn">New</button>
+        <button id="saveBtn">Save</button>
+        <button id="openBtn">Open Project</button>
+        <button id="pngBtn">Export PNG</button>
+        <button id="pdfBtn">Export PDF</button>
+        <button class="primary" id="printBtn">Print Current</button>
+        <button class="primary" id="printBothBtn">Print Front + Back</button>
+        <button id="logoutBtn">Logout</button>
+      </div>
+    </header>
 
-    <section class="workspace">
-      <div class="card-info">CR80 • 85.60 × 53.98 mm • 300 DPI</div>
-      <div class="canvas-shell">
-        <canvas id="cardCanvas" width="1011" height="638"></canvas>
-      </div>
-      <p id="status">Ready.</p>
-    </section>
+    <main>
+      <aside class="tools">
+        <h3>Tools</h3>
+        <button id="addTextBtn">Add Text</button>
+        <button id="addImageBtn">Add Image</button>
+        <button id="addLogoBtn">Add Logo</button>
+        <button id="backgroundBtn">Background Image</button>
+        <button id="fillBtn">Fill Card</button>
+        <button id="fitBtn">Fit Inside</button>
+        <button id="cropBtn">Crop Mode</button>
+        <button id="resetImageBtn">Reset Image</button>
+        <button id="rotateImageBtn">Rotate Image 90°</button>
+        <button id="qrBtn">QR Code</button>
+        <button id="barcodeBtn">Barcode</button>
+        <button id="duplicateBtn">Duplicate</button>
+        <button id="nfcBtn">NFC Link</button>
+        <hr>
+        <button id="frontBtn" class="active">Front</button>
+        <button id="backBtn">Back</button>
+        <hr>
+        <button id="deleteBtn">Delete Selected</button>
+        <input id="imageInput" type="file" accept="image/*" hidden>
+        <input id="projectInput" type="file" accept=".tabaja,.json" hidden>
+      </aside>
 
-    <aside class="properties">
-      <h3>Properties</h3>
-      <label>Text</label>
-      <input id="textValue" placeholder="Selected text">
-      <label>Font size</label>
-      <input id="fontSize" type="number" min="6" max="200" value="34">
-      <label>Font family</label>
-      <select id="fontFamily">
-        <option>Arial</option><option>Calibri</option><option>Verdana</option>
-        <option>Georgia</option><option>Times New Roman</option>
-      </select>
-      <label>Text color</label>
-      <input id="textColor" type="color" value="#111111">
-      <div class="row">
-        <button id="boldBtn">Bold</button>
-        <button id="italicBtn">Italic</button>
-      </div>
-      <label>Background color</label>
-      <input id="cardColor" type="color" value="#ffffff">
-      <label>Opacity</label>
-      <input id="opacity" type="range" min="0" max="1" value="1" step="0.01">
-      <label>Rotation</label>
-      <input id="rotation" type="range" min="-180" max="180" value="0" step="1">
-      <div class="help">
-        <b>Image tools</b>
-        <p>Select an image first. Fill Card covers the full card. Fit Inside shows the complete image. Crop Mode clips the image to the card while allowing you to drag and resize it.</p>
-      </div>
-    </aside>
-  </main>
+      <section class="workspace">
+        <div class="workspace-bar">
+          <div id="cardInfo" class="card-info">CR80 • 85.60 × 53.98 mm • Landscape • 300 DPI</div>
+          <label class="orientation-label">Orientation
+            <select id="orientationSelect">
+              <option value="landscape">Landscape</option>
+              <option value="portrait">Portrait</option>
+            </select>
+          </label>
+        </div>
+        <div id="canvasShell" class="canvas-shell landscape">
+          <canvas id="cardCanvas" width="1011" height="638"></canvas>
+        </div>
+        <p id="status">Ready.</p>
+      </section>
+
+      <aside class="properties">
+        <h3>Properties</h3>
+        <label>Text</label>
+        <input id="textValue" placeholder="Selected text">
+        <label>Font size</label>
+        <input id="fontSize" type="number" min="6" max="200" value="34">
+        <label>Font family</label>
+        <select id="fontFamily">
+          <option>Arial</option><option>Calibri</option><option>Verdana</option>
+          <option>Georgia</option><option>Times New Roman</option>
+        </select>
+        <label>Text color</label>
+        <input id="textColor" type="color" value="#111111">
+        <div class="row">
+          <button id="boldBtn">Bold</button>
+          <button id="italicBtn">Italic</button>
+        </div>
+        <label>Background color</label>
+        <input id="cardColor" type="color" value="#ffffff">
+        <label>Opacity</label>
+        <input id="opacity" type="range" min="0" max="1" value="1" step="0.01">
+        <label>Rotation</label>
+        <input id="rotation" type="range" min="-180" max="180" value="0" step="1">
+        <div class="help">
+          <b>Image tools</b>
+          <p>Select an image first. Fill Card covers the card. Fit Inside shows the complete image. Crop Mode clips the image while you move or resize it.</p>
+        </div>
+      </aside>
+    </main>
+  </div>
 
   <script src="app.js"></script>
 </body>
