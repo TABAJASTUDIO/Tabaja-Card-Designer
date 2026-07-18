@@ -794,3 +794,114 @@ sides.back = snapshot();
 updateCardInfo();
 status("V5.0 VECTOR TEST — stable engine kept, vector PDF added.");
 if (isLoggedIn()) showApp(); else showLogin();
+
+
+// ===== V6 BETA: Employee Card Builder (additive only) =====
+const V6_TEMPLATE_KEY = "tabaja_card_designer_v6_template";
+let builderPhotoData = "";
+let builderLogoData = "";
+
+function readBuilderFile(input, setter) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => setter(String(reader.result || ""));
+  reader.readAsDataURL(file);
+}
+
+$("builderPhoto").onchange = e => readBuilderFile(e.target, v => { builderPhotoData = v; status("Employee photo ready."); });
+$("builderLogo").onchange = e => readBuilderFile(e.target, v => { builderLogoData = v; status("Company logo ready."); });
+
+function roleObject(role) { return canvas.getObjects().find(o => o.role === role); }
+function fitTextObject(obj, maxWidth) {
+  obj.scaleX = 1;
+  if ((obj.width || 1) > maxWidth) obj.scaleX = maxWidth / obj.width;
+  obj.setCoords();
+}
+function setOrCreateText(role, text, defaults) {
+  let obj = roleObject(role);
+  if (!obj) {
+    obj = new fabric.IText(text || "", Object.assign({ role, fontFamily:"Arial", fill:"#111111", originX:"left", originY:"top" }, defaults));
+    canvas.add(obj);
+  } else {
+    obj.set({ text: text || "" });
+  }
+  fitTextObject(obj, defaults.maxWidth || W * 0.55);
+  return obj;
+}
+function setOrCreateImage(role, dataUrl, defaults) {
+  return new Promise(resolve => {
+    if (!dataUrl) return resolve(roleObject(role));
+    fabric.Image.fromURL(dataUrl, img => {
+      const old = roleObject(role);
+      const keep = old ? { left:old.left, top:old.top, scaleX:old.scaleX, scaleY:old.scaleY, angle:old.angle, originX:old.originX, originY:old.originY } : defaults;
+      if (old) canvas.remove(old);
+      img.set(Object.assign({ role, originX:"center", originY:"center" }, keep));
+      if (!old) {
+        const s = Math.min((defaults.maxW || W*.25)/img.width, (defaults.maxH || H*.45)/img.height);
+        img.scale(s);
+      }
+      rememberImage(img);
+      canvas.add(img);
+      resolve(img);
+    }, { crossOrigin:"anonymous" });
+  });
+}
+function ensurePoweredBy() {
+  let p = roleObject("poweredBy");
+  const text = "Powered by Tabaja Solution";
+  if (!p) {
+    p = new fabric.Text(text, { role:"poweredBy", left:W/2, top:H-18, originX:"center", originY:"center", fontFamily:"Arial", fontSize:13, fontWeight:"bold", fill:"#555555", selectable:false, evented:false, excludeFromExport:false });
+    canvas.add(p);
+  } else {
+    p.set({ text, selectable:false, evented:false, left:Math.min(Math.max(p.left||W/2,30),W-30), top:Math.min(p.top||H-18,H-12) });
+  }
+  canvas.bringToFront(p);
+}
+async function generateEmployeeCard() {
+  const landscape = orientation === "landscape";
+  const company = $("builderCompany").value.trim();
+  const name = $("builderName").value.trim();
+  const job = $("builderJob").value.trim();
+  const phone = $("builderPhone").value.trim();
+  const email = $("builderEmail").value.trim();
+  const website = $("builderWebsite").value.trim();
+  const tx = landscape ? W*.38 : W*.12;
+  setOrCreateText("employeeCompany", company, { left:tx, top:H*.14, fontSize:30, fontWeight:"bold", fill:"#174a7a", maxWidth:landscape?W*.52:W*.76 });
+  setOrCreateText("employeeName", name, { left:tx, top:H*.36, fontSize:44, fontWeight:"bold", fill:"#111111", maxWidth:landscape?W*.55:W*.76 });
+  setOrCreateText("employeeJob", job, { left:tx, top:H*.49, fontSize:27, fill:"#355b7d", maxWidth:landscape?W*.52:W*.76 });
+  setOrCreateText("employeePhone", phone, { left:tx, top:H*.64, fontSize:21, fill:"#222222", maxWidth:landscape?W*.52:W*.76 });
+  setOrCreateText("employeeEmail", email, { left:tx, top:H*.72, fontSize:18, fill:"#333333", maxWidth:landscape?W*.52:W*.76 });
+  setOrCreateText("employeeWebsite", website, { left:tx, top:H*.79, fontSize:18, fill:"#333333", maxWidth:landscape?W*.52:W*.76 });
+  await setOrCreateImage("employeePhoto", builderPhotoData, { left:landscape?W*.20:W*.50, top:landscape?H*.52:H*.35, maxW:landscape?W*.25:W*.46, maxH:landscape?H*.58:H*.34 });
+  await setOrCreateImage("companyLogo", builderLogoData, { left:landscape?W*.82:W*.50, top:landscape?H*.16:H*.10, maxW:landscape?W*.23:W*.42, maxH:H*.18 });
+  ensurePoweredBy();
+  canvas.requestRenderAll();
+  saveCurrentSide();
+  status("Employee card generated. Move any item once, then Update keeps its position.");
+}
+$("generateEmployeeBtn").onclick = generateEmployeeCard;
+$("replacePhotoBtn").onclick = () => $("builderPhoto").click();
+$("saveTemplateBtn").onclick = () => {
+  ensurePoweredBy(); saveCurrentSide();
+  localStorage.setItem(V6_TEMPLATE_KEY, snapshot());
+  status("Template saved on this device.");
+};
+$("loadTemplateBtn").onclick = async () => {
+  const saved = localStorage.getItem(V6_TEMPLATE_KEY);
+  if (!saved) return alert("No saved template on this device.");
+  await loadSnapshot(saved); ensurePoweredBy(); saveCurrentSide();
+  status("Template loaded. Enter new employee details and press Generate / Update.");
+};
+
+// Protect the mandatory footer from normal deletion.
+const oldDeleteHandler = $("deleteBtn").onclick;
+$("deleteBtn").onclick = () => {
+  const protectedSelected = canvas.getActiveObjects().some(o => o.role === "poweredBy");
+  if (protectedSelected) return status("Powered by Tabaja Solution is protected.");
+  oldDeleteHandler();
+};
+canvas.on("after:render", () => {
+  const p = roleObject("poweredBy");
+  if (p) { p.selectable = false; p.evented = false; }
+});

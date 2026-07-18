@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Tabaja Card Designer V5.0 VECTOR TEST</title>
-  <link rel="stylesheet" href="style.css?v=5.0-vector.1">
+  <title>Tabaja Card Designer V6.0 BETA</title>
+  <link rel="stylesheet" href="style.css?v=6.0-beta.1">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
@@ -30,7 +30,7 @@
   <div id="appShell" class="app-shell hidden">
     <header>
       <div>
-        <h1>Tabaja Card Designer V5.0 VECTOR TEST</h1>
+        <h1>Tabaja Card Designer V6.0 BETA</h1>
         <small>Professional CR80 PVC Card Designer • Powered by Tabaja Solution</small>
       </div>
       <div class="top-actions">
@@ -89,6 +89,28 @@
       </section>
 
       <aside class="properties">
+
+        <div class="builder-panel">
+          <h3>Employee Card Builder</h3>
+          <label>Company Name</label><input id="builderCompany" placeholder="Company name">
+          <label>Employee Name</label><input id="builderName" placeholder="Full name">
+          <label>Job Title</label><input id="builderJob" placeholder="Job title">
+          <label>Phone</label><input id="builderPhone" placeholder="Company phone">
+          <label>Email</label><input id="builderEmail" placeholder="Email (optional)">
+          <label>Website</label><input id="builderWebsite" placeholder="Website (optional)">
+          <label>Employee Photo</label><input id="builderPhoto" type="file" accept="image/*">
+          <label>Company Logo</label><input id="builderLogo" type="file" accept="image/*">
+          <div class="builder-actions">
+            <button class="primary" id="generateEmployeeBtn">Generate / Update Card</button>
+            <button id="replacePhotoBtn">Replace Photo</button>
+          </div>
+          <div class="builder-actions">
+            <button id="saveTemplateBtn">Save Template</button>
+            <button id="loadTemplateBtn">Load Template</button>
+          </div>
+          <p class="builder-note">You can move and resize the generated elements. Updating the employee keeps their positions.</p>
+        </div>
+        <hr>
         <h3>Properties</h3>
         <label>Text</label>
         <input id="textValue" placeholder="Selected text">
@@ -119,6 +141,6 @@
     </main>
   </div>
 
-  <script src="app.js?v=5.0-vector.1"></script>
+  <script src="app.js?v=6.0-beta.1"></script>
 </body>
 </html>
