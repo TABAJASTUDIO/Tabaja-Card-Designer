@@ -598,11 +598,14 @@ async function printSides(list) {
 function buildPrintJpegPdf(images, pxW, pxH, mmW, mmH) {
   const pageW = mmW * 72 / 25.4;
   const pageH = mmH * 72 / 25.4;
-  // 0.80 mm print bleed slightly enlarges the artwork beyond every card edge
-  // to remove the last thin white strip without changing the design canvas.
-  const bleed = 0.80 * 72 / 25.4;
-  const drawW = pageW + bleed * 2;
-  const drawH = pageH + bleed * 2;
+  // Keep the proven 0.80 mm bleed on the left, right and top.
+  // Add a little more only below the card because the ZC300 feed leaves
+  // a very thin white strip on the trailing (bottom) edge.
+  const bleedX = 0.80 * 72 / 25.4;
+  const bleedTop = 0.80 * 72 / 25.4;
+  const bleedBottom = 1.60 * 72 / 25.4;
+  const drawW = pageW + bleedX * 2;
+  const drawH = pageH + bleedTop + bleedBottom;
   const objects = [];
   const addObj = bytes => { objects.push(bytes); return objects.length; };
   const pagesId = 2;
@@ -619,7 +622,7 @@ function buildPrintJpegPdf(images, pxW, pxH, mmW, mmH) {
     ]));
 
     const content = asciiBytes(
-      `q\n${drawW.toFixed(3)} 0 0 ${drawH.toFixed(3)} ${(-bleed).toFixed(3)} ${(-bleed).toFixed(3)} cm\n/Im${i + 1} Do\nQ`
+      `q\n${drawW.toFixed(3)} 0 0 ${drawH.toFixed(3)} ${(-bleedX).toFixed(3)} ${(-bleedBottom).toFixed(3)} cm\n/Im${i + 1} Do\nQ`
     );
     const contentId = addObj(concatBytes([
       asciiBytes(`<< /Length ${content.length} >>\nstream\n`),
@@ -685,5 +688,5 @@ canvas.setBackgroundColor("#ffffff", canvas.renderAll.bind(canvas));
 sides.front = snapshot();
 sides.back = snapshot();
 updateCardInfo();
-status("V4.5 ready — CR80 print with 0.8 mm bleed active.");
+status("V4.6 ready — extra bottom-edge bleed active.");
 if (isLoggedIn()) showApp(); else showLogin();

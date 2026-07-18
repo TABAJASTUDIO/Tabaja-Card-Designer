@@ -50,3 +50,9 @@ The old `scripts` and `styles` folders are not used by this version.
 ## V4.5 final print bleed
 - Added 0.80 mm bleed on all four sides for print output only.
 - Design canvas, Fill Card, rotate, front/back, and exact CR80 PDF sizing are unchanged.
+
+
+## V4.6 bottom-edge correction
+- Kept 0.80 mm bleed on left, right and top.
+- Increased only the bottom print bleed to 1.60 mm to remove the remaining thin white strip.
+- No other design, fill, rotate, front/back or PDF-size behaviour was changed.
