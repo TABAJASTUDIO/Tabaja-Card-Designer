@@ -56,3 +56,9 @@ The old `scripts` and `styles` folders are not used by this version.
 - Kept 0.80 mm bleed on left, right and top.
 - Increased only the bottom print bleed to 1.60 mm to remove the remaining thin white strip.
 - No other design, fill, rotate, front/back or PDF-size behaviour was changed.
+
+
+## V4.7 layered final print engine
+- Print bleed is applied only to the background layer.
+- Text, logos, QR codes, barcodes, photos and other foreground objects remain at exact CR80 size and position.
+- Prevents the bottom edge correction from cutting or enlarging important card content.

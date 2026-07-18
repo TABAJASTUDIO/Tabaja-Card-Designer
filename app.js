@@ -566,46 +566,107 @@ $("pdfBtn").onclick = async () => {
   } catch (e) { alert("PDF export failed: " + e.message); }
 };
 
+async function renderSnapshotForPrint(snapshotJson) {
+  return new Promise((resolve, reject) => {
+    const bgEl = document.createElement("canvas");
+    const fgEl = document.createElement("canvas");
+    bgEl.width = fgEl.width = W;
+    bgEl.height = fgEl.height = H;
+
+    const bgCanvas = new fabric.StaticCanvas(bgEl, {
+      width: W, height: H, backgroundColor: "#ffffff", renderOnAddRemove: false
+    });
+
+    bgCanvas.loadFromJSON(snapshotJson || emptySnapshot(), () => {
+      try {
+        bgCanvas.setDimensions({ width: W, height: H });
+        bgCanvas.getObjects().forEach(o => { o.visible = o.role === "background"; });
+        bgCanvas.renderAll();
+        const backgroundJpeg = bgCanvas.toDataURL({
+          format: "jpeg", quality: 1, multiplier: 1, enableRetinaScaling: false
+        });
+        bgCanvas.dispose();
+
+        const fgCanvas = new fabric.StaticCanvas(fgEl, {
+          width: W, height: H, backgroundColor: null, renderOnAddRemove: false
+        });
+
+        fgCanvas.loadFromJSON(snapshotJson || emptySnapshot(), () => {
+          try {
+            fgCanvas.setDimensions({ width: W, height: H });
+            fgCanvas.backgroundColor = null;
+            fgCanvas.getObjects().forEach(o => { o.visible = o.role !== "background"; });
+            fgCanvas.renderAll();
+
+            const ctx = fgEl.getContext("2d", { willReadFrequently: true });
+            const rgba = ctx.getImageData(0, 0, W, H).data;
+            const pixelCount = W * H;
+            const rgb = new Uint8Array(pixelCount * 3);
+            const alpha = new Uint8Array(pixelCount);
+            for (let i = 0, j = 0, k = 0; i < rgba.length; i += 4, j += 3, k++) {
+              rgb[j] = rgba[i];
+              rgb[j + 1] = rgba[i + 1];
+              rgb[j + 2] = rgba[i + 2];
+              alpha[k] = rgba[i + 3];
+            }
+            fgCanvas.dispose();
+            resolve({ backgroundJpeg, foregroundRgb: rgb, foregroundAlpha: alpha });
+          } catch (e) {
+            fgCanvas.dispose();
+            reject(e);
+          }
+        });
+      } catch (e) {
+        bgCanvas.dispose();
+        reject(e);
+      }
+    });
+  });
+}
+
 async function printSides(list) {
   try {
     saveCurrentSide();
 
-    // IMPORTANT: Edge reports the Zebra card stock as a pixel-sized sheet
-    // (for example 1006 × 640 px). Browser HTML printing then treats those
-    // pixels as 96-DPI CSS pixels and the Zebra driver scales the card down.
-    // To preserve the real CR80 physical size, build a PDF whose MediaBox is
-    // expressed in PDF points (85.60 × 53.98 mm), then download that exact file.
-    const jpegBytes = [];
+    // V4.7: the bleed is applied only to the background layer.
+    // Every text, logo, QR, barcode and employee photo is drawn again at
+    // the exact CR80 coordinates, so no important content is enlarged or cut.
+    const printLayers = [];
     for (const side of list) {
-      const jpeg = await exportSide(side, "jpeg", 1);
-      jpegBytes.push(dataUrlToBytes(jpeg));
+      const layer = await renderSnapshotForPrint(sides[side]);
+      printLayers.push({
+        backgroundJpeg: dataUrlToBytes(layer.backgroundJpeg),
+        foregroundRgb: layer.foregroundRgb,
+        foregroundAlpha: layer.foregroundAlpha
+      });
     }
 
     const c = CARD[orientation];
-    const pdfBytes = buildPrintJpegPdf(jpegBytes, W, H, c.mmW, c.mmH);
+    const pdfBytes = buildLayeredPrintPdf(printLayers, W, H, c.mmW, c.mmH);
     const fileName = list.length === 2
-      ? `Tabaja-PRINT-Front-Back-${orientation}-CR80.pdf`
-      : `Tabaja-PRINT-${list[0]}-${orientation}-CR80.pdf`;
+      ? `Tabaja-PRINT-Front-Back-${orientation}-CR80-V4.7.pdf`
+      : `Tabaja-PRINT-${list[0]}-${orientation}-CR80-V4.7.pdf`;
 
     downloadBlob(new Blob([pdfBytes], { type: "application/pdf" }), fileName);
-    status("Exact-size CR80 PDF downloaded. Open it and print at Actual size / 100%.");
-    alert("Exact-size CR80 print file downloaded.\n\nOpen the PDF, choose Zebra ZC300, then select Actual size / 100% and print.");
+    status("V4.7 layered CR80 PDF downloaded — background bleed, protected content.");
+    alert("V4.7 exact-size CR80 print file downloaded.\n\nThe background has bleed, while text and all other objects remain at their exact size.\n\nOpen the PDF, choose Zebra ZC300, then select Actual size / 100% and print.");
   } catch (e) {
     alert("Print preparation failed: " + e.message);
   }
 }
 
-function buildPrintJpegPdf(images, pxW, pxH, mmW, mmH) {
+function buildLayeredPrintPdf(layers, pxW, pxH, mmW, mmH) {
   const pageW = mmW * 72 / 25.4;
   const pageH = mmH * 72 / 25.4;
-  // Keep the proven 0.80 mm bleed on the left, right and top.
-  // Add a little more only below the card because the ZC300 feed leaves
-  // a very thin white strip on the trailing (bottom) edge.
+
+  // Background-only compensation. Keep the previously successful edge reach,
+  // but never scale the foreground/content layer.
   const bleedX = 0.80 * 72 / 25.4;
   const bleedTop = 0.80 * 72 / 25.4;
   const bleedBottom = 1.60 * 72 / 25.4;
-  const drawW = pageW + bleedX * 2;
-  const drawH = pageH + bleedTop + bleedBottom;
+  const bgDrawW = pageW + bleedX * 2;
+  const bgDrawH = pageH + bleedTop + bleedBottom;
+
   const objects = [];
   const addObj = bytes => { objects.push(bytes); return objects.length; };
   const pagesId = 2;
@@ -614,15 +675,29 @@ function buildPrintJpegPdf(images, pxW, pxH, mmW, mmH) {
   addObj(asciiBytes("<< /Type /Catalog /Pages 2 0 R >>"));
   addObj(asciiBytes("PAGES_PLACEHOLDER"));
 
-  images.forEach((imgBytes, i) => {
-    const imageId = addObj(concatBytes([
-      asciiBytes(`<< /Type /XObject /Subtype /Image /Width ${pxW} /Height ${pxH} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${imgBytes.length} >>\nstream\n`),
-      imgBytes,
+  layers.forEach((layer, i) => {
+    const n = i + 1;
+    const bgId = addObj(concatBytes([
+      asciiBytes(`<< /Type /XObject /Subtype /Image /Width ${pxW} /Height ${pxH} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${layer.backgroundJpeg.length} >>\nstream\n`),
+      layer.backgroundJpeg,
+      asciiBytes("\nendstream")
+    ]));
+
+    const alphaId = addObj(concatBytes([
+      asciiBytes(`<< /Type /XObject /Subtype /Image /Width ${pxW} /Height ${pxH} /ColorSpace /DeviceGray /BitsPerComponent 8 /Length ${layer.foregroundAlpha.length} >>\nstream\n`),
+      layer.foregroundAlpha,
+      asciiBytes("\nendstream")
+    ]));
+
+    const fgId = addObj(concatBytes([
+      asciiBytes(`<< /Type /XObject /Subtype /Image /Width ${pxW} /Height ${pxH} /ColorSpace /DeviceRGB /BitsPerComponent 8 /SMask ${alphaId} 0 R /Length ${layer.foregroundRgb.length} >>\nstream\n`),
+      layer.foregroundRgb,
       asciiBytes("\nendstream")
     ]));
 
     const content = asciiBytes(
-      `q\n${drawW.toFixed(3)} 0 0 ${drawH.toFixed(3)} ${(-bleedX).toFixed(3)} ${(-bleedBottom).toFixed(3)} cm\n/Im${i + 1} Do\nQ`
+      `q\n${bgDrawW.toFixed(3)} 0 0 ${bgDrawH.toFixed(3)} ${(-bleedX).toFixed(3)} ${(-bleedBottom).toFixed(3)} cm\n/Bg${n} Do\nQ\n` +
+      `q\n${pageW.toFixed(3)} 0 0 ${pageH.toFixed(3)} 0 0 cm\n/Fg${n} Do\nQ`
     );
     const contentId = addObj(concatBytes([
       asciiBytes(`<< /Length ${content.length} >>\nstream\n`),
@@ -631,7 +706,7 @@ function buildPrintJpegPdf(images, pxW, pxH, mmW, mmH) {
     ]));
 
     const pageId = addObj(asciiBytes(
-      `<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 ${pageW.toFixed(3)} ${pageH.toFixed(3)}] /CropBox [0 0 ${pageW.toFixed(3)} ${pageH.toFixed(3)}] /Resources << /XObject << /Im${i + 1} ${imageId} 0 R >> >> /Contents ${contentId} 0 R >>`
+      `<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 ${pageW.toFixed(3)} ${pageH.toFixed(3)}] /CropBox [0 0 ${pageW.toFixed(3)} ${pageH.toFixed(3)}] /Resources << /XObject << /Bg${n} ${bgId} 0 R /Fg${n} ${fgId} 0 R >> >> /Contents ${contentId} 0 R >>`
     ));
     pageIds.push(pageId);
   });
@@ -688,5 +763,5 @@ canvas.setBackgroundColor("#ffffff", canvas.renderAll.bind(canvas));
 sides.front = snapshot();
 sides.back = snapshot();
 updateCardInfo();
-status("V4.6 ready — extra bottom-edge bleed active.");
+status("V4.7 ready — background-only bleed with protected content.");
 if (isLoggedIn()) showApp(); else showLogin();
