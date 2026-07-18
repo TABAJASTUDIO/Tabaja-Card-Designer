@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tabaja Card Designer V3 Production</title>
+  <title>Tabaja Card Designer V3.1.1</title>
 
   <link rel="stylesheet" href="styles/style.css" />
 
@@ -15,7 +15,7 @@
 <body>
   <header class="topbar">
     <div class="brand">
-      <strong>Tabaja Card Designer V3</strong>
+      <strong>Tabaja Card Designer V3.1</strong>
       <span>Professional CR80 PVC Card Designer • Powered by Tabaja Solution</span>
     </div>
 
@@ -25,7 +25,8 @@
       <button id="openBtn">Open Project</button>
       <button id="exportPngBtn">Export PNG</button>
       <button id="exportPdfBtn">Export PDF</button>
-      <button id="printBtn" class="primary">Print</button>
+      <button id="printBtn" class="primary">Print Current</button>
+      <button id="printBothBtn" class="primary">Print Front + Back</button>
     </div>
   </header>
 
@@ -37,6 +38,10 @@
       <button id="addImageBtn">Add Image</button>
       <button id="addLogoBtn">Add Logo</button>
       <button id="backgroundBtn">Background Image</button>
+      <button id="fillCardBtn">Fill Card</button>
+      <button id="fitCardBtn">Fit Inside</button>
+      <button id="cropModeBtn">Crop Mode</button>
+      <button id="resetImageBtn">Reset Image</button>
       <button id="qrBtn">QR Code</button>
       <button id="barcodeBtn">Barcode</button>
       <button id="duplicateBtn">Duplicate</button>
@@ -136,7 +141,7 @@
       <div class="info">
         <strong>How to use</strong>
         <span>Select any object, then drag, resize or rotate it.</span>
-        <span>You can also drop an image directly onto the card.</span>
+        <span>You can also drop an image directly onto the card.</span><span>Crop Mode: select an image, press Crop Mode, then drag/resize until framing is correct.</span>
       </div>
 
       <div class="info">
