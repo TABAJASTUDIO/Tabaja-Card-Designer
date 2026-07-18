@@ -570,85 +570,26 @@ async function printSides(list) {
   try {
     saveCurrentSide();
 
-    // Flatten each side to solid RGB JPEG for reliable full-colour Zebra output.
-    const images = [];
-    for (const side of list) images.push(await exportSide(side, "jpeg", 1));
+    // IMPORTANT: Edge reports the Zebra card stock as a pixel-sized sheet
+    // (for example 1006 × 640 px). Browser HTML printing then treats those
+    // pixels as 96-DPI CSS pixels and the Zebra driver scales the card down.
+    // To preserve the real CR80 physical size, build a PDF whose MediaBox is
+    // expressed in PDF points (85.60 × 53.98 mm), then download that exact file.
+    const jpegBytes = [];
+    for (const side of list) {
+      const jpeg = await exportSide(side, "jpeg", 1);
+      jpegBytes.push(dataUrlToBytes(jpeg));
+    }
 
-    // Edge/Zebra exposes the custom card page in pixels (for example 1006×640).
-    // Use the exact exported canvas pixel dimensions for the print page so the
-    // image fills the whole driver page instead of sitting as an 85.6 mm box
-    // inside a much larger pixel-defined sheet.
-    const pageW = W;
-    const pageH = H;
-    const frame = document.createElement("iframe");
-    frame.setAttribute("aria-hidden", "true");
-    frame.style.position = "fixed";
-    frame.style.right = "0";
-    frame.style.bottom = "0";
-    frame.style.width = "1px";
-    frame.style.height = "1px";
-    frame.style.border = "0";
-    frame.style.opacity = "0";
-    document.body.appendChild(frame);
+    const c = CARD[orientation];
+    const pdfBytes = buildPrintJpegPdf(jpegBytes, W, H, c.mmW, c.mmH);
+    const fileName = list.length === 2
+      ? `Tabaja-PRINT-Front-Back-${orientation}-CR80.pdf`
+      : `Tabaja-PRINT-${list[0]}-${orientation}-CR80.pdf`;
 
-    const pages = images.map((src, i) =>
-      `<section class="card-page"><img src="${src}" alt="Card side ${i + 1}"></section>`
-    ).join("");
-
-    const doc = frame.contentDocument;
-    doc.open();
-    doc.write(`<!doctype html>
-<html>
-<head>
-<meta charset="utf-8">
-<title>Tabaja Card Print</title>
-<style>
-  @page { size: ${pageW}px ${pageH}px; margin: 0; }
-  * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-  html, body { width: ${pageW}px; height: ${pageH}px; margin: 0 !important; padding: 0 !important; background: white; }
-  .card-page {
-    position: relative;
-    width: ${pageW}px;
-    height: ${pageH}px;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    background: white;
-    page-break-after: always;
-    break-after: page;
-  }
-  .card-page:last-child { page-break-after: auto; break-after: auto; }
-  .card-page img {
-    position: absolute;
-    left: -2px;
-    top: -2px;
-    width: calc(100% + 4px);
-    height: calc(100% + 4px);
-    margin: 0;
-    padding: 0;
-    display: block;
-  }
-</style>
-</head>
-<body>${pages}</body>
-</html>`);
-    doc.close();
-
-    const waitForImages = () => Promise.all(
-      Array.from(doc.images).map(img => img.complete ? Promise.resolve() : new Promise(resolve => {
-        img.onload = resolve;
-        img.onerror = resolve;
-      }))
-    );
-
-    await waitForImages();
-    await new Promise(resolve => setTimeout(resolve, 250));
-
-    frame.contentWindow.focus();
-    frame.contentWindow.print();
-    status(list.length === 2 ? "Front + Back sent directly to print." : "Card sent directly to print.");
-
-    setTimeout(() => frame.remove(), 3000);
+    downloadBlob(new Blob([pdfBytes], { type: "application/pdf" }), fileName);
+    status("Exact-size CR80 PDF downloaded. Open it and print at Actual size / 100%.");
+    alert("Exact-size CR80 print file downloaded.\n\nOpen the PDF, choose Zebra ZC300, then select Actual size / 100% and print.");
   } catch (e) {
     alert("Print preparation failed: " + e.message);
   }
@@ -743,5 +684,5 @@ canvas.setBackgroundColor("#ffffff", canvas.renderAll.bind(canvas));
 sides.front = snapshot();
 sides.back = snapshot();
 updateCardInfo();
-status("V4.1 ready — print repair active.");
+status("V4.4 ready — exact CR80 PDF print active.");
 if (isLoggedIn()) showApp(); else showLogin();

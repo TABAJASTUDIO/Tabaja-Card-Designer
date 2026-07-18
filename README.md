@@ -39,3 +39,9 @@ The old `scripts` and `styles` folders are not used by this version.
 - Print page now uses the exact canvas pixel size instead of millimetres.
 - Fixes cards appearing small inside the Zebra custom pixel page.
 - Front and Back Fill Card behaviour remains unchanged.
+
+
+## V4.4 exact-size print repair
+- Browser direct printing was removed because Edge exposes Zebra CR80 stock as a pixel-sized page and scales the artwork down.
+- Print buttons now generate an exact CR80 PDF using a physical PDF MediaBox of 85.60 × 53.98 mm.
+- Open the downloaded PDF and print with Actual size / 100%.
