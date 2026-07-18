@@ -114,11 +114,35 @@ function fillCard() {
   if (!o) return status("Select an image first.");
   rememberImage(o);
   clearClip(o);
-  const scale = Math.max(W / o.width, H / o.height);
-  o.set({ scaleX: scale, scaleY: scale, left: W / 2, top: H / 2, originX: "center", originY: "center" });
+
+  if (currentSide === "back") {
+    // The back side must show the complete supplied artwork without cropping.
+    // Stretch it exactly to CR80 dimensions so one click is enough.
+    o.set({
+      scaleX: W / o.width,
+      scaleY: H / o.height,
+      left: W / 2,
+      top: H / 2,
+      originX: "center",
+      originY: "center"
+    });
+    status("Back fitted exactly to the card — no crop.");
+  } else {
+    // Keep the proven front-side cover behaviour unchanged.
+    const scale = Math.max(W / o.width, H / o.height);
+    o.set({
+      scaleX: scale,
+      scaleY: scale,
+      left: W / 2,
+      top: H / 2,
+      originX: "center",
+      originY: "center"
+    });
+    status("Fill Card applied.");
+  }
+
   o.setCoords();
   canvas.requestRenderAll();
-  status("Fill Card applied.");
 }
 
 function fitInside() {
@@ -546,30 +570,80 @@ async function printSides(list) {
   try {
     saveCurrentSide();
 
-    // Render every side on a solid white canvas and flatten to high-quality JPEG.
-    // This prevents transparent pixels from being interpreted as black by some
-    // Windows / Edge / Zebra driver combinations.
-    const jpegBytes = [];
-    for (const side of list) {
-      const jpeg = await exportSide(side, "jpeg", 1);
-      jpegBytes.push(dataUrlToBytes(jpeg));
-    }
+    // Flatten each side to solid RGB JPEG for reliable full-colour Zebra output.
+    const images = [];
+    for (const side of list) images.push(await exportSide(side, "jpeg", 1));
 
     const c = CARD[orientation];
-    const pdfBytes = buildPrintJpegPdf(jpegBytes, W, H, c.mmW, c.mmH);
-    const blob = new Blob([pdfBytes], { type: "application/pdf" });
-    const url = URL.createObjectURL(blob);
-    const printWindow = window.open(url, "_blank");
+    const frame = document.createElement("iframe");
+    frame.setAttribute("aria-hidden", "true");
+    frame.style.position = "fixed";
+    frame.style.right = "0";
+    frame.style.bottom = "0";
+    frame.style.width = "1px";
+    frame.style.height = "1px";
+    frame.style.border = "0";
+    frame.style.opacity = "0";
+    document.body.appendChild(frame);
 
-    if (!printWindow) {
-      downloadBlob(blob, `Tabaja-Card-PRINT-${list.join("-")}-${orientation}.pdf`);
-      alert("The print-ready PDF was downloaded. Open it and print at Actual size / 100% with margins set to None.");
-    } else {
-      status(list.length === 2
-        ? "Print-ready Front + Back PDF opened. Print at Actual size / 100%, margins None."
-        : "Print-ready card PDF opened. Print at Actual size / 100%, margins None.");
-      setTimeout(() => URL.revokeObjectURL(url), 60000);
-    }
+    const pages = images.map((src, i) =>
+      `<section class="card-page"><img src="${src}" alt="Card side ${i + 1}"></section>`
+    ).join("");
+
+    const doc = frame.contentDocument;
+    doc.open();
+    doc.write(`<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Tabaja Card Print</title>
+<style>
+  @page { size: ${c.mmW}mm ${c.mmH}mm; margin: 0; }
+  * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  html, body { width: ${c.mmW}mm; margin: 0 !important; padding: 0 !important; background: white; }
+  .card-page {
+    position: relative;
+    width: ${c.mmW}mm;
+    height: ${c.mmH}mm;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: white;
+    page-break-after: always;
+    break-after: page;
+  }
+  .card-page:last-child { page-break-after: auto; break-after: auto; }
+  .card-page img {
+    position: absolute;
+    left: -0.30mm;
+    top: -0.30mm;
+    width: calc(100% + 0.60mm);
+    height: calc(100% + 0.60mm);
+    margin: 0;
+    padding: 0;
+    display: block;
+  }
+</style>
+</head>
+<body>${pages}</body>
+</html>`);
+    doc.close();
+
+    const waitForImages = () => Promise.all(
+      Array.from(doc.images).map(img => img.complete ? Promise.resolve() : new Promise(resolve => {
+        img.onload = resolve;
+        img.onerror = resolve;
+      }))
+    );
+
+    await waitForImages();
+    await new Promise(resolve => setTimeout(resolve, 250));
+
+    frame.contentWindow.focus();
+    frame.contentWindow.print();
+    status(list.length === 2 ? "Front + Back sent directly to print." : "Card sent directly to print.");
+
+    setTimeout(() => frame.remove(), 3000);
   } catch (e) {
     alert("Print preparation failed: " + e.message);
   }
