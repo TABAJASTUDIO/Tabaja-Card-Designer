@@ -3,11 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Tabaja Card Designer V4.7.2 SAFE</title>
-  <link rel="stylesheet" href="style.css?v=4.7.2-safe.0">
+  <title>Tabaja Card Designer V5.0 VECTOR TEST</title>
+  <link rel="stylesheet" href="style.css?v=5.0-vector.1">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/svg2pdf.js@2.5.0/dist/svg2pdf.umd.min.js"></script>
 </head>
 <body>
   <section id="loginScreen" class="login-screen">
@@ -28,7 +30,7 @@
   <div id="appShell" class="app-shell hidden">
     <header>
       <div>
-        <h1>Tabaja Card Designer V4.7.2 SAFE</h1>
+        <h1>Tabaja Card Designer V5.0 VECTOR TEST</h1>
         <small>Professional CR80 PVC Card Designer • Powered by Tabaja Solution</small>
       </div>
       <div class="top-actions">
@@ -36,8 +38,10 @@
         <button id="saveBtn">Save</button>
         <button id="openBtn">Open Project</button>
         <button id="pngBtn">Export PNG</button>
-        <button id="pdfBtn">Export PDF</button>
-        <button class="primary" id="printBtn">Print Current (Exact)</button>
+        <button id="pdfBtn">Export PDF (Stable)</button>
+        <button class="primary" id="vectorPdfBtn">Export Vector PDF V5</button>
+        <button class="primary" id="printBtn">Print Current (Stable)</button>
+        <button class="primary" id="vectorPrintBtn">Print Vector V5</button>
         <button class="primary" id="printBothBtn">Print Front + Back (Exact)</button>
         <button id="logoutBtn">Logout</button>
       </div>
@@ -115,6 +119,6 @@
     </main>
   </div>
 
-  <script src="app.js?v=4.7.2-safe.0"></script>
+  <script src="app.js?v=5.0-vector.1"></script>
 </body>
 </html>

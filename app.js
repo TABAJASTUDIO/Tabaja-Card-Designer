@@ -52,7 +52,7 @@ $("logoutBtn").onclick = () => {
 function snapshot() {
   return JSON.stringify(canvas.toJSON([
     "role", "originalScaleX", "originalScaleY", "originalLeft", "originalTop",
-    "originalOriginX", "originalOriginY", "cropActive"
+    "originalOriginX", "originalOriginY", "cropActive", "dataValue"
   ]));
 }
 
@@ -245,6 +245,51 @@ $("cropBtn").onclick = toggleCrop;
 $("resetImageBtn").onclick = resetImage;
 $("rotateImageBtn").onclick = rotateImage90;
 
+function gcd(a, b) {
+  a = Math.abs(a); b = Math.abs(b);
+  while (b) { const t = b; b = a % b; a = t; }
+  return a;
+}
+
+function qrCanvasToVectorGroup(sourceCanvas, value) {
+  const ctx = sourceCanvas.getContext("2d", { willReadFrequently: true });
+  const w = sourceCanvas.width, h = sourceCanvas.height;
+  const data = ctx.getImageData(0, 0, w, h).data;
+  const dark = (x, y) => {
+    const i = (y * w + x) * 4;
+    return data[i] < 128 && data[i + 1] < 128 && data[i + 2] < 128 && data[i + 3] > 0;
+  };
+  let minX=w, minY=h, maxX=-1, maxY=-1;
+  for (let y=0; y<h; y++) for (let x=0; x<w; x++) if (dark(x,y)) {
+    if (x<minX) minX=x; if (x>maxX) maxX=x; if (y<minY) minY=y; if (y>maxY) maxY=y;
+  }
+  if (maxX < 0) throw new Error("Empty QR code");
+  let unit = 0;
+  for (let y=minY; y<=maxY; y++) {
+    let last = dark(minX,y), run=1;
+    for (let x=minX+1; x<=maxX; x++) {
+      const now=dark(x,y);
+      if (now===last) run++; else { unit = unit ? gcd(unit,run) : run; run=1; last=now; }
+    }
+    unit = unit ? gcd(unit,run) : run;
+  }
+  if (!unit || unit < 1) unit = 1;
+  const cols = Math.round((maxX-minX+1)/unit);
+  const rows = Math.round((maxY-minY+1)/unit);
+  const rects=[];
+  for (let r=0; r<rows; r++) {
+    let c=0;
+    while (c<cols) {
+      if (!dark(Math.min(maxX, minX + Math.floor((c+0.5)*unit)), Math.min(maxY, minY + Math.floor((r+0.5)*unit)))) { c++; continue; }
+      const start=c;
+      while (c<cols && dark(Math.min(maxX, minX + Math.floor((c+0.5)*unit)), Math.min(maxY, minY + Math.floor((r+0.5)*unit)))) c++;
+      rects.push(new fabric.Rect({ left:start, top:r, width:c-start, height:1, fill:"#000000", strokeWidth:0, selectable:false, evented:false }));
+    }
+  }
+  rects.unshift(new fabric.Rect({ left:-4, top:-4, width:cols+8, height:rows+8, fill:"#ffffff", strokeWidth:0, selectable:false, evented:false }));
+  return new fabric.Group(rects, { role:"qr", dataValue:value, originX:"center", originY:"center" });
+}
+
 $("qrBtn").onclick = () => {
   const v = prompt("Enter QR link or text:");
   if (!v) return;
@@ -253,26 +298,33 @@ $("qrBtn").onclick = () => {
   setTimeout(() => {
     const qrCanvas = d.querySelector("canvas");
     if (!qrCanvas) return alert("QR code could not be created.");
-    fabric.Image.fromURL(qrCanvas.toDataURL("image/png"), img => {
-      img.scaleToWidth(Math.min(W, H) * 0.35);
-      img.set({ left: W / 2, top: H / 2, originX: "center", originY: "center" });
-      canvas.add(img).setActiveObject(img);
+    try {
+      const group = qrCanvasToVectorGroup(qrCanvas, v);
+      group.scaleToWidth(Math.min(W, H) * 0.35);
+      group.set({ left: W / 2, top: H / 2, originX: "center", originY: "center" });
+      canvas.add(group).setActiveObject(group);
       canvas.requestRenderAll();
-    });
+      status("Vector QR added.");
+    } catch (e) {
+      alert("Vector QR could not be created: " + e.message);
+    }
   }, 80);
 };
 
 $("barcodeBtn").onclick = () => {
   const v = prompt("Enter barcode value:");
   if (!v) return;
-  const c = document.createElement("canvas");
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   try {
-    JsBarcode(c, v, { format: "CODE128", displayValue: true, width: 3, height: 120, margin: 10 });
-    fabric.Image.fromURL(c.toDataURL("image/png"), img => {
-      img.scaleToWidth(W * 0.42);
-      img.set({ left: W / 2, top: H / 2, originX: "center", originY: "center" });
-      canvas.add(img).setActiveObject(img);
+    JsBarcode(svg, v, { format: "CODE128", displayValue: true, width: 3, height: 120, margin: 10 });
+    const markup = new XMLSerializer().serializeToString(svg);
+    fabric.loadSVGFromString(markup, (objects, options) => {
+      const group = fabric.util.groupSVGElements(objects, options);
+      group.set({ role: "barcode", dataValue: v, left: W / 2, top: H / 2, originX: "center", originY: "center" });
+      group.scaleToWidth(W * 0.42);
+      canvas.add(group).setActiveObject(group);
       canvas.requestRenderAll();
+      status("Vector barcode added.");
     });
   } catch (e) { alert("Invalid barcode value."); }
 };
@@ -299,7 +351,7 @@ $("duplicateBtn").onclick = () => {
     c.set({ left: (o.left || 0) + 25, top: (o.top || 0) + 25 });
     canvas.add(c).setActiveObject(c);
     canvas.requestRenderAll();
-  }, ["role", "originalScaleX", "originalScaleY", "originalLeft", "originalTop", "originalOriginX", "originalOriginY", "cropActive"]);
+  }, ["role", "originalScaleX", "originalScaleY", "originalLeft", "originalTop", "originalOriginX", "originalOriginY", "cropActive", "dataValue"]);
 };
 
 $("deleteBtn").onclick = () => {
@@ -658,6 +710,61 @@ function buildPrintJpegPdf(images, pxW, pxH, mmW, mmH) {
   return concatBytes(bodyParts);
 }
 
+async function snapshotToSvgElement(snapshotJson) {
+  return new Promise((resolve, reject) => {
+    const el = document.createElement("canvas");
+    const temp = new fabric.StaticCanvas(el, { width: W, height: H, backgroundColor: "#ffffff", renderOnAddRemove: false });
+    temp.loadFromJSON(snapshotJson || emptySnapshot(), () => {
+      try {
+        temp.setDimensions({ width: W, height: H });
+        temp.renderAll();
+        const svgText = temp.toSVG({ width: W, height: H, viewBox: { x: 0, y: 0, width: W, height: H } });
+        temp.dispose();
+        const doc = new DOMParser().parseFromString(svgText, "image/svg+xml");
+        const svg = doc.documentElement;
+        if (svg.querySelector("parsererror")) throw new Error("SVG parser error");
+        resolve(svg);
+      } catch (e) { temp.dispose(); reject(e); }
+    });
+  });
+}
+
+async function buildVectorPdf(list, useBleed = false) {
+  if (!window.jspdf || !window.jspdf.jsPDF) throw new Error("jsPDF did not load. Check internet connection.");
+  saveCurrentSide();
+  const c = CARD[orientation];
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ orientation: c.mmW >= c.mmH ? "landscape" : "portrait", unit: "mm", format: [c.mmW, c.mmH], compress: true, hotfixes: ["px_scaling"] });
+  for (let i=0; i<list.length; i++) {
+    if (i) pdf.addPage([c.mmW, c.mmH], c.mmW >= c.mmH ? "landscape" : "portrait");
+    const svg = await snapshotToSvgElement(sides[list[i]]);
+    const bleed = useBleed ? 0.35 : 0;
+    await pdf.svg(svg, { x: -bleed, y: -bleed, width: c.mmW + bleed*2, height: c.mmH + bleed*2 });
+  }
+  return pdf;
+}
+
+$("vectorPdfBtn").onclick = async () => {
+  try {
+    const both = confirm("Export Front and Back as VECTOR PDF?\nOK = both sides\nCancel = current side only");
+    const list = both ? ["front", "back"] : [currentSide];
+    status("Building vector PDF...");
+    const pdf = await buildVectorPdf(list, false);
+    pdf.save(`Tabaja-Card-V5-Vector-${orientation}.pdf`);
+    status("V5 vector PDF exported.");
+  } catch (e) { alert("Vector PDF failed: " + e.message); status("Vector PDF failed."); }
+};
+
+$("vectorPrintBtn").onclick = async () => {
+  try {
+    status("Building vector print PDF...");
+    const pdf = await buildVectorPdf([currentSide], true);
+    pdf.save(`Tabaja-PRINT-V5-Vector-${currentSide}-${orientation}-CR80.pdf`);
+    status("Vector CR80 PDF downloaded. Print at Actual size / 100%.");
+    alert("V5 VECTOR print file downloaded.\n\nOpen it and print at Actual size / 100%. Compare the small text with the stable PDF.");
+  } catch (e) { alert("Vector print failed: " + e.message); status("Vector print failed."); }
+};
+
 $("printBtn").onclick = () => printSides([currentSide]);
 $("printBothBtn").onclick = () => printSides(["front", "back"]);
 
@@ -685,5 +792,5 @@ canvas.setBackgroundColor("#ffffff", canvas.renderAll.bind(canvas));
 sides.front = snapshot();
 sides.back = snapshot();
 updateCardInfo();
-status("V4.7.2 SAFE — stable CR80 print restored.");
+status("V5.0 VECTOR TEST — stable engine kept, vector PDF added.");
 if (isLoggedIn()) showApp(); else showLogin();
