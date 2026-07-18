@@ -1,5 +1,14 @@
-# Tabaja Card Designer V3.1
+# Tabaja Card Designer V3.1.2 Fixed
 
-New: Fill Card, Fit Inside, Crop Mode, Reset Image, Print Front + Back.
+Fixes:
+- Export PDF uses the correct `window.jspdf.jsPDF` namespace.
+- Fill Card covers the full CR80 card.
+- Fit Inside displays the complete selected image.
+- Crop Mode clips the selected image to the card and lets you drag/resize it.
+- Save/Open, PNG export and printing are included.
 
-Direct silent Zebra printing still requires a local bridge application.
+Upload these four files to the repository root:
+- index.html
+- app.js
+- style.css
+- README.md

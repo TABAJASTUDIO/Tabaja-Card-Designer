@@ -1,170 +1,94 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tabaja Card Designer V3.1.1</title>
-
-  <link rel="stylesheet" href="styles/style.css" />
-
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Tabaja Card Designer V3.1.2</title>
+  <link rel="stylesheet" href="style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">
-      <strong>Tabaja Card Designer V3.1</strong>
-      <span>Professional CR80 PVC Card Designer • Powered by Tabaja Solution</span>
+  <header>
+    <div>
+      <h1>Tabaja Card Designer V3.1.2</h1>
+      <small>Professional CR80 PVC Card Designer • Powered by Tabaja Solution</small>
     </div>
-
     <div class="top-actions">
       <button id="newBtn">New</button>
       <button id="saveBtn">Save</button>
       <button id="openBtn">Open Project</button>
-      <button id="exportPngBtn">Export PNG</button>
-      <button id="exportPdfBtn">Export PDF</button>
-      <button id="printBtn" class="primary">Print Current</button>
-      <button id="printBothBtn" class="primary">Print Front + Back</button>
+      <button id="pngBtn">Export PNG</button>
+      <button id="pdfBtn">Export PDF</button>
+      <button class="primary" id="printBtn">Print Current</button>
+      <button class="primary" id="printBothBtn">Print Front + Back</button>
     </div>
   </header>
 
-  <main class="layout">
-    <aside class="sidebar">
-      <h2>Tools</h2>
-
+  <main>
+    <aside class="tools">
+      <h3>Tools</h3>
       <button id="addTextBtn">Add Text</button>
       <button id="addImageBtn">Add Image</button>
       <button id="addLogoBtn">Add Logo</button>
       <button id="backgroundBtn">Background Image</button>
-      <button id="fillCardBtn">Fill Card</button>
-      <button id="fitCardBtn">Fit Inside</button>
-      <button id="cropModeBtn">Crop Mode</button>
+      <button id="fillBtn">Fill Card</button>
+      <button id="fitBtn">Fit Inside</button>
+      <button id="cropBtn">Crop Mode</button>
       <button id="resetImageBtn">Reset Image</button>
       <button id="qrBtn">QR Code</button>
       <button id="barcodeBtn">Barcode</button>
       <button id="duplicateBtn">Duplicate</button>
       <button id="nfcBtn">NFC Link</button>
-
-      <div class="divider"></div>
-
-      <button id="bringFrontBtn">Bring to Front</button>
-      <button id="sendBackBtn">Send to Back</button>
-      <button id="centerHBtn">Center Horizontal</button>
-      <button id="centerVBtn">Center Vertical</button>
-      <button id="deleteBtn" class="danger">Delete Selected</button>
-      <button id="clearBtn">Clear Side</button>
-
-      <input id="imageInput" type="file" accept="image/*" hidden />
-      <input id="logoInput" type="file" accept="image/*" hidden />
-      <input id="backgroundInput" type="file" accept="image/*" hidden />
-      <input id="projectInput" type="file" accept=".tabaja,.json,application/json" hidden />
+      <hr>
+      <button id="frontBtn" class="active">Front</button>
+      <button id="backBtn">Back</button>
+      <hr>
+      <button id="deleteBtn">Delete Selected</button>
+      <input id="imageInput" type="file" accept="image/*" hidden>
+      <input id="projectInput" type="file" accept=".tabaja,.json" hidden>
     </aside>
 
     <section class="workspace">
-      <div class="workspace-toolbar">
-        <div class="tabs">
-          <button id="frontTab" class="active">Front</button>
-          <button id="backTab">Back</button>
-        </div>
-
-        <div class="workspace-meta">
-          <span>CR80 • 85.60 × 53.98 mm • 300 DPI</span>
-        </div>
+      <div class="card-info">CR80 • 85.60 × 53.98 mm • 300 DPI</div>
+      <div class="canvas-shell">
+        <canvas id="cardCanvas" width="1011" height="638"></canvas>
       </div>
-
-      <div id="dropZone" class="stage">
-        <div class="card-shell">
-          <canvas id="cardCanvas" width="1011" height="638"></canvas>
-        </div>
-      </div>
-
-      <div class="bottom-toolbar">
-        <button id="undoBtn">Undo</button>
-        <button id="redoBtn">Redo</button>
-        <button id="zoomOutBtn">−</button>
-        <button id="zoomResetBtn">100%</button>
-        <button id="zoomInBtn">+</button>
-      </div>
+      <p id="status">Ready.</p>
     </section>
 
     <aside class="properties">
-      <h2>Properties</h2>
-
-      <label>
-        Text
-        <input id="textValue" type="text" placeholder="Selected text" />
-      </label>
-
-      <label>
-        Font size
-        <input id="fontSize" type="number" min="8" max="180" value="34" />
-      </label>
-
-      <label>
-        Font family
-        <select id="fontFamily">
-          <option>Arial</option>
-          <option>Verdana</option>
-          <option>Tahoma</option>
-          <option>Georgia</option>
-          <option>Times New Roman</option>
-        </select>
-      </label>
-
-      <label>
-        Text color
-        <input id="textColor" type="color" value="#111111" />
-      </label>
-
-      <div class="two-col">
+      <h3>Properties</h3>
+      <label>Text</label>
+      <input id="textValue" placeholder="Selected text">
+      <label>Font size</label>
+      <input id="fontSize" type="number" min="6" max="200" value="34">
+      <label>Font family</label>
+      <select id="fontFamily">
+        <option>Arial</option><option>Calibri</option><option>Verdana</option>
+        <option>Georgia</option><option>Times New Roman</option>
+      </select>
+      <label>Text color</label>
+      <input id="textColor" type="color" value="#111111">
+      <div class="row">
         <button id="boldBtn">Bold</button>
         <button id="italicBtn">Italic</button>
       </div>
-
-      <label>
-        Background color
-        <input id="backgroundColor" type="color" value="#ffffff" />
-      </label>
-
-      <label>
-        Opacity
-        <input id="opacity" type="range" min="0.1" max="1" step="0.05" value="1" />
-      </label>
-
-      <label>
-        Rotation
-        <input id="rotation" type="range" min="-180" max="180" step="1" value="0" />
-      </label>
-
-      <div class="info">
-        <strong>How to use</strong>
-        <span>Select any object, then drag, resize or rotate it.</span>
-        <span>You can also drop an image directly onto the card.</span><span>Crop Mode: select an image, press Crop Mode, then drag/resize until framing is correct.</span>
-      </div>
-
-      <div class="info">
-        <strong>Zebra ZC300</strong>
-        <span>Print opens the system print window.</span>
-        <span>Select CR80, Scale 100%, Margins None.</span>
+      <label>Background color</label>
+      <input id="cardColor" type="color" value="#ffffff">
+      <label>Opacity</label>
+      <input id="opacity" type="range" min="0" max="1" value="1" step="0.01">
+      <label>Rotation</label>
+      <input id="rotation" type="range" min="-180" max="180" value="0" step="1">
+      <div class="help">
+        <b>Image tools</b>
+        <p>Select an image first. Fill Card covers the full card. Fit Inside shows the complete image. Crop Mode clips the image to the card while allowing you to drag and resize it.</p>
       </div>
     </aside>
   </main>
 
-  <div id="printArea"></div>
-
-  <div id="promptModal" class="modal">
-    <div class="modal-card">
-      <h3 id="promptTitle">Enter value</h3>
-      <input id="promptInput" type="text" />
-      <div class="modal-actions">
-        <button id="promptCancel">Cancel</button>
-        <button id="promptOk" class="primary">OK</button>
-      </div>
-    </div>
-  </div>
-
-  <script src="scripts/app.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
