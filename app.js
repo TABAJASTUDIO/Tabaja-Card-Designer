@@ -977,10 +977,16 @@ async function generateEmployeeCard() {
       await builderAddOrUpdateImage("employeePhoto", builderPhotoData, photoBox);
     } else if (!builderObject("employeePhoto")) ensureBuilderPlaceholder("employeePhotoPlaceholder", photoBox, "EMPLOYEE PHOTO");
 
+    // V6.4: the company logo is fully optional.
+    // Show the real logo only when the user selects one; otherwise remove every logo guide/object
+    // so nothing appears in PNG, PDF, or printing.
+    removeBuilderPlaceholder("companyLogoPlaceholder");
     if (builderLogoData) {
-      removeBuilderPlaceholder("companyLogoPlaceholder");
       await builderAddOrUpdateImage("companyLogo", builderLogoData, logoBox);
-    } else if (!builderObject("companyLogo")) ensureBuilderPlaceholder("companyLogoPlaceholder", logoBox, "LOGO");
+    } else {
+      const oldLogo = builderObject("companyLogo");
+      if (oldLogo) canvas.remove(oldLogo);
+    }
 
     const textLeft = landscape ? W * 0.36 : W * 0.10;
     const textWidth = landscape ? W * 0.57 : W * 0.80;
@@ -1059,7 +1065,7 @@ $("deleteBtn").onclick = () => {
   if (typeof v61OriginalDeleteHandler === "function") v61OriginalDeleteHandler();
 };
 
-builderStatus("V6.1 BETA ready — fill employee details and press Generate / Update Card.");
+builderStatus("V6.4 BETA ready — company logo is optional and no placeholder is exported.");
 
 // ===== V6.3 BETA: Locked Card Background =====
 function removeBackgroundImageObjects() {
