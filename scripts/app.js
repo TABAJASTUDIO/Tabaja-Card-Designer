@@ -536,20 +536,45 @@ function renderSnapshotToData(snapshotJson, format = "png", quality = 1) {
 }
 
 async function exportSide(side, format = "png", quality = 1) {
-  saveCurrentSide();
-  return renderSnapshotToData(sides[side], format, quality);
+  const snapshotForSide = sides[side] || emptySnapshot();
+  return renderSnapshotToData(snapshotForSide, format, quality);
+}
+
+function exportVisibleCanvas(format = "png", quality = 1) {
+  canvas.discardActiveObject();
+  canvas.renderAll();
+  return canvas.toDataURL({
+    format,
+    quality,
+    multiplier: 1,
+    enableRetinaScaling: false
+  });
 }
 
 $("pngBtn").onclick = async () => {
   try {
+    // Freeze the selected side before any async export work begins.
+    const selectedSide = currentSide;
     saveCurrentSide();
+
     const both = confirm("Export Front and Back?\nOK = both sides\nCancel = current side only");
-    const list = both ? ["front", "back"] : [currentSide];
-    for (const side of list) {
-      const data = await exportSide(side, "png", 1);
-      downloadData(data, `Tabaja-Card-${side}-${orientation}-300DPI.png`);
+
+    if (!both) {
+      // Export exactly what is visible on the editor right now.
+      const data = exportVisibleCanvas("png", 1);
+      downloadData(data, `Tabaja-Card-${selectedSide}-${orientation}-300DPI.png`);
+      status(`${selectedSide.toUpperCase()} PNG exported.`);
+      return;
     }
-    status("PNG exported.");
+
+    // Use frozen snapshots so Front and Back can never overwrite each other.
+    const frozenSides = { front: sides.front, back: sides.back };
+    for (const side of ["front", "back"]) {
+      const data = await renderSnapshotToData(frozenSides[side], "png", 1);
+      downloadData(data, `Tabaja-Card-${side}-${orientation}-300DPI.png`);
+      await new Promise(resolve => setTimeout(resolve, 150));
+    }
+    status("Front and Back PNG exported.");
   } catch (e) { alert("PNG export failed: " + e.message); }
 };
 
@@ -1090,7 +1115,7 @@ $("deleteBtn").onclick = () => {
   if (typeof v61OriginalDeleteHandler === "function") v61OriginalDeleteHandler();
 };
 
-builderStatus("V6.4 BETA ready — company logo is optional and no placeholder is exported.");
+builderStatus("V6.6.1 ready — Front/Back PNG export fixed.");
 
 // ===== V6.3 BETA: Locked Card Background =====
 function removeBackgroundImageObjects() {
