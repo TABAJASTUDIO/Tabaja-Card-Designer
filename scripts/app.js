@@ -567,14 +567,31 @@ $("pngBtn").onclick = async () => {
       return;
     }
 
-    // Use frozen snapshots so Front and Back can never overwrite each other.
+    // Export both sides inside ONE ZIP file. This avoids browser blocking
+    // one of two automatic downloads and guarantees Front + Back are included.
+    if (typeof JSZip === "undefined") {
+      throw new Error("ZIP library did not load. Refresh the page and try again.");
+    }
+
     const frozenSides = { front: sides.front, back: sides.back };
+    const zip = new JSZip();
+
     for (const side of ["front", "back"]) {
       const data = await renderSnapshotToData(frozenSides[side], "png", 1);
-      downloadData(data, `Tabaja-Card-${side}-${orientation}-300DPI.png`);
-      await new Promise(resolve => setTimeout(resolve, 150));
+      const base64 = data.split(",")[1];
+      zip.file(`Tabaja-Card-${side}-${orientation}-300DPI.png`, base64, { base64: true });
     }
-    status("Front and Back PNG exported.");
+
+    const zipBlob = await zip.generateAsync({ type: "blob" });
+    const zipUrl = URL.createObjectURL(zipBlob);
+    const a = document.createElement("a");
+    a.href = zipUrl;
+    a.download = `Tabaja-Card-Front-and-Back-${orientation}-300DPI.zip`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(zipUrl), 1000);
+    status("Front and Back PNG exported inside one ZIP file.");
   } catch (e) { alert("PNG export failed: " + e.message); }
 };
 
@@ -1115,7 +1132,7 @@ $("deleteBtn").onclick = () => {
   if (typeof v61OriginalDeleteHandler === "function") v61OriginalDeleteHandler();
 };
 
-builderStatus("V6.6.1 ready — Front/Back PNG export fixed.");
+builderStatus("V6.6.2 ready — Both Sides exports one ZIP containing Front + Back.");
 
 // ===== V6.3 BETA: Locked Card Background =====
 function removeBackgroundImageObjects() {
