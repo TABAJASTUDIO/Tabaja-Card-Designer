@@ -73,6 +73,22 @@ function loadSnapshot(data) {
 
 function saveCurrentSide() { sides[currentSide] = snapshot(); }
 
+function syncCurrentBackgroundToOtherSide() {
+  const syncControl = $("syncBackgroundBothSides");
+  if (!syncControl || !syncControl.checked) return;
+
+  saveCurrentSide();
+  const otherSide = currentSide === "front" ? "back" : "front";
+  const currentData = JSON.parse(sides[currentSide] || emptySnapshot());
+  const otherData = JSON.parse(sides[otherSide] || emptySnapshot());
+
+  otherData.background = currentData.background ?? "#ffffff";
+  otherData.objects = (otherData.objects || []).filter(object =>
+    object.role !== "background" && object.role !== "cardBackgroundImage"
+  );
+  sides[otherSide] = JSON.stringify(otherData);
+}
+
 async function switchSide(side) {
   saveCurrentSide();
   currentSide = side;
@@ -389,7 +405,13 @@ $("fontFamily").onchange = e => { const o = canvas.getActiveObject(); if (o && (
 $("textColor").oninput = e => { const o = canvas.getActiveObject(); if (o) { o.set("fill", e.target.value); canvas.requestRenderAll(); } };
 $("boldBtn").onclick = () => { const o = canvas.getActiveObject(); if (o) { o.set("fontWeight", o.fontWeight === "bold" ? "normal" : "bold"); canvas.requestRenderAll(); } };
 $("italicBtn").onclick = () => { const o = canvas.getActiveObject(); if (o) { o.set("fontStyle", o.fontStyle === "italic" ? "normal" : "italic"); canvas.requestRenderAll(); } };
-$("cardColor").oninput = e => canvas.setBackgroundColor(e.target.value, canvas.renderAll.bind(canvas));
+$("cardColor").oninput = e => {
+  canvas.setBackgroundColor(e.target.value, () => {
+    canvas.renderAll();
+    saveCurrentSide();
+    syncCurrentBackgroundToOtherSide();
+  });
+};
 $("opacity").oninput = e => { const o = canvas.getActiveObject(); if (o) { o.set("opacity", +e.target.value); canvas.requestRenderAll(); } };
 $("rotation").oninput = e => { const o = canvas.getActiveObject(); if (o) { o.rotate(+e.target.value); o.setCoords(); canvas.requestRenderAll(); } };
 
@@ -650,15 +672,12 @@ async function printSides(list) {
 function buildPrintJpegPdf(images, pxW, pxH, mmW, mmH) {
   const pageW = mmW * 72 / 25.4;
   const pageH = mmH * 72 / 25.4;
-  // Zebra ZC300 edge calibration (Beta): the remaining white strip is
-  // less than 1 mm on the LEFT and BOTTOM edges. Keep the normal 0.80 mm
-  // overscan on the other edges and add another 0.60 mm only where needed.
-  // This affects print output only; the editor canvas and exported card size
-  // stay exactly CR80 (85.60 × 53.98 mm).
-  const bleedLeft = 1.40 * 72 / 25.4;
+  // 0.80 mm print bleed slightly enlarges the artwork beyond every card edge
+  // to remove the last thin white strip without changing the design canvas.
+  const bleedLeft = 1.20 * 72 / 25.4;
   const bleedRight = 0.80 * 72 / 25.4;
   const bleedTop = 0.80 * 72 / 25.4;
-  const bleedBottom = 1.40 * 72 / 25.4;
+  const bleedBottom = 1.20 * 72 / 25.4;
   const drawW = pageW + bleedLeft + bleedRight;
   const drawH = pageH + bleedTop + bleedBottom;
   const objects = [];
@@ -1083,7 +1102,9 @@ function finishCardBackground(message) {
   canvas.discardActiveObject();
   canvas.requestRenderAll();
   saveCurrentSide();
-  status(message);
+  syncCurrentBackgroundToOtherSide();
+  const synced = $("syncBackgroundBothSides")?.checked ? " Front + Back." : "";
+  status(message + synced);
 }
 
 function applySolidCardBackground(color) {
@@ -1128,6 +1149,14 @@ $("resetWhiteBackgroundBtn").addEventListener("click", () => {
   applySolidCardBackground("#ffffff");
 });
 $("cardBackgroundImageBtn").addEventListener("click", () => chooseImage("background"));
+$("syncBackgroundBothSides").addEventListener("change", event => {
+  if (event.target.checked) {
+    syncCurrentBackgroundToOtherSide();
+    status("Background linking enabled — Front and Back now use the same background.");
+  } else {
+    status("Background linking disabled — each side can now use a different background.");
+  }
+});
 
 // Keep the original quick color control synchronized with the new background panel.
 $("cardBgSolidColor").addEventListener("input", event => {

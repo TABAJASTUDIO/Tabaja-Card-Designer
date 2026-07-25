@@ -7,3 +7,23 @@ header{display:flex;justify-content:space-between;gap:20px;align-items:center;pa
 
 /* V6.3 Locked Card Background panel */
 .background-panel h3{display:flex;align-items:center;gap:6px}.background-color-row{display:grid;grid-template-columns:62px 1fr;gap:8px;align-items:center}.background-color-row input,.background-gradient-colors input{height:40px;padding:3px;cursor:pointer}.background-gradient-colors{display:grid;grid-template-columns:1fr 1fr;gap:8px}.background-full-button{width:100%;margin-top:9px}.background-actions{grid-template-columns:1fr 1fr}.background-panel select{margin-bottom:0}
+
+
+/* V6.6: linked Front / Back background control */
+.background-sync-option {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 10px 0 14px;
+  padding: 9px 10px;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.background-sync-option input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  flex: 0 0 auto;
+}
