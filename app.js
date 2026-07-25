@@ -650,11 +650,17 @@ async function printSides(list) {
 function buildPrintJpegPdf(images, pxW, pxH, mmW, mmH) {
   const pageW = mmW * 72 / 25.4;
   const pageH = mmH * 72 / 25.4;
-  // 0.80 mm print bleed slightly enlarges the artwork beyond every card edge
-  // to remove the last thin white strip without changing the design canvas.
-  const bleed = 0.80 * 72 / 25.4;
-  const drawW = pageW + bleed * 2;
-  const drawH = pageH + bleed * 2;
+  // Zebra ZC300 edge calibration (Beta): the remaining white strip is
+  // less than 1 mm on the LEFT and BOTTOM edges. Keep the normal 0.80 mm
+  // overscan on the other edges and add another 0.60 mm only where needed.
+  // This affects print output only; the editor canvas and exported card size
+  // stay exactly CR80 (85.60 × 53.98 mm).
+  const bleedLeft = 1.40 * 72 / 25.4;
+  const bleedRight = 0.80 * 72 / 25.4;
+  const bleedTop = 0.80 * 72 / 25.4;
+  const bleedBottom = 1.40 * 72 / 25.4;
+  const drawW = pageW + bleedLeft + bleedRight;
+  const drawH = pageH + bleedTop + bleedBottom;
   const objects = [];
   const addObj = bytes => { objects.push(bytes); return objects.length; };
   const pagesId = 2;
@@ -671,7 +677,7 @@ function buildPrintJpegPdf(images, pxW, pxH, mmW, mmH) {
     ]));
 
     const content = asciiBytes(
-      `q\n${drawW.toFixed(3)} 0 0 ${drawH.toFixed(3)} ${(-bleed).toFixed(3)} ${(-bleed).toFixed(3)} cm\n/Im${i + 1} Do\nQ`
+      `q\n${drawW.toFixed(3)} 0 0 ${drawH.toFixed(3)} ${(-bleedLeft).toFixed(3)} ${(-bleedBottom).toFixed(3)} cm\n/Im${i + 1} Do\nQ`
     );
     const contentId = addObj(concatBytes([
       asciiBytes(`<< /Length ${content.length} >>\nstream\n`),

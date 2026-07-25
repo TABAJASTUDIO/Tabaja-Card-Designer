@@ -62,3 +62,11 @@ The old `scripts` and `styles` folders are not used by this version.
 - Print bleed is applied only to the background layer.
 - Text, logos, QR codes, barcodes, photos and other foreground objects remain at exact CR80 size and position.
 - Prevents the bottom edge correction from cutting or enlarging important card content.
+
+
+## V6.3 Edge Fix Beta
+- Added asymmetric print calibration for a remaining white strip under 1 mm.
+- Left print overscan: 1.40 mm.
+- Bottom print overscan: 1.40 mm.
+- Right and top overscan remain 0.80 mm.
+- Editor canvas and physical CR80 PDF page size remain unchanged.
