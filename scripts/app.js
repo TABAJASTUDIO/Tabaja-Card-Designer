@@ -714,12 +714,13 @@ async function printSides(list) {
 function buildPrintJpegPdf(images, pxW, pxH, mmW, mmH) {
   const pageW = mmW * 72 / 25.4;
   const pageH = mmH * 72 / 25.4;
-  // 0.80 mm print bleed slightly enlarges the artwork beyond every card edge
-  // to remove the last thin white strip without changing the design canvas.
-  const bleedLeft = 1.20 * 72 / 25.4;
-  const bleedRight = 0.80 * 72 / 25.4;
-  const bleedTop = 0.80 * 72 / 25.4;
-  const bleedBottom = 1.20 * 72 / 25.4;
+  // V6.6.3 Zebra ZC300 asymmetric calibration. The printer was leaving a
+  // persistent strip on the left and bottom, so those two edges receive
+  // stronger overscan while top/right keep a smaller safety bleed.
+  const bleedLeft = 2.40 * 72 / 25.4;
+  const bleedRight = 1.20 * 72 / 25.4;
+  const bleedTop = 1.20 * 72 / 25.4;
+  const bleedBottom = 2.40 * 72 / 25.4;
   const drawW = pageW + bleedLeft + bleedRight;
   const drawH = pageH + bleedTop + bleedBottom;
   const objects = [];
@@ -1132,7 +1133,7 @@ $("deleteBtn").onclick = () => {
   if (typeof v61OriginalDeleteHandler === "function") v61OriginalDeleteHandler();
 };
 
-builderStatus("V6.6.2 ready — Both Sides exports one ZIP containing Front + Back.");
+builderStatus("V6.6.3 ready — Zebra left/bottom white-margin calibration applied.");
 
 // ===== V6.3 BETA: Locked Card Background =====
 function removeBackgroundImageObjects() {
