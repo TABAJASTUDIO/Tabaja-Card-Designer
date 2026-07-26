@@ -1017,8 +1017,13 @@ async function generateEmployeeCard() {
     const name = $("builderName").value.trim() || "EMPLOYEE NAME";
     const job = $("builderJob").value.trim() || "Job Title";
     const phone = $("builderPhone").value.trim();
+    const whatsapp = $("builderWhatsApp").value.trim();
     const email = $("builderEmail").value.trim();
     const website = $("builderWebsite").value.trim();
+    const facebook = $("builderFacebook").value.trim();
+    const instagram = $("builderInstagram").value.trim();
+    const twitter = $("builderTwitter").value.trim();
+    const linkedin = $("builderLinkedIn").value.trim();
 
     // V6.3: keep the selected canvas background visible.
     // This transparent structural layer replaces the old forced white rectangle.
@@ -1078,10 +1083,39 @@ async function generateEmployeeCard() {
     });
     fitBuilderText(jobObj, landscape ? 28 : 25, 15);
 
-    const contactLines = [phone && "Tel: " + phone, email && "Email: " + email, website && "Web: " + website].filter(Boolean);
-    builderAddOrUpdateText("employeeContacts", contactLines.join("\n") || "", {
-      left: textLeft, top: companyTop + H * 0.48, width: textWidth, heightLimit: H * 0.25, widthLimit: textWidth,
-      fontSize: landscape ? 19 : 18, fill: "#263746", lineHeight: 1.35, textAlign: "left"
+    // V7.2: contact and social-media icons. Empty fields create no icon and no text.
+    const oldContacts = builderObject("employeeContacts");
+    if (oldContacts) canvas.remove(oldContacts);
+    for (let i = 0; i < 10; i++) {
+      ["contactIcon" + i, "contactValue" + i].forEach(role => {
+        const old = builderObject(role);
+        if (old) canvas.remove(old);
+      });
+    }
+    const contactRows = [
+      phone && { icon: "✆", value: phone, color: "#263746" },
+      whatsapp && { icon: "☎", value: whatsapp, color: "#25A244" },
+      email && { icon: "✉", value: email, color: "#2c6e9d" },
+      website && { icon: "🌐", value: website, color: "#17547f" },
+      facebook && { icon: "f", value: facebook, color: "#1877F2" },
+      instagram && { icon: "◎", value: instagram, color: "#C13584" },
+      twitter && { icon: "𝕏", value: twitter, color: "#111820" },
+      linkedin && { icon: "in", value: linkedin, color: "#0A66C2" }
+    ].filter(Boolean);
+    const contactTop = companyTop + H * 0.48;
+    const contactFont = landscape ? 18 : 16;
+    const rowGap = landscape ? 25 : 23;
+    contactRows.forEach((row, i) => {
+      const y = contactTop + i * rowGap;
+      builderAddOrUpdateText("contactIcon" + i, row.icon, {
+        left: textLeft, top: y, width: 28, heightLimit: rowGap, widthLimit: 28,
+        fontSize: contactFont, fontWeight: "bold", fill: row.color, textAlign: "center"
+      });
+      const valueObj = builderAddOrUpdateText("contactValue" + i, row.value, {
+        left: textLeft + 34, top: y, width: textWidth - 34, heightLimit: rowGap, widthLimit: textWidth - 34,
+        fontSize: contactFont, fill: "#263746", textAlign: "left"
+      });
+      fitBuilderText(valueObj, contactFont, 11);
     });
 
     ensurePoweredBy();
@@ -1209,7 +1243,7 @@ $("cardColor").addEventListener("input", event => {
   $("cardBgSolidColor").value = event.target.value;
 });
 
-status("V7.1 ready — Excel batch printing with employee photo and company logo folder matching.");
+status("V7.2 ready — automatic phone, WhatsApp, email, web and social-media icons.");
 
 // ===== V7.0: Excel Batch Print — 50 cards per print job =====
 let batchRows = [];
@@ -1243,9 +1277,14 @@ function setupBatchMappings(){
   fillMappingSelect('mapId',['employeeid','staffid','id','serial']);
   fillMappingSelect('mapJob',['jobtitle','position','job','designation']);
   fillMappingSelect('mapCompany',['companyname','company','organization']);
-  fillMappingSelect('mapPhone',['phone','telephone','mobile','whatsapp']);
+  fillMappingSelect('mapPhone',['phone','telephone','mobile','call']);
+  fillMappingSelect('mapWhatsApp',['whatsapp','whatsappnumber','wa']);
   fillMappingSelect('mapEmail',['email','emailaddress']);
   fillMappingSelect('mapWebsite',['website','web']);
+  fillMappingSelect('mapFacebook',['facebook','facebookusername','fb']);
+  fillMappingSelect('mapInstagram',['instagram','instagramusername','ig']);
+  fillMappingSelect('mapTwitter',['twitter','x','xusername','twitterusername']);
+  fillMappingSelect('mapLinkedIn',['linkedin','linkedinusername']);
   fillMappingSelect('mapPhoto',['photo','photofilename','image','picture']);
   fillMappingSelect('mapLogo',['logo','logofilename','companylogo','brandlogo']);
 }
@@ -1339,8 +1378,13 @@ async function applyBatchRecord(index){
   batchEl('builderCompany').value=mappedValue(row,'mapCompany');
   batchEl('builderJob').value=mappedValue(row,'mapJob');
   batchEl('builderPhone').value=mappedValue(row,'mapPhone');
+  batchEl('builderWhatsApp').value=mappedValue(row,'mapWhatsApp');
   batchEl('builderEmail').value=mappedValue(row,'mapEmail');
   batchEl('builderWebsite').value=mappedValue(row,'mapWebsite');
+  batchEl('builderFacebook').value=mappedValue(row,'mapFacebook');
+  batchEl('builderInstagram').value=mappedValue(row,'mapInstagram');
+  batchEl('builderTwitter').value=mappedValue(row,'mapTwitter');
+  batchEl('builderLinkedIn').value=mappedValue(row,'mapLinkedIn');
   const photo=findPhotoFile(row);
   const logo=findLogoFile(row);
   builderPhotoData=photo?await fileToDataUrl(photo):'';
@@ -1423,4 +1467,4 @@ batchEl('batchPrint50Btn')?.addEventListener('click',async()=>{
 
 setupBatchMappings();
 const lastBatchEnd=Number(localStorage.getItem('tabaja_v7_last_batch_end')||0);
-if(lastBatchEnd>0) batchMsg(`V7.0 ready. Last completed batch ended at record ${lastBatchEnd}.`); else batchMsg('V7.0 ready — upload Excel and print 50 cards at a time.');
+if(lastBatchEnd>0) batchMsg(`V7.0 ready. Last completed batch ended at record ${lastBatchEnd}.`); else batchMsg('V7.2 ready — upload Excel; contact and social icons appear automatically for non-empty fields.');

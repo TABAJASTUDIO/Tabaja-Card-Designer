@@ -126,7 +126,7 @@
         </div>
 
         <div class="builder-panel batch-panel">
-          <h3>📥 Excel Batch Print (50 Cards)</h3>
+          <h3>📥 Excel Batch Print (50 Cards) — V7.2</h3>
           <label>1. Upload Excel / CSV</label>
           <input id="batchExcelInput" type="file" accept=".xlsx,.xls,.csv">
           <label>2. Upload Employee Photos Folder (optional)</label>
@@ -139,8 +139,13 @@
           <label>Job Title Column</label><select id="mapJob"></select>
           <label>Company Column</label><select id="mapCompany"></select>
           <label>Phone Column</label><select id="mapPhone"></select>
+          <label>WhatsApp Column</label><select id="mapWhatsApp"></select>
           <label>Email Column</label><select id="mapEmail"></select>
           <label>Website Column</label><select id="mapWebsite"></select>
+          <label>Facebook Column</label><select id="mapFacebook"></select>
+          <label>Instagram Column</label><select id="mapInstagram"></select>
+          <label>X / Twitter Column</label><select id="mapTwitter"></select>
+          <label>LinkedIn Column</label><select id="mapLinkedIn"></select>
           <label>Photo Filename Column</label><select id="mapPhoto"></select>
           <label>Logo Filename Column (optional)</label><select id="mapLogo"></select>
           <div class="batch-range">
@@ -161,7 +166,7 @@
             <button id="batchResetBtn">Reset Batch</button>
           </div>
           <div id="batchProgress" class="batch-progress">Ready.</div>
-          <p class="builder-note">Photo matching: Employee ID (example 000001.jpg). Logo matching: company name (example B7S.png) or the optional Logo Filename column. One print dialog contains up to 50 cards.</p>
+          <p class="builder-note">Contact icons are added automatically only when a value exists. Photo matching: Employee ID (example 000001.jpg). Logo matching: company name (example B7S.png) or the optional Logo Filename column. One print dialog contains up to 50 cards.</p>
         </div>
 
         <div class="builder-panel">
@@ -169,9 +174,14 @@
           <label>Company Name</label><input id="builderCompany" placeholder="Company name">
           <label>Employee Name</label><input id="builderName" placeholder="Full name">
           <label>Job Title</label><input id="builderJob" placeholder="Job title">
-          <label>Phone</label><input id="builderPhone" placeholder="Company phone">
+          <label>Phone</label><input id="builderPhone" placeholder="Phone (optional)">
+          <label>WhatsApp</label><input id="builderWhatsApp" placeholder="WhatsApp (optional)">
           <label>Email</label><input id="builderEmail" placeholder="Email (optional)">
           <label>Website</label><input id="builderWebsite" placeholder="Website (optional)">
+          <label>Facebook</label><input id="builderFacebook" placeholder="Facebook username / link (optional)">
+          <label>Instagram</label><input id="builderInstagram" placeholder="Instagram username (optional)">
+          <label>X / Twitter</label><input id="builderTwitter" placeholder="X / Twitter username (optional)">
+          <label>LinkedIn</label><input id="builderLinkedIn" placeholder="LinkedIn username / link (optional)">
           <label>Employee Photo</label><input id="builderPhoto" type="file" accept="image/*">
           <label>Company Logo</label><input id="builderLogo" type="file" accept="image/*">
           <div class="builder-actions">
