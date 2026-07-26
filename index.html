@@ -126,13 +126,15 @@
         </div>
 
         <div class="builder-panel batch-panel">
-          <h3>📥 Excel Batch Print (50 Cards) — V7.2</h3>
+          <h3>📥 Excel Batch Print (50 Cards) — V7.3 Stability</h3>
           <label>1. Upload Excel / CSV</label>
           <input id="batchExcelInput" type="file" accept=".xlsx,.xls,.csv">
           <label>2. Upload Employee Photos Folder (optional)</label>
           <input id="batchPhotosInput" type="file" accept="image/*" webkitdirectory directory multiple>
           <label>3. Upload Company Logos Folder (optional)</label>
           <input id="batchLogosInput" type="file" accept="image/*" webkitdirectory directory multiple>
+          <label>4. Upload Card Backgrounds Folder (optional)</label>
+          <input id="batchBackgroundsInput" type="file" accept="image/*" webkitdirectory directory multiple>
           <div id="batchSummary" class="batch-summary">No batch loaded.</div>
           <label>Name Column</label><select id="mapName"></select>
           <label>ID Column</label><select id="mapId"></select>
@@ -148,6 +150,7 @@
           <label>LinkedIn Column</label><select id="mapLinkedIn"></select>
           <label>Photo Filename Column</label><select id="mapPhoto"></select>
           <label>Logo Filename Column (optional)</label><select id="mapLogo"></select>
+          <label>Background Filename Column (optional)</label><select id="mapBackground"></select>
           <div class="batch-range">
             <div><label>From</label><input id="batchFrom" type="number" min="1" value="1"></div>
             <div><label>To</label><input id="batchTo" type="number" min="1" value="50"></div>
@@ -155,8 +158,9 @@
           <label class="background-sync-option"><input id="batchBothSides" type="checkbox"><span>Print Front + Back</span></label>
           <div class="builder-actions">
             <button id="batchPreviewBtn">Preview Record</button>
-            <button id="batchPrint50Btn" class="primary">Print This 50</button>
+            <button id="batchPreflightBtn">Pre-flight Check</button>
           </div>
+          <button id="batchPrint50Btn" class="primary background-full-button">Print This 50</button>
           <div class="builder-actions">
             <button id="batchPrev50Btn">Previous 50</button>
             <button id="batchNext50Btn">Next 50</button>
@@ -166,7 +170,7 @@
             <button id="batchResetBtn">Reset Batch</button>
           </div>
           <div id="batchProgress" class="batch-progress">Ready.</div>
-          <p class="builder-note">Contact icons are added automatically only when a value exists. Photo matching: Employee ID (example 000001.jpg). Logo matching: company name (example B7S.png) or the optional Logo Filename column. One print dialog contains up to 50 cards.</p>
+          <p class="builder-note">Missing photos are cleared and marked, never copied from another record. When a logo exists, only the logo is shown. Backgrounds reset for every record. Contact icons are added automatically only when a value exists. Photo matching: Employee ID (example 000001.jpg). Logo matching: company name (example B7S.png) or the optional Logo Filename column. One print dialog contains up to 50 cards.</p>
         </div>
 
         <div class="builder-panel">

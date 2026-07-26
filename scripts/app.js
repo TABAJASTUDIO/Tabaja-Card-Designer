@@ -868,6 +868,7 @@ if (isLoggedIn()) showApp(); else showLogin();
 const V61_TEMPLATE_KEY = "tabaja_card_designer_v61_template";
 let builderPhotoData = "";
 let builderLogoData = "";
+let builderBatchBackgroundData = "";
 
 function builderStatus(message) { status(message); }
 
@@ -909,7 +910,7 @@ function builderAddOrUpdateText(role, text, props) {
   if (!object) {
     object = new fabric.Textbox(value, Object.assign({
       role,
-      fontFamily: "Arial",
+      fontFamily: "Arial, Helvetica, sans-serif",
       editable: true,
       splitByGrapheme: false,
       lineHeight: 1.05
@@ -1045,10 +1046,16 @@ async function generateEmployeeCard() {
       ? { left: W * 0.77, top: H * 0.07, width: W * 0.17, height: H * 0.15 }
       : { left: W * 0.30, top: H * 0.30, width: W * 0.40, height: H * 0.12 };
 
+    // Always reset the previous employee photo before loading the current record.
+    // This prevents a missing photo from inheriting the previous employee's image.
     if (builderPhotoData) {
       removeBuilderPlaceholder("employeePhotoPlaceholder");
       await builderAddOrUpdateImage("employeePhoto", builderPhotoData, photoBox);
-    } else if (!builderObject("employeePhoto")) ensureBuilderPlaceholder("employeePhotoPlaceholder", photoBox, "EMPLOYEE PHOTO");
+    } else {
+      const oldPhoto = builderObject("employeePhoto");
+      if (oldPhoto) canvas.remove(oldPhoto);
+      ensureBuilderPlaceholder("employeePhotoPlaceholder", photoBox, "MISSING PHOTO");
+    }
 
     // V6.4: the company logo is fully optional.
     // Show the real logo only when the user selects one; otherwise remove every logo guide/object
@@ -1065,11 +1072,17 @@ async function generateEmployeeCard() {
     const textWidth = landscape ? W * 0.57 : W * 0.80;
     const companyTop = landscape ? H * 0.12 : H * 0.45;
 
-    const companyObj = builderAddOrUpdateText("employeeCompany", company, {
-      left: textLeft, top: companyTop, width: textWidth, heightLimit: H * 0.10, widthLimit: textWidth,
-      fontSize: landscape ? 29 : 28, fontWeight: "bold", fill: "#17547f", textAlign: "left"
-    });
-    fitBuilderText(companyObj, landscape ? 29 : 28, 16);
+    // Logo and company text are mutually exclusive: when a logo exists, show the logo only.
+    const oldCompanyText = builderObject("employeeCompany");
+    if (builderLogoData) {
+      if (oldCompanyText) canvas.remove(oldCompanyText);
+    } else {
+      const companyObj = builderAddOrUpdateText("employeeCompany", company, {
+        left: textLeft, top: companyTop, width: textWidth, heightLimit: H * 0.10, widthLimit: textWidth,
+        fontSize: landscape ? 29 : 28, fontWeight: "bold", fill: "#17547f", textAlign: "left"
+      });
+      fitBuilderText(companyObj, landscape ? 29 : 28, 16);
+    }
 
     const nameObj = builderAddOrUpdateText("employeeName", name, {
       left: textLeft, top: companyTop + H * 0.17, width: textWidth, heightLimit: H * 0.18, widthLimit: textWidth,
@@ -1103,8 +1116,9 @@ async function generateEmployeeCard() {
       linkedin && { icon: "in", value: linkedin, color: "#0A66C2" }
     ].filter(Boolean);
     const contactTop = companyTop + H * 0.48;
-    const contactFont = landscape ? 18 : 16;
-    const rowGap = landscape ? 25 : 23;
+    // Use larger type whenever the number of rows allows it. Export is rendered at 2× for crisp small text.
+    const contactFont = contactRows.length <= 4 ? (landscape ? 23 : 21) : (landscape ? 18 : 17);
+    const rowGap = contactRows.length <= 4 ? (landscape ? 31 : 29) : (landscape ? 25 : 23);
     contactRows.forEach((row, i) => {
       const y = contactTop + i * rowGap;
       builderAddOrUpdateText("contactIcon" + i, row.icon, {
@@ -1243,13 +1257,14 @@ $("cardColor").addEventListener("input", event => {
   $("cardBgSolidColor").value = event.target.value;
 });
 
-status("V7.2 ready — automatic phone, WhatsApp, email, web and social-media icons.");
+status("V7.3 Stability ready — media reset, logo-only mode, crisp export, pre-flight and bleed overscan.");
 
 // ===== V7.0: Excel Batch Print — 50 cards per print job =====
 let batchRows = [];
 let batchHeaders = [];
 let batchPhotoMap = new Map();
 let batchLogoMap = new Map();
+let batchBackgroundMap = new Map();
 let batchCurrentIndex = 0;
 const BATCH_SIZE = 50;
 
@@ -1287,11 +1302,12 @@ function setupBatchMappings(){
   fillMappingSelect('mapLinkedIn',['linkedin','linkedinusername']);
   fillMappingSelect('mapPhoto',['photo','photofilename','image','picture']);
   fillMappingSelect('mapLogo',['logo','logofilename','companylogo','brandlogo']);
+  fillMappingSelect('mapBackground',['background','backgroundfilename','cardbackground','templatebackground']);
 }
 function updateBatchSummary(){
   const summary=batchEl('batchSummary'); if(!summary) return;
   if(!batchRows.length){ summary.textContent='No batch loaded.'; return; }
-  summary.textContent=`${batchRows.length} records loaded • ${batchHeaders.length} columns • ${countUniqueFiles(batchPhotoMap)} employee photos • ${countUniqueFiles(batchLogoMap)} company logos`;
+  summary.textContent=`${batchRows.length} records loaded • ${batchHeaders.length} columns • ${countUniqueFiles(batchPhotoMap)} employee photos • ${countUniqueFiles(batchLogoMap)} company logos • ${countUniqueFiles(batchBackgroundMap)} backgrounds`;
   batchEl('batchFrom').max=batchRows.length; batchEl('batchTo').max=batchRows.length;
   batchEl('batchTo').value=Math.min(BATCH_SIZE,batchRows.length);
 }
@@ -1336,6 +1352,12 @@ batchEl('batchLogosInput')?.addEventListener('change', async e=>{
   updateBatchSummary(); batchMsg(`${files.length} company logos loaded. Logo will match by company name or Logo Filename column.`);
 });
 
+batchEl('batchBackgroundsInput')?.addEventListener('change', async e=>{
+  const files=[...(e.target.files||[])];
+  indexImageFiles(batchBackgroundMap,files);
+  updateBatchSummary(); batchMsg(`${files.length} card backgrounds loaded. Background will match by filename or company name.`);
+});
+
 function mappedValue(row,id){ const col=batchEl(id)?.value; return col ? String(row[col] ?? '').trim() : ''; }
 function findPhotoFile(row){
   const named=mappedValue(row,'mapPhoto');
@@ -1367,6 +1389,27 @@ function findLogoFile(row){
   const company=mappedValue(row,'mapCompany');
   return findFileInMap(batchLogoMap,[named,company]);
 }
+function findBackgroundFile(row){
+  const named=mappedValue(row,'mapBackground');
+  const company=mappedValue(row,'mapCompany');
+  return findFileInMap(batchBackgroundMap,[named,company]);
+}
+function setBatchCanvasBackground(dataUrl){
+  return new Promise((resolve,reject)=>{
+    // Reset first so a blank record can never inherit the previous record's background.
+    canvas.setBackgroundImage(null, ()=>{
+      canvas.setBackgroundColor('#ffffff', ()=>{
+        if(!dataUrl){ canvas.requestRenderAll(); return resolve(); }
+        fabric.Image.fromURL(dataUrl, img=>{
+          if(!img) return reject(new Error('Background image could not be loaded.'));
+          const scale=Math.max(W/img.width,H/img.height);
+          img.set({originX:'center',originY:'center',left:W/2,top:H/2,scaleX:scale,scaleY:scale,selectable:false,evented:false});
+          canvas.setBackgroundImage(img,()=>{canvas.requestRenderAll();resolve();});
+        },{crossOrigin:'anonymous'});
+      });
+    });
+  });
+}
 
 function fileToDataUrl(file){ return new Promise((resolve,reject)=>{ const r=new FileReader(); r.onload=()=>resolve(String(r.result||'')); r.onerror=reject; r.readAsDataURL(file); }); }
 
@@ -1385,14 +1428,29 @@ async function applyBatchRecord(index){
   batchEl('builderInstagram').value=mappedValue(row,'mapInstagram');
   batchEl('builderTwitter').value=mappedValue(row,'mapTwitter');
   batchEl('builderLinkedIn').value=mappedValue(row,'mapLinkedIn');
+  // Reset all record-specific media before resolving the current row.
+  builderPhotoData='';
+  builderLogoData='';
+  builderBatchBackgroundData='';
   const photo=findPhotoFile(row);
   const logo=findLogoFile(row);
+  const background=findBackgroundFile(row);
   builderPhotoData=photo?await fileToDataUrl(photo):'';
   builderLogoData=logo?await fileToDataUrl(logo):'';
+  builderBatchBackgroundData=background?await fileToDataUrl(background):'';
+  await setBatchCanvasBackground(builderBatchBackgroundData);
   await generateEmployeeCard();
   batchMsg(`Previewing record ${index+1}/${batchRows.length}: ${mappedValue(row,'mapName')||'Unnamed'}`);
   return row;
 }
+
+batchEl('batchPreflightBtn')?.addEventListener('click',()=>{
+  if(!batchRows.length) return alert('Upload an Excel file first.');
+  const from=Math.max(1,Number(batchEl('batchFrom').value)||1);
+  const to=Math.min(batchRows.length,Math.max(from,Number(batchEl('batchTo').value)||from));
+  const warnings=preflightBatchRange(from-1,to-1);
+  alert(warnings.length ? `Pre-flight: ${warnings.length} warning(s)\n\n${warnings.slice(0,20).join('\n')}` : `Pre-flight passed for records ${from}-${to}.`);
+});
 
 batchEl('batchPreviewBtn')?.addEventListener('click',async()=>{
   try{ const start=Math.max(1,Number(batchEl('batchFrom').value)||1); await applyBatchRecord(start-1); }
@@ -1408,14 +1466,14 @@ function setBatchRange(start){
 batchEl('batchNext50Btn')?.addEventListener('click',()=>setBatchRange((Number(batchEl('batchTo').value)||0)+1));
 batchEl('batchPrev50Btn')?.addEventListener('click',()=>setBatchRange((Number(batchEl('batchFrom').value)||1)-BATCH_SIZE));
 batchEl('batchReprintBtn')?.addEventListener('click',async()=>{ try{ await applyBatchRecord(batchCurrentIndex); await printBatchRange(batchCurrentIndex,batchCurrentIndex); }catch(e){alert(e.message||e);} });
-batchEl('batchResetBtn')?.addEventListener('click',()=>{ batchRows=[];batchHeaders=[];batchPhotoMap.clear();batchLogoMap.clear();batchCurrentIndex=0;builderPhotoData='';builderLogoData='';setupBatchMappings();updateBatchSummary();batchMsg('Batch reset.'); });
+batchEl('batchResetBtn')?.addEventListener('click',()=>{ batchRows=[];batchHeaders=[];batchPhotoMap.clear();batchLogoMap.clear();batchBackgroundMap.clear();batchCurrentIndex=0;builderPhotoData='';builderLogoData='';builderBatchBackgroundData='';setupBatchMappings();updateBatchSummary();batchMsg('Batch reset.'); });
 
 async function snapshotDataUrl(snapshotJson){
   return new Promise((resolve,reject)=>{
     const el=document.createElement('canvas');
     const temp=new fabric.StaticCanvas(el,{width:W,height:H,backgroundColor:'#fff',renderOnAddRemove:false});
     temp.loadFromJSON(snapshotJson||emptySnapshot(),()=>{
-      try{temp.setDimensions({width:W,height:H});temp.renderAll();const url=temp.toDataURL({format:'png',multiplier:1});temp.dispose();resolve(url);}catch(e){temp.dispose();reject(e);}
+      try{temp.setDimensions({width:W,height:H});temp.renderAll();const url=temp.toDataURL({format:'png',multiplier:2,enableRetinaScaling:true});temp.dispose();resolve(url);}catch(e){temp.dispose();reject(e);}
     });
   });
 }
@@ -1423,9 +1481,31 @@ function openBatchPrintWindow(pages,title){
   const win=window.open('','_blank'); if(!win) throw new Error('Pop-up blocked. Allow pop-ups and try again.');
   const c=CARD[orientation];
   win.document.write(`<!doctype html><html><head><title>${escapeHtml(title)}</title><style>
-    @page{size:${c.mmW}mm ${c.mmH}mm;margin:0}html,body{margin:0;padding:0;background:#fff}.page{width:${c.mmW}mm;height:${c.mmH}mm;page-break-after:always;break-after:page;overflow:hidden}.page:last-child{page-break-after:auto}.page img{display:block;width:100%;height:100%;object-fit:fill}@media screen{body{background:#ddd}.page{margin:8px auto;box-shadow:0 2px 10px #777}}
+    @page{size:${c.mmW}mm ${c.mmH}mm;margin:0}html,body{margin:0;padding:0;background:#fff}.page{width:${c.mmW}mm;height:${c.mmH}mm;page-break-after:always;break-after:page;overflow:hidden}.page:last-child{page-break-after:auto}.page img{display:block;width:102.6%;height:102.6%;max-width:none;object-fit:fill;transform:translate(-1.3%,-1.3%)}@media screen{body{background:#ddd}.page{margin:8px auto;box-shadow:0 2px 10px #777}}
   </style></head><body>${pages.map((p,i)=>`<div class="page"><img src="${p}" alt="Card ${i+1}"></div>`).join('')}<script>window.onload=()=>setTimeout(()=>window.print(),500)<\/script></body></html>`);
   win.document.close();
+}
+
+function preflightBatchRange(startIndex,endIndex){
+  const warnings=[];
+  for(let i=startIndex;i<=endIndex;i++){
+    const row=batchRows[i];
+    const label=`Record ${i+1} (${mappedValue(row,'mapName')||'Unnamed'})`;
+    if(!findPhotoFile(row)) warnings.push(`${label}: missing employee photo`);
+    if(batchLogoMap.size && !findLogoFile(row)) warnings.push(`${label}: company logo not matched`);
+    if(batchBackgroundMap.size && !findBackgroundFile(row)) warnings.push(`${label}: background not matched`);
+  }
+  return warnings;
+}
+function confirmPreflight(startIndex,endIndex){
+  const warnings=preflightBatchRange(startIndex,endIndex);
+  if(!warnings.length){
+    batchMsg(`Pre-flight passed: records ${startIndex+1}-${endIndex+1} are ready.`);
+    return true;
+  }
+  const shown=warnings.slice(0,12).join('\n');
+  const more=warnings.length>12?`\n…and ${warnings.length-12} more warning(s).`:'';
+  return confirm(`PRE-FLIGHT CHECK\n\n${warnings.length} warning(s):\n\n${shown}${more}\n\nContinue printing anyway?`);
 }
 
 async function printBatchRange(startIndex,endIndex){
@@ -1433,6 +1513,7 @@ async function printBatchRange(startIndex,endIndex){
   startIndex=Math.max(0,startIndex); endIndex=Math.min(batchRows.length-1,endIndex);
   if(endIndex<startIndex) throw new Error('Invalid print range.');
   if(endIndex-startIndex+1>BATCH_SIZE) endIndex=startIndex+BATCH_SIZE-1;
+  if(!confirmPreflight(startIndex,endIndex)) { batchMsg('Printing cancelled after pre-flight check.'); return; }
   saveCurrentSide();
   const originalFront=sides.front, originalBack=sides.back, originalSide=currentSide;
   const pages=[]; const both=batchEl('batchBothSides')?.checked;
@@ -1467,4 +1548,4 @@ batchEl('batchPrint50Btn')?.addEventListener('click',async()=>{
 
 setupBatchMappings();
 const lastBatchEnd=Number(localStorage.getItem('tabaja_v7_last_batch_end')||0);
-if(lastBatchEnd>0) batchMsg(`V7.0 ready. Last completed batch ended at record ${lastBatchEnd}.`); else batchMsg('V7.2 ready — upload Excel; contact and social icons appear automatically for non-empty fields.');
+if(lastBatchEnd>0) batchMsg(`V7.0 ready. Last completed batch ended at record ${lastBatchEnd}.`); else batchMsg('V7.3 Stability ready — media reset, pre-flight check, crisp 2× rendering and edge overscan.');
