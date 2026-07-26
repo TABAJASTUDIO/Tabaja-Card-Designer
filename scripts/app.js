@@ -1210,3 +1210,181 @@ $("cardColor").addEventListener("input", event => {
 });
 
 status("V6.3 BETA ready — Employee Builder preserves the selected Card Background.");
+
+// ===== V7.0: Excel Batch Print — 50 cards per print job =====
+let batchRows = [];
+let batchHeaders = [];
+let batchPhotoMap = new Map();
+let batchCurrentIndex = 0;
+const BATCH_SIZE = 50;
+
+function batchEl(id){ return document.getElementById(id); }
+function batchMsg(message){ const el=batchEl('batchProgress'); if(el) el.textContent=message; status(message); }
+function normalizeKey(value){ return String(value ?? '').trim().toLowerCase().replace(/[^a-z0-9]+/g,''); }
+function escapeHtml(value){ return String(value ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function guessHeader(words){
+  const normalized=batchHeaders.map(h=>[h,normalizeKey(h)]);
+  for(const word of words){
+    const found=normalized.find(([,n])=>n===word || n.includes(word));
+    if(found) return found[0];
+  }
+  return '';
+}
+function fillMappingSelect(id, preferred=[]){
+  const select=batchEl(id); if(!select) return;
+  const chosen=guessHeader(preferred);
+  select.innerHTML='<option value="">— Not used —</option>'+batchHeaders.map(h=>`<option value="${escapeHtml(h)}">${escapeHtml(h)}</option>`).join('');
+  if(chosen) select.value=chosen;
+}
+function setupBatchMappings(){
+  fillMappingSelect('mapName',['fullname','employeename','name']);
+  fillMappingSelect('mapId',['employeeid','staffid','id','serial']);
+  fillMappingSelect('mapJob',['jobtitle','position','job','designation']);
+  fillMappingSelect('mapCompany',['companyname','company','organization']);
+  fillMappingSelect('mapPhone',['phone','telephone','mobile','whatsapp']);
+  fillMappingSelect('mapEmail',['email','emailaddress']);
+  fillMappingSelect('mapWebsite',['website','web']);
+  fillMappingSelect('mapPhoto',['photo','photofilename','image','picture']);
+}
+function updateBatchSummary(){
+  const summary=batchEl('batchSummary'); if(!summary) return;
+  if(!batchRows.length){ summary.textContent='No batch loaded.'; return; }
+  summary.textContent=`${batchRows.length} records loaded • ${batchHeaders.length} columns • ${batchPhotoMap.size} photos loaded`;
+  batchEl('batchFrom').max=batchRows.length; batchEl('batchTo').max=batchRows.length;
+  batchEl('batchTo').value=Math.min(BATCH_SIZE,batchRows.length);
+}
+
+batchEl('batchExcelInput')?.addEventListener('change', async e=>{
+  const file=e.target.files?.[0]; if(!file) return;
+  try{
+    batchMsg('Reading Excel file...');
+    const data=await file.arrayBuffer();
+    const wb=XLSX.read(data,{type:'array'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    batchRows=XLSX.utils.sheet_to_json(ws,{defval:'',raw:false});
+    batchHeaders=batchRows.length?Object.keys(batchRows[0]):[];
+    batchCurrentIndex=0; setupBatchMappings(); updateBatchSummary();
+    batchMsg(`Excel ready: ${batchRows.length} records. Check column mapping, then Preview.`);
+  }catch(err){ console.error(err); batchMsg('Excel error: '+(err.message||err)); }
+});
+
+batchEl('batchPhotosInput')?.addEventListener('change', async e=>{
+  batchPhotoMap.clear();
+  const files=[...(e.target.files||[])];
+  for(const file of files){
+    const full=(file.webkitRelativePath||file.name).toLowerCase();
+    batchPhotoMap.set(full,file);
+    batchPhotoMap.set(file.name.toLowerCase(),file);
+    batchPhotoMap.set(normalizeKey(file.name.replace(/\.[^.]+$/,'')),file);
+  }
+  updateBatchSummary(); batchMsg(`${files.length} photos loaded.`);
+});
+
+function mappedValue(row,id){ const col=batchEl(id)?.value; return col ? String(row[col] ?? '').trim() : ''; }
+function findPhotoFile(row){
+  const named=mappedValue(row,'mapPhoto');
+  const empId=mappedValue(row,'mapId');
+  const empName=mappedValue(row,'mapName');
+  const candidates=[named,named.toLowerCase(),normalizeKey(named.replace(/\.[^.]+$/,'')),empId,normalizeKey(empId),empName,normalizeKey(empName)].filter(Boolean);
+  for(const c of candidates){
+    const low=String(c).toLowerCase();
+    if(batchPhotoMap.has(low)) return batchPhotoMap.get(low);
+    if(batchPhotoMap.has(normalizeKey(low))) return batchPhotoMap.get(normalizeKey(low));
+    for(const [key,file] of batchPhotoMap){ if(key.endsWith('/'+low)||normalizeKey(key.replace(/\.[^.]+$/,''))===normalizeKey(low)) return file; }
+  }
+  return null;
+}
+function fileToDataUrl(file){ return new Promise((resolve,reject)=>{ const r=new FileReader(); r.onload=()=>resolve(String(r.result||'')); r.onerror=reject; r.readAsDataURL(file); }); }
+
+async function applyBatchRecord(index){
+  if(!batchRows.length) throw new Error('Upload an Excel file first.');
+  index=Math.max(0,Math.min(index,batchRows.length-1));
+  const row=batchRows[index]; batchCurrentIndex=index;
+  batchEl('builderName').value=mappedValue(row,'mapName');
+  batchEl('builderCompany').value=mappedValue(row,'mapCompany');
+  batchEl('builderJob').value=mappedValue(row,'mapJob');
+  batchEl('builderPhone').value=mappedValue(row,'mapPhone');
+  batchEl('builderEmail').value=mappedValue(row,'mapEmail');
+  batchEl('builderWebsite').value=mappedValue(row,'mapWebsite');
+  const photo=findPhotoFile(row);
+  builderPhotoData=photo?await fileToDataUrl(photo):'';
+  await generateEmployeeCard();
+  batchMsg(`Previewing record ${index+1}/${batchRows.length}: ${mappedValue(row,'mapName')||'Unnamed'}`);
+  return row;
+}
+
+batchEl('batchPreviewBtn')?.addEventListener('click',async()=>{
+  try{ const start=Math.max(1,Number(batchEl('batchFrom').value)||1); await applyBatchRecord(start-1); }
+  catch(err){ alert(err.message||err); batchMsg('Preview failed.'); }
+});
+
+function setBatchRange(start){
+  if(!batchRows.length) return;
+  start=Math.max(1,Math.min(start,batchRows.length));
+  batchEl('batchFrom').value=start;
+  batchEl('batchTo').value=Math.min(start+BATCH_SIZE-1,batchRows.length);
+}
+batchEl('batchNext50Btn')?.addEventListener('click',()=>setBatchRange((Number(batchEl('batchTo').value)||0)+1));
+batchEl('batchPrev50Btn')?.addEventListener('click',()=>setBatchRange((Number(batchEl('batchFrom').value)||1)-BATCH_SIZE));
+batchEl('batchReprintBtn')?.addEventListener('click',async()=>{ try{ await applyBatchRecord(batchCurrentIndex); await printBatchRange(batchCurrentIndex,batchCurrentIndex); }catch(e){alert(e.message||e);} });
+batchEl('batchResetBtn')?.addEventListener('click',()=>{ batchRows=[];batchHeaders=[];batchPhotoMap.clear();batchCurrentIndex=0;setupBatchMappings();updateBatchSummary();batchMsg('Batch reset.'); });
+
+async function snapshotDataUrl(snapshotJson){
+  return new Promise((resolve,reject)=>{
+    const el=document.createElement('canvas');
+    const temp=new fabric.StaticCanvas(el,{width:W,height:H,backgroundColor:'#fff',renderOnAddRemove:false});
+    temp.loadFromJSON(snapshotJson||emptySnapshot(),()=>{
+      try{temp.setDimensions({width:W,height:H});temp.renderAll();const url=temp.toDataURL({format:'png',multiplier:1});temp.dispose();resolve(url);}catch(e){temp.dispose();reject(e);}
+    });
+  });
+}
+function openBatchPrintWindow(pages,title){
+  const win=window.open('','_blank'); if(!win) throw new Error('Pop-up blocked. Allow pop-ups and try again.');
+  const c=CARD[orientation];
+  win.document.write(`<!doctype html><html><head><title>${escapeHtml(title)}</title><style>
+    @page{size:${c.mmW}mm ${c.mmH}mm;margin:0}html,body{margin:0;padding:0;background:#fff}.page{width:${c.mmW}mm;height:${c.mmH}mm;page-break-after:always;break-after:page;overflow:hidden}.page:last-child{page-break-after:auto}.page img{display:block;width:100%;height:100%;object-fit:fill}@media screen{body{background:#ddd}.page{margin:8px auto;box-shadow:0 2px 10px #777}}
+  </style></head><body>${pages.map((p,i)=>`<div class="page"><img src="${p}" alt="Card ${i+1}"></div>`).join('')}<script>window.onload=()=>setTimeout(()=>window.print(),500)<\/script></body></html>`);
+  win.document.close();
+}
+
+async function printBatchRange(startIndex,endIndex){
+  if(!batchRows.length) throw new Error('Upload an Excel file first.');
+  startIndex=Math.max(0,startIndex); endIndex=Math.min(batchRows.length-1,endIndex);
+  if(endIndex<startIndex) throw new Error('Invalid print range.');
+  if(endIndex-startIndex+1>BATCH_SIZE) endIndex=startIndex+BATCH_SIZE-1;
+  saveCurrentSide();
+  const originalFront=sides.front, originalBack=sides.back, originalSide=currentSide;
+  const pages=[]; const both=batchEl('batchBothSides')?.checked;
+  try{
+    for(let i=startIndex;i<=endIndex;i++){
+      batchMsg(`Preparing ${i-startIndex+1}/${endIndex-startIndex+1} — record ${i+1}`);
+      if(currentSide!=='front') await switchSide('front');
+      await applyBatchRecord(i); saveCurrentSide();
+      pages.push(await snapshotDataUrl(sides.front));
+      if(both) pages.push(await snapshotDataUrl(sides.back));
+    }
+    openBatchPrintWindow(pages,`Tabaja Batch ${startIndex+1}-${endIndex+1}`);
+    localStorage.setItem('tabaja_v7_last_batch_end',String(endIndex+1));
+    batchMsg(`Print dialog opened for records ${startIndex+1}-${endIndex+1}. After printing, press Next 50.`);
+  } finally {
+    sides.front=originalFront; sides.back=originalBack;
+    if(currentSide!==originalSide) currentSide=originalSide;
+    await loadSnapshot(sides[currentSide]);
+    batchEl('frontBtn').classList.toggle('active',currentSide==='front'); batchEl('backBtn').classList.toggle('active',currentSide==='back');
+  }
+}
+
+batchEl('batchPrint50Btn')?.addEventListener('click',async()=>{
+  try{
+    let from=Math.max(1,Number(batchEl('batchFrom').value)||1);
+    let to=Math.max(from,Number(batchEl('batchTo').value)||Math.min(from+BATCH_SIZE-1,batchRows.length));
+    to=Math.min(to,from+BATCH_SIZE-1,batchRows.length);
+    batchEl('batchTo').value=to;
+    await printBatchRange(from-1,to-1);
+  }catch(err){console.error(err);alert('Batch print failed:\n'+(err.message||err));batchMsg('Batch print failed.');}
+});
+
+setupBatchMappings();
+const lastBatchEnd=Number(localStorage.getItem('tabaja_v7_last_batch_end')||0);
+if(lastBatchEnd>0) batchMsg(`V7.0 ready. Last completed batch ended at record ${lastBatchEnd}.`); else batchMsg('V7.0 ready — upload Excel and print 50 cards at a time.');

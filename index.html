@@ -3,13 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Tabaja Card Designer V6.6.3 BETA</title>
+  <title>Tabaja Card Designer V7.0 Batch Print</title>
   <link rel="stylesheet" href="style.css?v=6.2-beta.1">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/svg2pdf.js@2.5.0/dist/svg2pdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
   <section id="loginScreen" class="login-screen">
@@ -30,7 +31,7 @@
   <div id="appShell" class="app-shell hidden">
     <header>
       <div>
-        <h1>Tabaja Card Designer V6.6.3 BETA</h1>
+        <h1>Tabaja Card Designer V7.0 • Batch Print Edition</h1>
         <small>Professional CR80 PVC Card Designer • Powered by Tabaja Solution</small>
       </div>
       <div class="top-actions">
@@ -124,6 +125,42 @@
           <p class="builder-note">The background stays behind every element and is included in PNG, PDF and printing.</p>
         </div>
 
+        <div class="builder-panel batch-panel">
+          <h3>📥 Excel Batch Print (50 Cards)</h3>
+          <label>1. Upload Excel / CSV</label>
+          <input id="batchExcelInput" type="file" accept=".xlsx,.xls,.csv">
+          <label>2. Upload Photos Folder (optional)</label>
+          <input id="batchPhotosInput" type="file" accept="image/*" webkitdirectory directory multiple>
+          <div id="batchSummary" class="batch-summary">No batch loaded.</div>
+          <label>Name Column</label><select id="mapName"></select>
+          <label>ID Column</label><select id="mapId"></select>
+          <label>Job Title Column</label><select id="mapJob"></select>
+          <label>Company Column</label><select id="mapCompany"></select>
+          <label>Phone Column</label><select id="mapPhone"></select>
+          <label>Email Column</label><select id="mapEmail"></select>
+          <label>Website Column</label><select id="mapWebsite"></select>
+          <label>Photo Filename Column</label><select id="mapPhoto"></select>
+          <div class="batch-range">
+            <div><label>From</label><input id="batchFrom" type="number" min="1" value="1"></div>
+            <div><label>To</label><input id="batchTo" type="number" min="1" value="50"></div>
+          </div>
+          <label class="background-sync-option"><input id="batchBothSides" type="checkbox"><span>Print Front + Back</span></label>
+          <div class="builder-actions">
+            <button id="batchPreviewBtn">Preview Record</button>
+            <button id="batchPrint50Btn" class="primary">Print This 50</button>
+          </div>
+          <div class="builder-actions">
+            <button id="batchPrev50Btn">Previous 50</button>
+            <button id="batchNext50Btn">Next 50</button>
+          </div>
+          <div class="builder-actions">
+            <button id="batchReprintBtn">Reprint Current</button>
+            <button id="batchResetBtn">Reset Batch</button>
+          </div>
+          <div id="batchProgress" class="batch-progress">Ready.</div>
+          <p class="builder-note">One print dialog contains up to 50 cards. After printing, use Next 50.</p>
+        </div>
+
         <div class="builder-panel">
           <h3>Employee Card Builder</h3>
           <label>Company Name</label><input id="builderCompany" placeholder="Company name">
@@ -176,6 +213,6 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <script src="app.js?v=6.6.2-both-sides-zip-fix"></script>
+  <script src="app.js?v=7.0-batch-print"></script>
 </body>
 </html>

@@ -27,3 +27,9 @@ header{display:flex;justify-content:space-between;gap:20px;align-items:center;pa
   margin: 0;
   flex: 0 0 auto;
 }
+
+/* V7.0 Batch Print */
+.batch-panel{border-color:#1684e8;box-shadow:0 0 0 1px rgba(22,132,232,.18)}
+.batch-summary,.batch-progress{margin-top:10px;padding:9px;border-radius:8px;background:#0e141c;color:#bcd7ee;font-size:12px;line-height:1.45}
+.batch-range{display:grid;grid-template-columns:1fr 1fr;gap:8px}.batch-range label{margin-top:8px}
+.batch-panel select{padding:7px}.batch-panel input[type=file]{font-size:11px}
