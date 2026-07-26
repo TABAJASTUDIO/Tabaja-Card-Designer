@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Tabaja Card Designer V7.4 Professional Quality</title>
+  <title>Tabaja Card Designer V8.0 Professional Beta</title>
   <link rel="stylesheet" href="style.css?v=6.2-beta.1">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -31,10 +31,10 @@
   <div id="appShell" class="app-shell hidden">
     <header>
       <div>
-        <h1>Tabaja Card Designer V7.4 • Professional Quality</h1>
-        <small>Professional CR80 PVC Card Designer • Powered by Tabaja Solution</small>
+        <h1>Tabaja Card Designer V8.0 • Professional Beta</h1>
+        <small id="pageSubtitle">Dashboard • Professional CR80 PVC Production Suite</small>
       </div>
-      <div class="top-actions">
+      <div class="top-actions" id="designerTopActions">
         <button id="newBtn">New</button>
         <button id="saveBtn">Save</button>
         <button id="openBtn">Open Project</button>
@@ -48,8 +48,37 @@
       </div>
     </header>
 
-    <main>
-      <aside class="tools">
+    <nav class="v8-nav" aria-label="Main navigation">
+      <button class="v8-nav-btn active" data-view="dashboard">⌂<span>Dashboard</span></button>
+      <button class="v8-nav-btn" data-view="designer">✦<span>Card Designer</span></button>
+      <button class="v8-nav-btn" data-view="batch">▦<span>Batch Printing</span></button>
+      <button class="v8-nav-btn" data-view="quality">★<span>Print Quality</span></button>
+      <button class="v8-nav-btn" data-view="zebra">▣<span>Zebra Settings</span></button>
+    </nav>
+
+    <section id="v8Dashboard" class="v8-dashboard">
+      <div class="v8-hero">
+        <div>
+          <span class="v8-kicker">TABAJA PRODUCTION WORKSPACE</span>
+          <h2>What are you printing today?</h2>
+          <p>Single employee cards and large Excel batches are now separated, so the workspace stays clean and easy to use.</p>
+        </div>
+        <div class="v8-ready-badge">● SYSTEM READY</div>
+      </div>
+      <div class="v8-dashboard-grid">
+        <button class="v8-action-card" data-go="designer"><b>Design One Card</b><span>Create or update a single employee card.</span><em>Open Designer →</em></button>
+        <button class="v8-action-card featured" data-go="batch"><b>Print an Excel Batch</b><span>Import employees, photos, logos and print up to 50 cards.</span><em>Start Batch Wizard →</em></button>
+        <button class="v8-action-card" data-go="quality"><b>Professional Quality</b><span>Photo enhancement, sharp text and high-resolution output.</span><em>Open Quality →</em></button>
+        <button class="v8-action-card" data-go="zebra"><b>Zebra ZC300 Setup</b><span>Card offset, bleed and test-card controls.</span><em>Open Printer Setup →</em></button>
+      </div>
+      <div class="v8-workflow">
+        <h3>Batch workflow</h3>
+        <div class="v8-steps"><span>1 Excel</span><i>→</i><span>2 Photos</span><i>→</i><span>3 Logos</span><i>→</i><span>4 Preview</span><i>→</i><span>5 Pre-flight</span><i>→</i><span>6 Print</span></div>
+      </div>
+    </section>
+
+    <main id="v8Main">
+      <aside class="tools" data-v8-section="designer">
         <h3>Tools</h3>
         <button id="addTextBtn">Add Text</button>
         <button id="addImageBtn">Add Image</button>
@@ -73,7 +102,7 @@
         <input id="projectInput" type="file" accept=".tabaja,.json" hidden>
       </aside>
 
-      <section class="workspace">
+      <section class="workspace" data-v8-section="workspace">
         <div class="workspace-bar">
           <div id="cardInfo" class="card-info">CR80 • 85.60 × 53.98 mm • Landscape • 300 DPI</div>
           <label class="orientation-label">Orientation
@@ -91,7 +120,7 @@
 
       <aside class="properties">
 
-        <div class="builder-panel background-panel">
+        <div class="builder-panel background-panel" data-v8-panel="designer">
           <h3>🎨 Card Background</h3>
           <label>Solid Color</label>
           <div class="background-color-row">
@@ -125,8 +154,8 @@
           <p class="builder-note">The background stays behind every element and is included in PNG, PDF and printing.</p>
         </div>
 
-        <div class="builder-panel batch-panel">
-          <h3>📥 Excel Batch Print (50 Cards) — V7.3 Stability</h3>
+        <div class="builder-panel batch-panel" data-v8-panel="batch">
+          <h3>📥 Batch Printing Wizard — V8.0</h3>
           <label>1. Upload Excel / CSV</label>
           <input id="batchExcelInput" type="file" accept=".xlsx,.xls,.csv">
           <label>2. Upload Employee Photos Folder (optional)</label>
@@ -173,7 +202,7 @@
           <p class="builder-note">Missing photos are cleared and marked, never copied from another record. When a logo exists, only the logo is shown. Backgrounds reset for every record. Contact icons are added automatically only when a value exists. Photo matching: Employee ID (example 000001.jpg). Logo matching: company name (example B7S.png) or the optional Logo Filename column. One print dialog contains up to 50 cards.</p>
         </div>
 
-        <div class="builder-panel">
+        <div class="builder-panel" data-v8-panel="designer">
           <h3>Employee Card Builder</h3>
           <label>Company Name</label><input id="builderCompany" placeholder="Company name">
           <label>Employee Name</label><input id="builderName" placeholder="Full name">
@@ -188,7 +217,7 @@
           <label>LinkedIn</label><input id="builderLinkedIn" placeholder="LinkedIn username / link (optional)">
           <label>Employee Photo</label><input id="builderPhoto" type="file" accept="image/*">
           <label>Company Logo</label><input id="builderLogo" type="file" accept="image/*">
-          <details class="quality-tools" id="qualityTools">
+          <details class="quality-tools" id="qualityTools" open>
             <summary>Advanced Image &amp; Print Quality</summary>
             <label class="background-sync-option"><input id="autoEnhancePhotos" type="checkbox" checked><span>Auto-enhance employee photos</span></label>
             <label>Photo brightness <span id="brightnessValue">3%</span></label>
@@ -216,6 +245,31 @@
           </div>
           <p class="builder-note">You can move and resize the generated elements. Updating the employee keeps their positions.</p>
         </div>
+        <div id="v8QualityPanel" class="builder-panel v8-special-panel" data-v8-panel="quality">
+          <h3>★ Professional Print Quality</h3>
+          <p class="v8-panel-intro">Choose one quality mode. Professional is recommended for Zebra PVC cards.</p>
+          <div class="v8-quality-modes">
+            <button type="button" data-quality-mode="standard"><b>Standard</b><span>Fast preview</span></button>
+            <button type="button" class="active" data-quality-mode="professional"><b>Professional</b><span>Recommended</span></button>
+            <button type="button" data-quality-mode="ultra"><b>Ultra HD</b><span>Maximum detail</span></button>
+          </div>
+          <div id="qualityToolsHost"></div>
+          <div class="v8-quality-status"><b>Automatic:</b> high-quality text, photo enhancement and bleed-safe rendering.</div>
+        </div>
+
+        <div id="v8ZebraPanel" class="builder-panel v8-special-panel" data-v8-panel="zebra">
+          <h3>▣ Zebra ZC300 Settings</h3>
+          <p class="v8-panel-intro">Use the offsets only when a printed card shifts toward one edge.</p>
+          <label>Horizontal offset X (mm)</label><input id="zebraOffsetX" type="number" value="0" min="-3" max="3" step="0.1">
+          <label>Vertical offset Y (mm)</label><input id="zebraOffsetY" type="number" value="0" min="-3" max="3" step="0.1">
+          <label>Smart bleed</label><select id="zebraBleed"><option value="0.5">0.5 mm</option><option value="1" selected>1.0 mm</option><option value="1.5">1.5 mm</option></select>
+          <label>Card format</label><select><option>CR80 — 85.60 × 53.98 mm</option></select>
+          <div class="builder-actions"><button type="button" id="saveZebraSettings">Save Settings</button><button type="button" id="resetZebraSettings">Reset</button></div>
+          <button type="button" class="primary background-full-button" id="zebraTestCard">Prepare Test Card</button>
+          <div id="zebraSettingsStatus" class="batch-progress">Default Zebra settings loaded.</div>
+        </div>
+
+        <div data-v8-panel="designer" class="v8-properties-block">
         <hr>
         <h3>Properties</h3>
         <label>Text</label>
@@ -243,11 +297,13 @@
           <b>Image tools</b>
           <p>Select an image first. Fill Card covers the card. Fit Inside shows the complete image. Crop Mode clips the image while you move or resize it.</p>
         </div>
+        </div>
       </aside>
     </main>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <script src="app.js?v=7.4-professional-quality"></script>
+  <script src="app.js?v=8.0-professional-beta"></script>
+  <script src="v8-ui.js?v=8.0-professional-beta"></script>
 </body>
 </html>
