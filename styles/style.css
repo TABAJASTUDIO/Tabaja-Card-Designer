@@ -33,3 +33,11 @@ header{display:flex;justify-content:space-between;gap:20px;align-items:center;pa
 .batch-summary,.batch-progress{margin-top:10px;padding:9px;border-radius:8px;background:#0e141c;color:#bcd7ee;font-size:12px;line-height:1.45}
 .batch-range{display:grid;grid-template-columns:1fr 1fr;gap:8px}.batch-range label{margin-top:8px}
 .batch-panel select{padding:7px}.batch-panel input[type=file]{font-size:11px}
+
+
+/* V7.4 Professional Quality */
+.quality-tools{margin-top:12px;padding:10px;border:1px solid #35506b;border-radius:10px;background:#101821}
+.quality-tools summary{cursor:pointer;font-weight:800;color:#66b7ff;padding:4px 0}
+.quality-tools[open] summary{margin-bottom:8px}
+.quality-tools label span{float:right;color:#8ecbff;font-weight:700}
+.quality-tools input[type=range]{accent-color:#1684e8}

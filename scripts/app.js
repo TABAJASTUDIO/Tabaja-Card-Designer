@@ -524,7 +524,7 @@ function renderSnapshotToData(snapshotJson, format = "png", quality = 1) {
       try {
         temp.setDimensions({ width: W, height: H });
         temp.renderAll();
-        const data = temp.toDataURL({ format, quality, multiplier: 1, enableRetinaScaling: false });
+        const data = temp.toDataURL({ format, quality, multiplier: photoQualitySettings.highQuality ? 2 : 1, enableRetinaScaling: false });
         temp.dispose();
         resolve(data);
       } catch (e) {
@@ -546,7 +546,7 @@ function exportVisibleCanvas(format = "png", quality = 1) {
   return canvas.toDataURL({
     format,
     quality,
-    multiplier: 1,
+    multiplier: photoQualitySettings.highQuality ? 2 : 1,
     enableRetinaScaling: false
   });
 }
@@ -562,7 +562,7 @@ $("pngBtn").onclick = async () => {
     if (!both) {
       // Export exactly what is visible on the editor right now.
       const data = exportVisibleCanvas("png", 1);
-      downloadData(data, `Tabaja-Card-${selectedSide}-${orientation}-300DPI.png`);
+      downloadData(data, `Tabaja-Card-${selectedSide}-${orientation}-${photoQualitySettings.highQuality?600:300}DPI.png`);
       status(`${selectedSide.toUpperCase()} PNG exported.`);
       return;
     }
@@ -579,7 +579,7 @@ $("pngBtn").onclick = async () => {
     for (const side of ["front", "back"]) {
       const data = await renderSnapshotToData(frozenSides[side], "png", 1);
       const base64 = data.split(",")[1];
-      zip.file(`Tabaja-Card-${side}-${orientation}-300DPI.png`, base64, { base64: true });
+      zip.file(`Tabaja-Card-${side}-${orientation}-${photoQualitySettings.highQuality?600:300}DPI.png`, base64, { base64: true });
     }
 
     const zipBlob = await zip.generateAsync({ type: "blob" });
@@ -866,6 +866,79 @@ if (isLoggedIn()) showApp(); else showLogin();
 
 // ===== V6.1 BETA: Employee Card Builder — working canvas generator =====
 const V61_TEMPLATE_KEY = "tabaja_card_designer_v61_template";
+const photoQualitySettings = {
+  auto: true,
+  brightness: 0.03,
+  contrast: 0.06,
+  saturation: 0.02,
+  sharpness: 2,
+  highQuality: true
+};
+
+function qualityEl(id){ return document.getElementById(id); }
+function loadQualitySettings(){
+  try{
+    const saved=JSON.parse(localStorage.getItem('tabaja_v74_quality')||'null');
+    if(saved && typeof saved==='object') Object.assign(photoQualitySettings,saved);
+  }catch(_e){}
+}
+function saveQualitySettings(){ localStorage.setItem('tabaja_v74_quality',JSON.stringify(photoQualitySettings)); }
+function syncQualityControls(){
+  if(!qualityEl('autoEnhancePhotos')) return;
+  qualityEl('autoEnhancePhotos').checked=!!photoQualitySettings.auto;
+  qualityEl('photoBrightness').value=Math.round(photoQualitySettings.brightness*100);
+  qualityEl('photoContrast').value=Math.round(photoQualitySettings.contrast*100);
+  qualityEl('photoSaturation').value=Math.round(photoQualitySettings.saturation*100);
+  qualityEl('photoSharpness').value=photoQualitySettings.sharpness;
+  qualityEl('highQualityOutput').checked=!!photoQualitySettings.highQuality;
+  qualityEl('brightnessValue').textContent=Math.round(photoQualitySettings.brightness*100)+'%';
+  qualityEl('contrastValue').textContent=Math.round(photoQualitySettings.contrast*100)+'%';
+  qualityEl('saturationValue').textContent=Math.round(photoQualitySettings.saturation*100)+'%';
+  qualityEl('sharpnessValue').textContent=['Off','Light','Medium','Strong'][photoQualitySettings.sharpness]||'Medium';
+}
+function applyEmployeePhotoFilters(image){
+  if(!image || image.role!=='employeePhoto') return;
+  image.filters=[];
+  if(photoQualitySettings.auto){
+    if(Math.abs(photoQualitySettings.brightness)>0.001) image.filters.push(new fabric.Image.filters.Brightness({brightness:photoQualitySettings.brightness}));
+    if(Math.abs(photoQualitySettings.contrast)>0.001) image.filters.push(new fabric.Image.filters.Contrast({contrast:photoQualitySettings.contrast}));
+    if(Math.abs(photoQualitySettings.saturation)>0.001) image.filters.push(new fabric.Image.filters.Saturation({saturation:photoQualitySettings.saturation}));
+    const sharp=photoQualitySettings.sharpness;
+    if(sharp>0){
+      const center=[1.10,1.22,1.36][sharp-1]||1.22;
+      const edge=(1-center)/4;
+      image.filters.push(new fabric.Image.filters.Convolute({matrix:[0,edge,0,edge,center,edge,0,edge,0]}));
+    }
+  }
+  image.applyFilters();
+  image.dirty=true;
+}
+function currentEmployeePhoto(){ return builderObject('employeePhoto'); }
+function wireQualityTools(){
+  loadQualitySettings(); syncQualityControls();
+  const update=()=>{
+    photoQualitySettings.auto=qualityEl('autoEnhancePhotos').checked;
+    photoQualitySettings.brightness=Number(qualityEl('photoBrightness').value)/100;
+    photoQualitySettings.contrast=Number(qualityEl('photoContrast').value)/100;
+    photoQualitySettings.saturation=Number(qualityEl('photoSaturation').value)/100;
+    photoQualitySettings.sharpness=Number(qualityEl('photoSharpness').value);
+    photoQualitySettings.highQuality=qualityEl('highQualityOutput').checked;
+    saveQualitySettings(); syncQualityControls();
+  };
+  ['autoEnhancePhotos','photoBrightness','photoContrast','photoSaturation','photoSharpness','highQualityOutput'].forEach(id=>qualityEl(id)?.addEventListener('input',update));
+  qualityEl('applyEnhanceBtn')?.addEventListener('click',()=>{
+    update(); const image=currentEmployeePhoto();
+    if(!image) return alert('Select or preview an employee photo first.');
+    applyEmployeePhotoFilters(image); canvas.requestRenderAll(); saveCurrentSide(); status('Photo enhancement applied.');
+  });
+  qualityEl('resetEnhanceBtn')?.addEventListener('click',()=>{
+    Object.assign(photoQualitySettings,{auto:true,brightness:0.03,contrast:0.06,saturation:0.02,sharpness:2,highQuality:true});
+    saveQualitySettings(); syncQualityControls();
+    const image=currentEmployeePhoto(); if(image){applyEmployeePhotoFilters(image);canvas.requestRenderAll();saveCurrentSide();}
+    status('Professional quality defaults restored.');
+  });
+}
+
 let builderPhotoData = "";
 let builderLogoData = "";
 let builderBatchBackgroundData = "";
@@ -958,6 +1031,7 @@ async function builderAddOrUpdateImage(role, dataUrl, box) {
     angle: saved ? saved.angle : 0,
     scaleX: scale, scaleY: scale
   });
+  if (role === "employeePhoto") applyEmployeePhotoFilters(image);
   rememberImage(image);
   canvas.add(image);
   image.setCoords();
@@ -1257,7 +1331,7 @@ $("cardColor").addEventListener("input", event => {
   $("cardBgSolidColor").value = event.target.value;
 });
 
-status("V7.3 Stability ready — media reset, logo-only mode, crisp export, pre-flight and bleed overscan.");
+status("V7.4 Professional Quality ready — media reset, logo-only mode, crisp export, pre-flight and bleed overscan.");
 
 // ===== V7.0: Excel Batch Print — 50 cards per print job =====
 let batchRows = [];
@@ -1548,4 +1622,8 @@ batchEl('batchPrint50Btn')?.addEventListener('click',async()=>{
 
 setupBatchMappings();
 const lastBatchEnd=Number(localStorage.getItem('tabaja_v7_last_batch_end')||0);
-if(lastBatchEnd>0) batchMsg(`V7.0 ready. Last completed batch ended at record ${lastBatchEnd}.`); else batchMsg('V7.3 Stability ready — media reset, pre-flight check, crisp 2× rendering and edge overscan.');
+if(lastBatchEnd>0) batchMsg(`V7.0 ready. Last completed batch ended at record ${lastBatchEnd}.`); else batchMsg('V7.4 Professional Quality ready — media reset, pre-flight check, crisp 2× rendering and edge overscan.');
+
+
+// V7.4 Professional Quality controls
+wireQualityTools();

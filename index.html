@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Tabaja Card Designer V7.1 Batch Print + Company Logos</title>
+  <title>Tabaja Card Designer V7.4 Professional Quality</title>
   <link rel="stylesheet" href="style.css?v=6.2-beta.1">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -31,7 +31,7 @@
   <div id="appShell" class="app-shell hidden">
     <header>
       <div>
-        <h1>Tabaja Card Designer V7.1 • Batch Print + Company Logos</h1>
+        <h1>Tabaja Card Designer V7.4 • Professional Quality</h1>
         <small>Professional CR80 PVC Card Designer • Powered by Tabaja Solution</small>
       </div>
       <div class="top-actions">
@@ -188,6 +188,24 @@
           <label>LinkedIn</label><input id="builderLinkedIn" placeholder="LinkedIn username / link (optional)">
           <label>Employee Photo</label><input id="builderPhoto" type="file" accept="image/*">
           <label>Company Logo</label><input id="builderLogo" type="file" accept="image/*">
+          <details class="quality-tools" id="qualityTools">
+            <summary>Advanced Image &amp; Print Quality</summary>
+            <label class="background-sync-option"><input id="autoEnhancePhotos" type="checkbox" checked><span>Auto-enhance employee photos</span></label>
+            <label>Photo brightness <span id="brightnessValue">3%</span></label>
+            <input id="photoBrightness" type="range" min="-20" max="20" value="3" step="1">
+            <label>Photo contrast <span id="contrastValue">6%</span></label>
+            <input id="photoContrast" type="range" min="-20" max="30" value="6" step="1">
+            <label>Photo saturation <span id="saturationValue">2%</span></label>
+            <input id="photoSaturation" type="range" min="-20" max="30" value="2" step="1">
+            <label>Photo sharpness <span id="sharpnessValue">Medium</span></label>
+            <input id="photoSharpness" type="range" min="0" max="3" value="2" step="1">
+            <label class="background-sync-option"><input id="highQualityOutput" type="checkbox" checked><span>600 DPI PNG / professional print rendering</span></label>
+            <div class="builder-actions">
+              <button id="applyEnhanceBtn" type="button">Apply to Current Photo</button>
+              <button id="resetEnhanceBtn" type="button">Reset Quality</button>
+            </div>
+            <p class="builder-note">Enhancement applies only to employee photos—not logos or backgrounds. High-quality text is automatic and remains enabled by default.</p>
+          </details>
           <div class="builder-actions">
             <button class="primary" id="generateEmployeeBtn">Generate / Update Card</button>
             <button id="replacePhotoBtn">Replace Photo</button>
@@ -230,6 +248,6 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <script src="app.js?v=7.1-company-logo-folder"></script>
+  <script src="app.js?v=7.4-professional-quality"></script>
 </body>
 </html>
