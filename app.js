@@ -1209,12 +1209,13 @@ $("cardColor").addEventListener("input", event => {
   $("cardBgSolidColor").value = event.target.value;
 });
 
-status("V6.3 BETA ready — Employee Builder preserves the selected Card Background.");
+status("V7.1 ready — Excel batch printing with employee photo and company logo folder matching.");
 
 // ===== V7.0: Excel Batch Print — 50 cards per print job =====
 let batchRows = [];
 let batchHeaders = [];
 let batchPhotoMap = new Map();
+let batchLogoMap = new Map();
 let batchCurrentIndex = 0;
 const BATCH_SIZE = 50;
 
@@ -1246,11 +1247,12 @@ function setupBatchMappings(){
   fillMappingSelect('mapEmail',['email','emailaddress']);
   fillMappingSelect('mapWebsite',['website','web']);
   fillMappingSelect('mapPhoto',['photo','photofilename','image','picture']);
+  fillMappingSelect('mapLogo',['logo','logofilename','companylogo','brandlogo']);
 }
 function updateBatchSummary(){
   const summary=batchEl('batchSummary'); if(!summary) return;
   if(!batchRows.length){ summary.textContent='No batch loaded.'; return; }
-  summary.textContent=`${batchRows.length} records loaded • ${batchHeaders.length} columns • ${batchPhotoMap.size} photos loaded`;
+  summary.textContent=`${batchRows.length} records loaded • ${batchHeaders.length} columns • ${countUniqueFiles(batchPhotoMap)} employee photos • ${countUniqueFiles(batchLogoMap)} company logos`;
   batchEl('batchFrom').max=batchRows.length; batchEl('batchTo').max=batchRows.length;
   batchEl('batchTo').value=Math.min(BATCH_SIZE,batchRows.length);
 }
@@ -1269,16 +1271,30 @@ batchEl('batchExcelInput')?.addEventListener('change', async e=>{
   }catch(err){ console.error(err); batchMsg('Excel error: '+(err.message||err)); }
 });
 
-batchEl('batchPhotosInput')?.addEventListener('change', async e=>{
-  batchPhotoMap.clear();
-  const files=[...(e.target.files||[])];
+
+function countUniqueFiles(map){ return new Set([...map.values()]).size; }
+function indexImageFiles(targetMap, files){
+  targetMap.clear();
   for(const file of files){
     const full=(file.webkitRelativePath||file.name).toLowerCase();
-    batchPhotoMap.set(full,file);
-    batchPhotoMap.set(file.name.toLowerCase(),file);
-    batchPhotoMap.set(normalizeKey(file.name.replace(/\.[^.]+$/,'')),file);
+    const base=file.name.toLowerCase();
+    const stem=normalizeKey(file.name.replace(/\.[^.]+$/,''));
+    targetMap.set(full,file);
+    targetMap.set(base,file);
+    targetMap.set(stem,file);
   }
-  updateBatchSummary(); batchMsg(`${files.length} photos loaded.`);
+}
+
+batchEl('batchPhotosInput')?.addEventListener('change', async e=>{
+  const files=[...(e.target.files||[])];
+  indexImageFiles(batchPhotoMap,files);
+  updateBatchSummary(); batchMsg(`${files.length} employee photos loaded.`);
+});
+
+batchEl('batchLogosInput')?.addEventListener('change', async e=>{
+  const files=[...(e.target.files||[])];
+  indexImageFiles(batchLogoMap,files);
+  updateBatchSummary(); batchMsg(`${files.length} company logos loaded. Logo will match by company name or Logo Filename column.`);
 });
 
 function mappedValue(row,id){ const col=batchEl(id)?.value; return col ? String(row[col] ?? '').trim() : ''; }
@@ -1295,6 +1311,24 @@ function findPhotoFile(row){
   }
   return null;
 }
+function findFileInMap(map,candidates){
+  for(const c of candidates.filter(Boolean)){
+    const low=String(c).trim().toLowerCase();
+    const stem=normalizeKey(low.replace(/\.[^.]+$/,''));
+    if(map.has(low)) return map.get(low);
+    if(map.has(stem)) return map.get(stem);
+    for(const [key,file] of map){
+      if(key.endsWith('/'+low) || normalizeKey(key.replace(/\.[^.]+$/,''))===stem) return file;
+    }
+  }
+  return null;
+}
+function findLogoFile(row){
+  const named=mappedValue(row,'mapLogo');
+  const company=mappedValue(row,'mapCompany');
+  return findFileInMap(batchLogoMap,[named,company]);
+}
+
 function fileToDataUrl(file){ return new Promise((resolve,reject)=>{ const r=new FileReader(); r.onload=()=>resolve(String(r.result||'')); r.onerror=reject; r.readAsDataURL(file); }); }
 
 async function applyBatchRecord(index){
@@ -1308,7 +1342,9 @@ async function applyBatchRecord(index){
   batchEl('builderEmail').value=mappedValue(row,'mapEmail');
   batchEl('builderWebsite').value=mappedValue(row,'mapWebsite');
   const photo=findPhotoFile(row);
+  const logo=findLogoFile(row);
   builderPhotoData=photo?await fileToDataUrl(photo):'';
+  builderLogoData=logo?await fileToDataUrl(logo):'';
   await generateEmployeeCard();
   batchMsg(`Previewing record ${index+1}/${batchRows.length}: ${mappedValue(row,'mapName')||'Unnamed'}`);
   return row;
@@ -1328,7 +1364,7 @@ function setBatchRange(start){
 batchEl('batchNext50Btn')?.addEventListener('click',()=>setBatchRange((Number(batchEl('batchTo').value)||0)+1));
 batchEl('batchPrev50Btn')?.addEventListener('click',()=>setBatchRange((Number(batchEl('batchFrom').value)||1)-BATCH_SIZE));
 batchEl('batchReprintBtn')?.addEventListener('click',async()=>{ try{ await applyBatchRecord(batchCurrentIndex); await printBatchRange(batchCurrentIndex,batchCurrentIndex); }catch(e){alert(e.message||e);} });
-batchEl('batchResetBtn')?.addEventListener('click',()=>{ batchRows=[];batchHeaders=[];batchPhotoMap.clear();batchCurrentIndex=0;setupBatchMappings();updateBatchSummary();batchMsg('Batch reset.'); });
+batchEl('batchResetBtn')?.addEventListener('click',()=>{ batchRows=[];batchHeaders=[];batchPhotoMap.clear();batchLogoMap.clear();batchCurrentIndex=0;builderPhotoData='';builderLogoData='';setupBatchMappings();updateBatchSummary();batchMsg('Batch reset.'); });
 
 async function snapshotDataUrl(snapshotJson){
   return new Promise((resolve,reject)=>{

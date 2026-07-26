@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Tabaja Card Designer V7.0 Batch Print</title>
+  <title>Tabaja Card Designer V7.1 Batch Print + Company Logos</title>
   <link rel="stylesheet" href="style.css?v=6.2-beta.1">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -31,7 +31,7 @@
   <div id="appShell" class="app-shell hidden">
     <header>
       <div>
-        <h1>Tabaja Card Designer V7.0 • Batch Print Edition</h1>
+        <h1>Tabaja Card Designer V7.1 • Batch Print + Company Logos</h1>
         <small>Professional CR80 PVC Card Designer • Powered by Tabaja Solution</small>
       </div>
       <div class="top-actions">
@@ -129,8 +129,10 @@
           <h3>📥 Excel Batch Print (50 Cards)</h3>
           <label>1. Upload Excel / CSV</label>
           <input id="batchExcelInput" type="file" accept=".xlsx,.xls,.csv">
-          <label>2. Upload Photos Folder (optional)</label>
+          <label>2. Upload Employee Photos Folder (optional)</label>
           <input id="batchPhotosInput" type="file" accept="image/*" webkitdirectory directory multiple>
+          <label>3. Upload Company Logos Folder (optional)</label>
+          <input id="batchLogosInput" type="file" accept="image/*" webkitdirectory directory multiple>
           <div id="batchSummary" class="batch-summary">No batch loaded.</div>
           <label>Name Column</label><select id="mapName"></select>
           <label>ID Column</label><select id="mapId"></select>
@@ -140,6 +142,7 @@
           <label>Email Column</label><select id="mapEmail"></select>
           <label>Website Column</label><select id="mapWebsite"></select>
           <label>Photo Filename Column</label><select id="mapPhoto"></select>
+          <label>Logo Filename Column (optional)</label><select id="mapLogo"></select>
           <div class="batch-range">
             <div><label>From</label><input id="batchFrom" type="number" min="1" value="1"></div>
             <div><label>To</label><input id="batchTo" type="number" min="1" value="50"></div>
@@ -158,7 +161,7 @@
             <button id="batchResetBtn">Reset Batch</button>
           </div>
           <div id="batchProgress" class="batch-progress">Ready.</div>
-          <p class="builder-note">One print dialog contains up to 50 cards. After printing, use Next 50.</p>
+          <p class="builder-note">Photo matching: Employee ID (example 000001.jpg). Logo matching: company name (example B7S.png) or the optional Logo Filename column. One print dialog contains up to 50 cards.</p>
         </div>
 
         <div class="builder-panel">
@@ -213,6 +216,6 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <script src="app.js?v=7.0-batch-print"></script>
+  <script src="app.js?v=7.1-company-logo-folder"></script>
 </body>
 </html>
