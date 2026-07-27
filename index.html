@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Tabaja Card Designer V10 Account Preview</title>
+  <title>Tabaja Card Designer V10.1 Cloud Foundation</title>
   <meta name="theme-color" content="#1684e8">
   <meta name="application-name" content="Tabaja Card Designer">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -12,13 +12,14 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style.css?v=10.0.0">
+  <link rel="stylesheet" href="style.css?v=10.1.0">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/svg2pdf.js@2.5.0/dist/svg2pdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <section id="loginScreen" class="login-screen">
@@ -33,7 +34,7 @@
           <div><b>Plan permissions</b><span>Features can be enabled by subscription.</span></div>
           <div><b>PWA ready</b><span>Runs as an installed Windows or Android app.</span></div>
         </div>
-        <small>V10 Account Preview — cloud connection comes in the next backend build.</small>
+        <small>V10.1 Cloud Foundation — real cloud accounts are now supported through Supabase.</small>
       </div>
 
       <div class="auth-card">
@@ -58,7 +59,7 @@
 
         <form id="registerForm" class="auth-form hidden" autocomplete="on">
           <h2>Create company workspace</h2>
-          <p>Set up a customer account for this preview.</p>
+          <p>Create a secure company workspace in the cloud.</p>
           <div class="form-grid">
             <div><label for="registerCompany">Company name</label><input id="registerCompany" required></div>
             <div><label for="registerOwner">Owner name</label><input id="registerOwner" required></div>
@@ -68,7 +69,7 @@
           <label for="registerEmail">Email</label><input id="registerEmail" type="email" autocomplete="email" required>
           <label for="registerPassword">Password</label><div class="password-field"><input id="registerPassword" type="password" minlength="8" autocomplete="new-password" required><button id="toggleRegisterPassword" type="button">Show</button></div>
           <label class="remember"><input id="acceptTerms" type="checkbox" required> I accept the service terms and account rules.</label>
-          <button class="primary login-button" type="submit">Create Preview Account</button>
+          <button class="primary login-button" type="submit">Create Company Account</button>
           <div id="registerError" class="login-error" aria-live="polite"></div>
         </form>
 
@@ -86,7 +87,7 @@
   <div id="appShell" class="app-shell hidden">
     <header>
       <div>
-        <h1>Tabaja Card Designer V10 • Account Preview</h1>
+        <h1>Tabaja Card Designer V10.1 • Cloud Foundation</h1>
         <small id="pageSubtitle">Dashboard • Professional CR80 PVC Production Suite</small>
       </div>
       <div class="top-actions" id="designerTopActions">
@@ -100,7 +101,7 @@
         <button class="primary" id="vectorPrintBtn">Print Vector</button>
         <button class="primary" id="printBothBtn">Print Front + Back (Exact)</button>
         <button id="installAppBtn" class="install-app-btn" type="button" disabled>⬇ Install App</button>
-        <div class="account-chip"><span class="account-avatar" id="accountAvatar">T</span><span><b id="accountName">Tabaja Admin</b><small id="accountCompany">Tabaja Solution</small></span></div><button id="logoutBtn">Logout</button>
+        <div class="account-chip"><span class="account-avatar" id="accountAvatar">T</span><span><b id="accountName">Tabaja Admin</b><small id="accountCompany">Tabaja Solution</small></span></div><button id="cloudSetupBtn" type="button">Cloud Setup</button><button id="logoutBtn">Logout</button>
         <small id="pwaInstallStatus" class="pwa-install-status">Preparing install…</small>
       </div>
     </header>
@@ -120,13 +121,13 @@
           <h2>What are you printing today?</h2>
           <p>Single employee cards and large Excel batches are now separated, so the workspace stays clean and easy to use.</p>
         </div>
-        <div class="v8-ready-badge">● SYSTEM READY</div>
+        <div><div class="v8-ready-badge">● SYSTEM READY</div><div id="cloudStatusBadge" class="cloud-status-badge">LOCAL PREVIEW</div></div>
       </div>
       <div class="account-summary-grid">
         <div><span>Plan</span><b id="planName">Professional Preview</b><small>Account active</small></div>
         <div><span>Company</span><b id="summaryCompany">Tabaja Solution</b><small>Private workspace</small></div>
-        <div><span>Users</span><b>1 of 3</b><small>Preview allowance</small></div>
-        <div><span>Licence</span><b class="status-active">ACTIVE</b><small>No expiry in preview</small></div>
+        <div><span>Users</span><b id="usersAllowance">1 of 3</b><small id="usersAllowanceNote">Plan allowance</small></div>
+        <div><span>Licence</span><b id="licenceStatus" class="status-active">ACTIVE</b><small id="licenceNote">Cloud licence status</small></div>
       </div>
       <div class="v8-dashboard-grid">
         <button class="v8-action-card" data-go="designer"><b>Design One Card</b><span>Create or update a single employee card.</span><em>Open Designer →</em></button>
@@ -367,13 +368,34 @@
     </main>
   </div>
 
+
+  <div id="cloudSetupModal" class="cloud-modal hidden" role="dialog" aria-modal="true" aria-labelledby="cloudSetupTitle">
+    <div class="cloud-modal-card">
+      <button id="closeCloudSetupBtn" class="cloud-modal-close" type="button">×</button>
+      <span class="v8-kicker">TABAJA CLOUD</span>
+      <h2 id="cloudSetupTitle">Connect secure cloud backend</h2>
+      <p>Paste the Supabase Project URL and anon/public key. Never use the service_role key here.</p>
+      <label for="cloudProjectUrl">Project URL</label>
+      <input id="cloudProjectUrl" type="url" placeholder="https://your-project.supabase.co">
+      <label for="cloudAnonKey">Anon / public key</label>
+      <textarea id="cloudAnonKey" rows="5" placeholder="eyJhbGciOi..."></textarea>
+      <div class="cloud-modal-actions">
+        <button id="testCloudBtn" class="primary" type="button">Test & Save</button>
+        <button id="disconnectCloudBtn" type="button">Use Local Preview</button>
+      </div>
+      <div id="cloudSetupMessage" class="cloud-setup-message"></div>
+      <small>First run <b>supabase-schema.sql</b> inside your Supabase SQL Editor.</small>
+    </div>
+  </div>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <div id="pwaUpdateToast" class="pwa-update-toast" hidden>
     <span>A new version is ready.</span>
     <button id="pwaUpdateBtn" type="button">Update now</button>
   </div>
-  <script src="app.js?v=10.0.0"></script>
-  <script src="v8-ui.js?v=10.0.0"></script>
-  <script src="pwa.js?v=10.0.0"></script>
+  <script src="cloud.js?v=10.1.0"></script>
+  <script src="app.js?v=10.1.0"></script>
+  <script src="v8-ui.js?v=10.1.0"></script>
+  <script src="pwa.js?v=10.1.0"></script>
 </body>
 </html>

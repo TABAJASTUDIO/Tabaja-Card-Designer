@@ -61,42 +61,129 @@ $("backToLoginBtn").onclick = () => showAuthView("login");
 $("toggleLoginPassword").onclick = e => togglePassword("loginPassword", e.currentTarget);
 $("toggleRegisterPassword").onclick = e => togglePassword("registerPassword", e.currentTarget);
 
-$("loginForm").addEventListener("submit", e => {
+function setAuthBusy(formId, busy, text = "Please wait…") {
+  const form = $(formId);
+  const button = form?.querySelector('button[type="submit"]');
+  if (!button) return;
+  if (!button.dataset.originalText) button.dataset.originalText = button.textContent;
+  button.disabled = busy;
+  button.textContent = busy ? text : button.dataset.originalText;
+}
+
+function cloudMode() { return Boolean(window.TabajaCloud?.isConfigured()); }
+
+function updateCloudUI() {
+  const connected = cloudMode();
+  const badge = $("cloudStatusBadge");
+  if (badge) {
+    badge.textContent = connected ? "CLOUD CONNECTED" : "LOCAL PREVIEW";
+    badge.classList.toggle("connected", connected);
+  }
+  const account = readAccount();
+  if ($("usersAllowance")) $("usersAllowance").textContent = `1 of ${account.maxUsers || 3}`;
+  if ($("usersAllowanceNote")) $("usersAllowanceNote").textContent = connected ? "Cloud plan allowance" : "Preview allowance";
+  if ($("licenceStatus")) $("licenceStatus").textContent = String(account.status || "ACTIVE").toUpperCase();
+  if ($("licenceNote")) $("licenceNote").textContent = account.licenceExpiresAt ? `Expires ${new Date(account.licenceExpiresAt).toLocaleDateString()}` : (connected ? "Managed in cloud" : "No expiry in preview");
+}
+
+const originalShowApp = showApp;
+showApp = function() { originalShowApp(); updateCloudUI(); };
+
+$("loginForm").addEventListener("submit", async e => {
   e.preventDefault();
+  $("loginError").textContent = "";
   const user = $("loginUser").value.trim().toLowerCase();
   const pass = $("loginPassword").value;
-  const saved = readAccount();
-  const validDefault = user === LOGIN_USER && pass === LOGIN_PASSWORD;
-  const validCreated = saved.email && user === String(saved.email).toLowerCase() && pass === saved.previewPassword;
-  if (validDefault || validCreated) {
+  setAuthBusy("loginForm", true, "Signing in…");
+  try {
+    if (cloudMode() && user.includes("@")) {
+      await window.TabajaCloud.signIn(user, pass);
+      localStorage.setItem(LOGIN_KEY, "1");
+      sessionStorage.removeItem(LOGIN_KEY);
+      showApp();
+      return;
+    }
+    const saved = readAccount();
+    const validDefault = user === LOGIN_USER && pass === LOGIN_PASSWORD;
+    const validCreated = !cloudMode() && saved.email && user === String(saved.email).toLowerCase() && pass === saved.previewPassword;
+    if (!validDefault && !validCreated) throw new Error(cloudMode() ? "Use your cloud email and password, or the local admin test account." : "Incorrect email, username or password.");
     localStorage.removeItem(LOGIN_KEY); sessionStorage.removeItem(LOGIN_KEY);
     ($("rememberLogin").checked ? localStorage : sessionStorage).setItem(LOGIN_KEY, "1");
     if (validDefault && !localStorage.getItem(ACCOUNT_KEY)) writeAccount(defaultAccount);
     showApp();
-  } else { $("loginError").textContent = "Incorrect email, username or password."; }
+  } catch (error) {
+    $("loginError").textContent = error.message || "Unable to sign in.";
+  } finally { setAuthBusy("loginForm", false); }
 });
 
-$("registerForm").addEventListener("submit", e => {
+$("registerForm").addEventListener("submit", async e => {
   e.preventDefault();
+  $("registerError").textContent = "";
   const password = $("registerPassword").value;
   if (password.length < 8) { $("registerError").textContent = "Password must contain at least 8 characters."; return; }
-  const account = {
+  const payload = {
     company: $("registerCompany").value.trim(), owner: $("registerOwner").value.trim(),
     country: $("registerCountry").value.trim(), phone: $("registerPhone").value.trim(),
-    email: $("registerEmail").value.trim().toLowerCase(), previewPassword: password,
-    plan: "Professional Preview", createdAt: new Date().toISOString()
+    email: $("registerEmail").value.trim().toLowerCase(), password
   };
-  writeAccount(account);
-  localStorage.setItem(LOGIN_KEY, "1"); sessionStorage.removeItem(LOGIN_KEY);
-  $("registerError").textContent = ""; showApp();
+  setAuthBusy("registerForm", true, "Creating company…");
+  try {
+    if (cloudMode()) {
+      await window.TabajaCloud.signUp(payload);
+    } else {
+      writeAccount({ company: payload.company, owner: payload.owner, country: payload.country, phone: payload.phone, email: payload.email, previewPassword: password, plan: "Professional Preview", createdAt: new Date().toISOString() });
+    }
+    localStorage.setItem(LOGIN_KEY, "1"); sessionStorage.removeItem(LOGIN_KEY);
+    showApp();
+  } catch (error) {
+    $("registerError").textContent = error.message || "Unable to create company account.";
+  } finally { setAuthBusy("registerForm", false); }
 });
 
-$("forgotForm").addEventListener("submit", e => {
+$("forgotForm").addEventListener("submit", async e => {
   e.preventDefault();
-  $("forgotMessage").textContent = "Preview only: email delivery will be activated with the secure cloud backend.";
+  $("forgotMessage").textContent = "";
+  try {
+    if (!cloudMode()) throw new Error("Connect Cloud Setup first to send password reset emails.");
+    await window.TabajaCloud.resetPassword($("forgotEmail").value.trim());
+    $("forgotMessage").textContent = "Password reset email sent. Check your inbox.";
+  } catch (error) { $("forgotMessage").textContent = error.message || "Unable to send reset email."; }
 });
 
-$("logoutBtn").onclick = () => { localStorage.removeItem(LOGIN_KEY); sessionStorage.removeItem(LOGIN_KEY); showLogin(); };
+$("logoutBtn").onclick = async () => {
+  try { await window.TabajaCloud?.signOut(); } catch {}
+  localStorage.removeItem(LOGIN_KEY); sessionStorage.removeItem(LOGIN_KEY); showLogin();
+};
+
+function openCloudSetup() {
+  const config = window.TabajaCloud?.readConfig?.() || {};
+  $("cloudProjectUrl").value = config.url || "";
+  $("cloudAnonKey").value = config.anonKey || "";
+  $("cloudSetupMessage").textContent = "";
+  $("cloudSetupMessage").classList.remove("error");
+  $("cloudSetupModal").classList.remove("hidden");
+}
+$("cloudSetupBtn").onclick = openCloudSetup;
+$("closeCloudSetupBtn").onclick = () => $("cloudSetupModal").classList.add("hidden");
+$("cloudSetupModal").addEventListener("click", e => { if (e.target === $("cloudSetupModal")) $("cloudSetupModal").classList.add("hidden"); });
+$("testCloudBtn").onclick = async () => {
+  const message = $("cloudSetupMessage");
+  message.classList.remove("error"); message.textContent = "Testing secure connection…";
+  $("testCloudBtn").disabled = true;
+  try {
+    await window.TabajaCloud.connectionTest({ url: $("cloudProjectUrl").value, anonKey: $("cloudAnonKey").value });
+    message.textContent = "Cloud connected successfully. Log out, then create or sign in to a cloud company account.";
+    updateCloudUI();
+  } catch (error) {
+    message.classList.add("error"); message.textContent = error.message || "Connection failed.";
+  } finally { $("testCloudBtn").disabled = false; }
+};
+$("disconnectCloudBtn").onclick = () => {
+  localStorage.removeItem("tabaja_cloud_config_v101");
+  $("cloudProjectUrl").value = ""; $("cloudAnonKey").value = "";
+  $("cloudSetupMessage").textContent = "Cloud disconnected. Local preview mode is active.";
+  updateCloudUI();
+};
 
 function snapshot() {
   return JSON.stringify(canvas.toJSON([

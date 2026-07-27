@@ -1,9 +1,10 @@
-const CACHE_VERSION = 'tabaja-card-designer-v10.0.0';
+const CACHE_VERSION = 'tabaja-card-designer-v10.1.0';
 const APP_SHELL = [
   './',
   './index.html',
   './style.css',
   './app.js',
+  './cloud.js',
   './v8-ui.js',
   './pwa.js',
   './manifest.webmanifest',
