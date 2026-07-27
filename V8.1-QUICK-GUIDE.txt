@@ -1,0 +1,14 @@
+TABAJA CARD DESIGNER V8.1 — PRODUCTION EDITION
+
+SMART PHOTO NAMING
+1. Start every employee photo filename with the Employee ID from Excel.
+2. You may write the employee name after the ID.
+
+Accepted examples:
+000001.jpg
+000001 Sajed Tabaja.jpg
+000001-Sajed Tabaja.png
+000001_Updated Photo.webp
+
+The application reads only the leading number 000001 for matching.
+If two photos begin with the same ID, Pre-flight reports a duplicate and shows both filenames.

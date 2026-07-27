@@ -1331,7 +1331,7 @@ $("cardColor").addEventListener("input", event => {
   $("cardBgSolidColor").value = event.target.value;
 });
 
-status("V7.4 Professional Quality ready — media reset, logo-only mode, crisp export, pre-flight and bleed overscan.");
+status("V8.1 Production Edition ready — Smart File Matching enabled.");
 
 // ===== V7.0: Excel Batch Print — 50 cards per print job =====
 let batchRows = [];
@@ -1339,6 +1339,9 @@ let batchHeaders = [];
 let batchPhotoMap = new Map();
 let batchLogoMap = new Map();
 let batchBackgroundMap = new Map();
+let batchPhotoFiles = [];
+let batchLogoFiles = [];
+let batchBackgroundFiles = [];
 let batchCurrentIndex = 0;
 const BATCH_SIZE = 50;
 
@@ -1395,57 +1398,84 @@ batchEl('batchExcelInput')?.addEventListener('change', async e=>{
     const ws=wb.Sheets[wb.SheetNames[0]];
     batchRows=XLSX.utils.sheet_to_json(ws,{defval:'',raw:false});
     batchHeaders=batchRows.length?Object.keys(batchRows[0]):[];
-    batchCurrentIndex=0; setupBatchMappings(); updateBatchSummary();
+    batchCurrentIndex=0; setupBatchMappings(); updateBatchSummary(); updateSmartMatchReport();
     batchMsg(`Excel ready: ${batchRows.length} records. Check column mapping, then Preview.`);
   }catch(err){ console.error(err); batchMsg('Excel error: '+(err.message||err)); }
 });
 
 
 function countUniqueFiles(map){ return new Set([...map.values()]).size; }
+function fileStem(file){ return String(file?.name||'').replace(/\.[^.]+$/,'').trim(); }
+function leadingId(value){
+  const match=String(value??'').trim().match(/^(\d+)/);
+  return match ? match[1] : '';
+}
 function indexImageFiles(targetMap, files){
   targetMap.clear();
   for(const file of files){
     const full=(file.webkitRelativePath||file.name).toLowerCase();
     const base=file.name.toLowerCase();
-    const stem=normalizeKey(file.name.replace(/\.[^.]+$/,''));
+    const stem=normalizeKey(fileStem(file));
     targetMap.set(full,file);
     targetMap.set(base,file);
     targetMap.set(stem,file);
   }
 }
+function smartIdMatches(files, employeeId){
+  const wanted=leadingId(employeeId) || String(employeeId??'').trim();
+  if(!wanted) return [];
+  return files.filter(file => leadingId(fileStem(file)) === wanted);
+}
+function updateSmartMatchReport(){
+  const box=batchEl('batchMatchReport');
+  if(!box || !batchRows.length) return;
+  let matched=0, missing=0, duplicate=0;
+  const duplicateLines=[];
+  for(let i=0;i<batchRows.length;i++){
+    const row=batchRows[i];
+    const id=mappedValue(row,'mapId');
+    const matches=smartIdMatches(batchPhotoFiles,id);
+    if(matches.length===1) matched++;
+    else if(matches.length===0) missing++;
+    else { duplicate++; duplicateLines.push(`${id||'Record '+(i+1)}: ${matches.map(f=>f.name).join(' | ')}`); }
+  }
+  box.innerHTML=`<strong>Smart File Matching</strong><br>✅ Matched: ${matched} &nbsp; ⚠ Missing: ${missing} &nbsp; ⚠ Duplicate IDs: ${duplicate}` +
+    (duplicateLines.length ? `<details><summary>Show duplicate photos</summary>${duplicateLines.slice(0,20).map(x=>`<div>${escapeHtml(x)}</div>`).join('')}</details>` : '');
+}
 
 batchEl('batchPhotosInput')?.addEventListener('change', async e=>{
   const files=[...(e.target.files||[])];
+  batchPhotoFiles=files;
   indexImageFiles(batchPhotoMap,files);
-  updateBatchSummary(); batchMsg(`${files.length} employee photos loaded.`);
+  updateBatchSummary(); updateSmartMatchReport(); batchMsg(`${files.length} employee photos loaded — Smart File Matching uses the leading Employee ID.`);
 });
 
 batchEl('batchLogosInput')?.addEventListener('change', async e=>{
   const files=[...(e.target.files||[])];
+  batchLogoFiles=files;
   indexImageFiles(batchLogoMap,files);
   updateBatchSummary(); batchMsg(`${files.length} company logos loaded. Logo will match by company name or Logo Filename column.`);
 });
 
 batchEl('batchBackgroundsInput')?.addEventListener('change', async e=>{
   const files=[...(e.target.files||[])];
+  batchBackgroundFiles=files;
   indexImageFiles(batchBackgroundMap,files);
   updateBatchSummary(); batchMsg(`${files.length} card backgrounds loaded. Background will match by filename or company name.`);
 });
 
 function mappedValue(row,id){ const col=batchEl(id)?.value; return col ? String(row[col] ?? '').trim() : ''; }
-function findPhotoFile(row){
+function findPhotoMatches(row){
   const named=mappedValue(row,'mapPhoto');
   const empId=mappedValue(row,'mapId');
-  const empName=mappedValue(row,'mapName');
-  const candidates=[named,named.toLowerCase(),normalizeKey(named.replace(/\.[^.]+$/,'')),empId,normalizeKey(empId),empName,normalizeKey(empName)].filter(Boolean);
-  for(const c of candidates){
-    const low=String(c).toLowerCase();
-    if(batchPhotoMap.has(low)) return batchPhotoMap.get(low);
-    if(batchPhotoMap.has(normalizeKey(low))) return batchPhotoMap.get(normalizeKey(low));
-    for(const [key,file] of batchPhotoMap){ if(key.endsWith('/'+low)||normalizeKey(key.replace(/\.[^.]+$/,''))===normalizeKey(low)) return file; }
-  }
-  return null;
+  // V8.1 rule: a photo may be named "000001 Sajed Tabaja.jpg".
+  // Only the leading digits are used for Employee ID matching.
+  const byId=smartIdMatches(batchPhotoFiles,empId);
+  if(byId.length) return byId;
+  const exact=findFileInMap(batchPhotoMap,[named,empId,mappedValue(row,'mapName')]);
+  return exact ? [exact] : [];
 }
+function findPhotoFile(row){ return findPhotoMatches(row)[0] || null; }
 function findFileInMap(map,candidates){
   for(const c of candidates.filter(Boolean)){
     const low=String(c).trim().toLowerCase();
@@ -1540,7 +1570,7 @@ function setBatchRange(start){
 batchEl('batchNext50Btn')?.addEventListener('click',()=>setBatchRange((Number(batchEl('batchTo').value)||0)+1));
 batchEl('batchPrev50Btn')?.addEventListener('click',()=>setBatchRange((Number(batchEl('batchFrom').value)||1)-BATCH_SIZE));
 batchEl('batchReprintBtn')?.addEventListener('click',async()=>{ try{ await applyBatchRecord(batchCurrentIndex); await printBatchRange(batchCurrentIndex,batchCurrentIndex); }catch(e){alert(e.message||e);} });
-batchEl('batchResetBtn')?.addEventListener('click',()=>{ batchRows=[];batchHeaders=[];batchPhotoMap.clear();batchLogoMap.clear();batchBackgroundMap.clear();batchCurrentIndex=0;builderPhotoData='';builderLogoData='';builderBatchBackgroundData='';setupBatchMappings();updateBatchSummary();batchMsg('Batch reset.'); });
+batchEl('batchResetBtn')?.addEventListener('click',()=>{ batchRows=[];batchHeaders=[];batchPhotoMap.clear();batchLogoMap.clear();batchBackgroundMap.clear();batchPhotoFiles=[];batchLogoFiles=[];batchBackgroundFiles=[];batchCurrentIndex=0;builderPhotoData='';builderLogoData='';builderBatchBackgroundData='';setupBatchMappings();updateBatchSummary();batchMsg('Batch reset.'); });
 
 async function snapshotDataUrl(snapshotJson){
   return new Promise((resolve,reject)=>{
@@ -1565,7 +1595,9 @@ function preflightBatchRange(startIndex,endIndex){
   for(let i=startIndex;i<=endIndex;i++){
     const row=batchRows[i];
     const label=`Record ${i+1} (${mappedValue(row,'mapName')||'Unnamed'})`;
-    if(!findPhotoFile(row)) warnings.push(`${label}: missing employee photo`);
+    const photoMatches=findPhotoMatches(row);
+    if(!photoMatches.length) warnings.push(`${label}: missing employee photo`);
+    if(photoMatches.length>1) warnings.push(`${label}: duplicate photos — ${photoMatches.map(f=>f.name).join(' | ')}`);
     if(batchLogoMap.size && !findLogoFile(row)) warnings.push(`${label}: company logo not matched`);
     if(batchBackgroundMap.size && !findBackgroundFile(row)) warnings.push(`${label}: background not matched`);
   }
@@ -1622,7 +1654,7 @@ batchEl('batchPrint50Btn')?.addEventListener('click',async()=>{
 
 setupBatchMappings();
 const lastBatchEnd=Number(localStorage.getItem('tabaja_v7_last_batch_end')||0);
-if(lastBatchEnd>0) batchMsg(`V7.0 ready. Last completed batch ended at record ${lastBatchEnd}.`); else batchMsg('V7.4 Professional Quality ready — media reset, pre-flight check, crisp 2× rendering and edge overscan.');
+if(lastBatchEnd>0) batchMsg(`V7.0 ready. Last completed batch ended at record ${lastBatchEnd}.`); else batchMsg('V8.1 Production Edition ready — filenames may start with Employee ID followed by the employee name.');
 
 
 // V7.4 Professional Quality controls
