@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Tabaja Card Designer V9.1 PWA Pro</title>
+  <title>Tabaja Card Designer V10 Account Preview</title>
   <meta name="theme-color" content="#1684e8">
   <meta name="application-name" content="Tabaja Card Designer">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -12,7 +12,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style.css?v=9.1.0">
+  <link rel="stylesheet" href="style.css?v=10.0.0">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
@@ -22,24 +22,71 @@
 </head>
 <body>
   <section id="loginScreen" class="login-screen">
-    <form id="loginForm" class="login-card" autocomplete="on">
-      <div class="login-brand">TABAJA</div>
-      <h2>Card Designer Login</h2>
-      <p>Sign in to open the card designer.</p>
-      <label for="loginUser">Username</label>
-      <input id="loginUser" name="username" autocomplete="username" required>
-      <label for="loginPassword">Password</label>
-      <input id="loginPassword" name="password" type="password" autocomplete="current-password" required>
-      <label class="remember"><input id="rememberLogin" type="checkbox"> Keep me signed in</label>
-      <button class="primary login-button" type="submit">Login</button>
-      <div id="loginError" class="login-error" aria-live="polite"></div>
-    </form>
+    <div class="auth-layout">
+      <div class="auth-showcase">
+        <div class="login-brand">TABAJA SOLUTION</div>
+        <h1>Professional Card Production, secured by your account.</h1>
+        <p>Install once, sign in from any supported device, and work inside your company workspace.</p>
+        <div class="auth-feature-grid">
+          <div><b>Protected workspace</b><span>Only authorised users enter the designer.</span></div>
+          <div><b>Company account</b><span>Each customer gets a separate workspace.</span></div>
+          <div><b>Plan permissions</b><span>Features can be enabled by subscription.</span></div>
+          <div><b>PWA ready</b><span>Runs as an installed Windows or Android app.</span></div>
+        </div>
+        <small>V10 Account Preview — cloud connection comes in the next backend build.</small>
+      </div>
+
+      <div class="auth-card">
+        <div class="auth-logo">T</div>
+        <div class="auth-tabs" role="tablist">
+          <button id="showLoginTab" class="active" type="button">Sign In</button>
+          <button id="showRegisterTab" type="button">Create Company</button>
+        </div>
+
+        <form id="loginForm" class="auth-form" autocomplete="on">
+          <h2>Welcome back</h2>
+          <p>Sign in to open your company workspace.</p>
+          <label for="loginUser">Email or username</label>
+          <input id="loginUser" name="username" autocomplete="username" placeholder="admin or your email" required>
+          <label for="loginPassword">Password</label>
+          <div class="password-field"><input id="loginPassword" name="password" type="password" autocomplete="current-password" required><button id="toggleLoginPassword" type="button" aria-label="Show password">Show</button></div>
+          <div class="auth-row"><label class="remember"><input id="rememberLogin" type="checkbox"> Keep me signed in</label><button id="forgotPasswordBtn" class="link-button" type="button">Forgot password?</button></div>
+          <button class="primary login-button" type="submit">Sign In</button>
+          <div id="loginError" class="login-error" aria-live="polite"></div>
+          <div class="demo-credentials"><b>Test account</b><span>Username: admin</span><span>Password: Tabaja@2026</span></div>
+        </form>
+
+        <form id="registerForm" class="auth-form hidden" autocomplete="on">
+          <h2>Create company workspace</h2>
+          <p>Set up a customer account for this preview.</p>
+          <div class="form-grid">
+            <div><label for="registerCompany">Company name</label><input id="registerCompany" required></div>
+            <div><label for="registerOwner">Owner name</label><input id="registerOwner" required></div>
+            <div><label for="registerCountry">Country</label><input id="registerCountry" value="Sierra Leone" required></div>
+            <div><label for="registerPhone">Phone</label><input id="registerPhone" type="tel" required></div>
+          </div>
+          <label for="registerEmail">Email</label><input id="registerEmail" type="email" autocomplete="email" required>
+          <label for="registerPassword">Password</label><div class="password-field"><input id="registerPassword" type="password" minlength="8" autocomplete="new-password" required><button id="toggleRegisterPassword" type="button">Show</button></div>
+          <label class="remember"><input id="acceptTerms" type="checkbox" required> I accept the service terms and account rules.</label>
+          <button class="primary login-button" type="submit">Create Preview Account</button>
+          <div id="registerError" class="login-error" aria-live="polite"></div>
+        </form>
+
+        <form id="forgotForm" class="auth-form hidden">
+          <h2>Reset password</h2><p>Enter your account email. The cloud version will send a secure reset link.</p>
+          <label for="forgotEmail">Email</label><input id="forgotEmail" type="email" required>
+          <button class="primary login-button" type="submit">Request Reset</button>
+          <button id="backToLoginBtn" class="secondary-wide" type="button">Back to Sign In</button>
+          <div id="forgotMessage" class="login-error" aria-live="polite"></div>
+        </form>
+      </div>
+    </div>
   </section>
 
   <div id="appShell" class="app-shell hidden">
     <header>
       <div>
-        <h1>Tabaja Card Designer V9.1 • PWA Pro</h1>
+        <h1>Tabaja Card Designer V10 • Account Preview</h1>
         <small id="pageSubtitle">Dashboard • Professional CR80 PVC Production Suite</small>
       </div>
       <div class="top-actions" id="designerTopActions">
@@ -53,7 +100,7 @@
         <button class="primary" id="vectorPrintBtn">Print Vector</button>
         <button class="primary" id="printBothBtn">Print Front + Back (Exact)</button>
         <button id="installAppBtn" class="install-app-btn" type="button" disabled>⬇ Install App</button>
-        <button id="logoutBtn">Logout</button>
+        <div class="account-chip"><span class="account-avatar" id="accountAvatar">T</span><span><b id="accountName">Tabaja Admin</b><small id="accountCompany">Tabaja Solution</small></span></div><button id="logoutBtn">Logout</button>
         <small id="pwaInstallStatus" class="pwa-install-status">Preparing install…</small>
       </div>
     </header>
@@ -69,11 +116,17 @@
     <section id="v8Dashboard" class="v8-dashboard">
       <div class="v8-hero">
         <div>
-          <span class="v8-kicker">TABAJA PRODUCTION WORKSPACE</span>
+          <span class="v8-kicker" id="workspaceKicker">TABAJA SOLUTION WORKSPACE</span>
           <h2>What are you printing today?</h2>
           <p>Single employee cards and large Excel batches are now separated, so the workspace stays clean and easy to use.</p>
         </div>
         <div class="v8-ready-badge">● SYSTEM READY</div>
+      </div>
+      <div class="account-summary-grid">
+        <div><span>Plan</span><b id="planName">Professional Preview</b><small>Account active</small></div>
+        <div><span>Company</span><b id="summaryCompany">Tabaja Solution</b><small>Private workspace</small></div>
+        <div><span>Users</span><b>1 of 3</b><small>Preview allowance</small></div>
+        <div><span>Licence</span><b class="status-active">ACTIVE</b><small>No expiry in preview</small></div>
       </div>
       <div class="v8-dashboard-grid">
         <button class="v8-action-card" data-go="designer"><b>Design One Card</b><span>Create or update a single employee card.</span><em>Open Designer →</em></button>
@@ -319,8 +372,8 @@
     <span>A new version is ready.</span>
     <button id="pwaUpdateBtn" type="button">Update now</button>
   </div>
-  <script src="app.js?v=9.1.0"></script>
-  <script src="v8-ui.js?v=9.1.0"></script>
-  <script src="pwa.js?v=9.1.0"></script>
+  <script src="app.js?v=10.0.0"></script>
+  <script src="v8-ui.js?v=10.0.0"></script>
+  <script src="pwa.js?v=10.0.0"></script>
 </body>
 </html>

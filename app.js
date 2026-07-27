@@ -6,6 +6,7 @@ const CARD = {
 const LOGIN_USER = "admin";
 const LOGIN_PASSWORD = "Tabaja@2026";
 const LOGIN_KEY = "tabaja_card_designer_login";
+const ACCOUNT_KEY = "tabaja_card_designer_account_v10";
 
 const $ = id => document.getElementById(id);
 let orientation = "landscape";
@@ -21,33 +22,81 @@ let currentSide = "front";
 let pendingImageRole = "image";
 let cropMode = false;
 
-function status(msg) { $("status").textContent = msg; }
-function showApp() { $("loginScreen").classList.add("hidden"); $("appShell").classList.remove("hidden"); setTimeout(() => canvas.calcOffset(), 0); }
-function showLogin() { $("appShell").classList.add("hidden"); $("loginScreen").classList.remove("hidden"); $("loginPassword").value = ""; $("loginError").textContent = ""; }
-
-function isLoggedIn() {
-  return localStorage.getItem(LOGIN_KEY) === "1" || sessionStorage.getItem(LOGIN_KEY) === "1";
+const defaultAccount = { company: "Tabaja Solution", owner: "Tabaja Admin", email: "admin", country: "Sierra Leone", phone: "", plan: "Professional Preview" };
+function readAccount() {
+  try { return JSON.parse(localStorage.getItem(ACCOUNT_KEY)) || defaultAccount; }
+  catch { return defaultAccount; }
 }
+function writeAccount(account) { localStorage.setItem(ACCOUNT_KEY, JSON.stringify(account)); }
+function applyAccount(account = readAccount()) {
+  const initial = (account.company || account.owner || "T").trim().charAt(0).toUpperCase();
+  if ($("accountAvatar")) $("accountAvatar").textContent = initial;
+  if ($("accountName")) $("accountName").textContent = account.owner || "Account Owner";
+  if ($("accountCompany")) $("accountCompany").textContent = account.company || "Company Workspace";
+  if ($("summaryCompany")) $("summaryCompany").textContent = account.company || "Company Workspace";
+  if ($("planName")) $("planName").textContent = account.plan || "Professional Preview";
+  if ($("workspaceKicker")) $("workspaceKicker").textContent = `${(account.company || "COMPANY").toUpperCase()} WORKSPACE`;
+}
+function status(msg) { $("status").textContent = msg; }
+function showApp() { $("loginScreen").classList.add("hidden"); $("appShell").classList.remove("hidden"); applyAccount(); setTimeout(() => canvas.calcOffset(), 0); }
+function showLogin() { $("appShell").classList.add("hidden"); $("loginScreen").classList.remove("hidden"); $("loginPassword").value = ""; $("loginError").textContent = ""; showAuthView("login"); }
+
+function isLoggedIn() { return localStorage.getItem(LOGIN_KEY) === "1" || sessionStorage.getItem(LOGIN_KEY) === "1"; }
+function showAuthView(view) {
+  $("loginForm").classList.toggle("hidden", view !== "login");
+  $("registerForm").classList.toggle("hidden", view !== "register");
+  $("forgotForm").classList.toggle("hidden", view !== "forgot");
+  $("showLoginTab").classList.toggle("active", view === "login");
+  $("showRegisterTab").classList.toggle("active", view === "register");
+  document.querySelector('.auth-tabs').classList.toggle('hidden', view === 'forgot');
+}
+function togglePassword(inputId, button) {
+  const input = $(inputId); const show = input.type === "password";
+  input.type = show ? "text" : "password"; button.textContent = show ? "Hide" : "Show";
+}
+$("showLoginTab").onclick = () => showAuthView("login");
+$("showRegisterTab").onclick = () => showAuthView("register");
+$("forgotPasswordBtn").onclick = () => showAuthView("forgot");
+$("backToLoginBtn").onclick = () => showAuthView("login");
+$("toggleLoginPassword").onclick = e => togglePassword("loginPassword", e.currentTarget);
+$("toggleRegisterPassword").onclick = e => togglePassword("registerPassword", e.currentTarget);
 
 $("loginForm").addEventListener("submit", e => {
   e.preventDefault();
-  const user = $("loginUser").value.trim();
+  const user = $("loginUser").value.trim().toLowerCase();
   const pass = $("loginPassword").value;
-  if (user === LOGIN_USER && pass === LOGIN_PASSWORD) {
-    localStorage.removeItem(LOGIN_KEY);
-    sessionStorage.removeItem(LOGIN_KEY);
+  const saved = readAccount();
+  const validDefault = user === LOGIN_USER && pass === LOGIN_PASSWORD;
+  const validCreated = saved.email && user === String(saved.email).toLowerCase() && pass === saved.previewPassword;
+  if (validDefault || validCreated) {
+    localStorage.removeItem(LOGIN_KEY); sessionStorage.removeItem(LOGIN_KEY);
     ($("rememberLogin").checked ? localStorage : sessionStorage).setItem(LOGIN_KEY, "1");
+    if (validDefault && !localStorage.getItem(ACCOUNT_KEY)) writeAccount(defaultAccount);
     showApp();
-  } else {
-    $("loginError").textContent = "Incorrect username or password.";
-  }
+  } else { $("loginError").textContent = "Incorrect email, username or password."; }
 });
 
-$("logoutBtn").onclick = () => {
-  localStorage.removeItem(LOGIN_KEY);
-  sessionStorage.removeItem(LOGIN_KEY);
-  showLogin();
-};
+$("registerForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const password = $("registerPassword").value;
+  if (password.length < 8) { $("registerError").textContent = "Password must contain at least 8 characters."; return; }
+  const account = {
+    company: $("registerCompany").value.trim(), owner: $("registerOwner").value.trim(),
+    country: $("registerCountry").value.trim(), phone: $("registerPhone").value.trim(),
+    email: $("registerEmail").value.trim().toLowerCase(), previewPassword: password,
+    plan: "Professional Preview", createdAt: new Date().toISOString()
+  };
+  writeAccount(account);
+  localStorage.setItem(LOGIN_KEY, "1"); sessionStorage.removeItem(LOGIN_KEY);
+  $("registerError").textContent = ""; showApp();
+});
+
+$("forgotForm").addEventListener("submit", e => {
+  e.preventDefault();
+  $("forgotMessage").textContent = "Preview only: email delivery will be activated with the secure cloud backend.";
+});
+
+$("logoutBtn").onclick = () => { localStorage.removeItem(LOGIN_KEY); sessionStorage.removeItem(LOGIN_KEY); showLogin(); };
 
 function snapshot() {
   return JSON.stringify(canvas.toJSON([
