@@ -3,7 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Tabaja Card Designer V8.2.1 Size Fix</title>
+  <title>Tabaja Card Designer V9.0 PWA Beta</title>
+  <meta name="theme-color" content="#101827">
+  <meta name="application-name" content="Tabaja Card Designer">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Tabaja Cards">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png" sizes="192x192">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="stylesheet" href="style.css?v=6.2-beta.1">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -31,7 +39,7 @@
   <div id="appShell" class="app-shell hidden">
     <header>
       <div>
-        <h1>Tabaja Card Designer V8.2.1 • CR80 Size Fix</h1>
+        <h1>Tabaja Card Designer V9.0 • PWA Beta</h1>
         <small id="pageSubtitle">Dashboard • Professional CR80 PVC Production Suite</small>
       </div>
       <div class="top-actions" id="designerTopActions">
@@ -44,6 +52,7 @@
         <button class="primary" id="printBtn">Print Current (Stable)</button>
         <button class="primary" id="vectorPrintBtn">Print Vector</button>
         <button class="primary" id="printBothBtn">Print Front + Back (Exact)</button>
+        <button id="installAppBtn" class="primary pwa-install-btn" hidden>Install App</button>
         <button id="logoutBtn">Logout</button>
       </div>
     </header>
@@ -307,5 +316,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="app.js?v=8.1-face-crop-beta"></script>
   <script src="v8-ui.js?v=8.1-face-crop-beta"></script>
+  <script src="pwa.js?v=9.0.0"></script>
 </body>
 </html>
