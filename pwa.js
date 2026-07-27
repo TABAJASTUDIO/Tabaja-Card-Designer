@@ -1,52 +1,86 @@
 (() => {
   'use strict';
-
+  let deferredPrompt = null;
   const installButton = document.getElementById('installAppBtn');
-  let deferredInstallPrompt = null;
+  const updateToast = document.getElementById('pwaUpdateToast');
+  const updateButton = document.getElementById('pwaUpdateBtn');
+  const status = document.getElementById('pwaInstallStatus');
 
-  const isStandalone = () =>
-    window.matchMedia('(display-mode: standalone)').matches ||
-    window.navigator.standalone === true;
+  const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  document.documentElement.dataset.pwa = standalone ? 'installed' : 'browser';
 
-  function updateInstallButton() {
+  function setInstallState(text, enabled) {
     if (!installButton) return;
-    installButton.hidden = isStandalone() || !deferredInstallPrompt;
+    installButton.textContent = text;
+    installButton.disabled = !enabled;
+    installButton.classList.toggle('pwa-ready', enabled);
   }
 
-  window.addEventListener('beforeinstallprompt', (event) => {
+  if (standalone) {
+    setInstallState('✓ App Installed', false);
+    if (status) status.textContent = 'Running as installed app';
+  } else {
+    setInstallState('⬇ Install App', false);
+    if (status) status.textContent = 'Preparing install…';
+  }
+
+  window.addEventListener('beforeinstallprompt', event => {
     event.preventDefault();
-    deferredInstallPrompt = event;
-    updateInstallButton();
+    deferredPrompt = event;
+    setInstallState('⬇ Install App', true);
+    if (status) status.textContent = 'Ready to install';
   });
 
   installButton?.addEventListener('click', async () => {
-    if (!deferredInstallPrompt) return;
-    installButton.disabled = true;
-    try {
-      deferredInstallPrompt.prompt();
-      await deferredInstallPrompt.userChoice;
-    } finally {
-      deferredInstallPrompt = null;
-      installButton.disabled = false;
-      updateInstallButton();
+    if (!deferredPrompt) {
+      alert('Install is not ready yet. Refresh once, wait a few seconds, then try again. In Edge you can also use Menu (…) → Apps → Install Tabaja Card Designer.');
+      return;
+    }
+    deferredPrompt.prompt();
+    const choice = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    if (choice.outcome === 'accepted') {
+      setInstallState('✓ Installing…', false);
+      if (status) status.textContent = 'Installation accepted';
+    } else {
+      setInstallState('⬇ Install App', false);
+      if (status) status.textContent = 'Installation cancelled — refresh to try again';
     }
   });
 
   window.addEventListener('appinstalled', () => {
-    deferredInstallPrompt = null;
-    updateInstallButton();
+    deferredPrompt = null;
+    setInstallState('✓ App Installed', false);
+    if (status) status.textContent = 'Installed successfully';
   });
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
       try {
         const registration = await navigator.serviceWorker.register('./service-worker.js', { scope: './' });
-        registration.update().catch(() => {});
+        if (status && !standalone) status.textContent = 'PWA active — waiting for install permission';
+
+        registration.addEventListener('updatefound', () => {
+          const worker = registration.installing;
+          if (!worker) return;
+          worker.addEventListener('statechange', () => {
+            if (worker.state === 'installed' && navigator.serviceWorker.controller && updateToast) {
+              updateToast.hidden = false;
+            }
+          });
+        });
+
+        updateButton?.addEventListener('click', () => {
+          registration.waiting?.postMessage({ type: 'SKIP_WAITING' });
+        });
       } catch (error) {
-        console.error('PWA service worker registration failed:', error);
+        console.error('PWA registration failed:', error);
+        if (status) status.textContent = 'PWA registration failed';
       }
     });
-  }
 
-  updateInstallButton();
+    navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
+  } else if (status) {
+    status.textContent = 'This browser does not support app installation';
+  }
 })();
