@@ -2,7 +2,6 @@
   const subtitles = {
     dashboard: 'Dashboard • Professional CR80 PVC Production Suite',
     designer: 'Card Designer • Create and print one employee card',
-    employees: 'Employees • Company identity records and staff directory',
     batch: 'Batch Printing • Excel workflow for up to 50 cards',
     quality: 'Print Quality • Professional photo and text rendering',
     zebra: 'Zebra Settings • ZC300 alignment and bleed controls'
