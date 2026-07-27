@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Tabaja Card Designer V8.1 Auto Face Crop Beta</title>
+  <title>Tabaja Card Designer V8.2 Crop Test</title>
   <link rel="stylesheet" href="style.css?v=6.2-beta.1">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -31,7 +31,7 @@
   <div id="appShell" class="app-shell hidden">
     <header>
       <div>
-        <h1>Tabaja Card Designer V8.1 • Auto Face Crop Beta</h1>
+        <h1>Tabaja Card Designer V8.2 • ID Match + Crop Test</h1>
         <small id="pageSubtitle">Dashboard • Professional CR80 PVC Production Suite</small>
       </div>
       <div class="top-actions" id="designerTopActions">
@@ -161,7 +161,7 @@
           <label>2. Upload Employee Photos Folder (optional)</label>
           <input id="batchPhotosInput" type="file" accept="image/*" webkitdirectory directory multiple>
           <label class="background-sync-option"><input id="autoFaceCrop" type="checkbox" checked><span>Auto Face Center + Auto Crop</span></label>
-          <div id="faceCropStatus" class="batch-summary">Face crop: ready. Unsupported browsers use Smart Center Crop.</div>
+          <div id="faceCropStatus" class="batch-summary">ID matching: Excel ID → leading photo number. Crop: white-border trim + face/portrait centring ready.</div>
           <label>3. Upload Company Logos Folder (optional)</label>
           <input id="batchLogosInput" type="file" accept="image/*" webkitdirectory directory multiple>
           <label>4. Upload Card Backgrounds Folder (optional)</label>
@@ -179,7 +179,7 @@
           <label>Instagram Column</label><select id="mapInstagram"></select>
           <label>X / Twitter Column</label><select id="mapTwitter"></select>
           <label>LinkedIn Column</label><select id="mapLinkedIn"></select>
-          <label>Photo Filename Column</label><select id="mapPhoto"></select>
+          <label>Photo Filename Column <small>(optional legacy override — normally leave Not used)</small></label><select id="mapPhoto"></select>
           <label>Logo Filename Column (optional)</label><select id="mapLogo"></select>
           <label>Background Filename Column (optional)</label><select id="mapBackground"></select>
           <div class="batch-range">

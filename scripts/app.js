@@ -1337,6 +1337,8 @@ status("V7.4 Professional Quality ready — media reset, logo-only mode, crisp e
 let batchRows = [];
 let batchHeaders = [];
 let batchPhotoMap = new Map();
+let batchPhotoIdMap = new Map();
+let batchPhotoDuplicates = new Map();
 let batchLogoMap = new Map();
 let batchBackgroundMap = new Map();
 let batchCurrentIndex = 0;
@@ -1374,7 +1376,7 @@ function setupBatchMappings(){
   fillMappingSelect('mapInstagram',['instagram','instagramusername','ig']);
   fillMappingSelect('mapTwitter',['twitter','x','xusername','twitterusername']);
   fillMappingSelect('mapLinkedIn',['linkedin','linkedinusername']);
-  fillMappingSelect('mapPhoto',['photo','photofilename','image','picture']);
+  fillMappingSelect('mapPhoto',['photo','photofilename','image','picture']); // optional legacy override
   fillMappingSelect('mapLogo',['logo','logofilename','companylogo','brandlogo']);
   fillMappingSelect('mapBackground',['background','backgroundfilename','cardbackground','templatebackground']);
 }
@@ -1414,10 +1416,36 @@ function indexImageFiles(targetMap, files){
   }
 }
 
+function normalizeEmployeeId(value){
+  const raw=String(value ?? '').trim();
+  if(!raw) return '';
+  const digits=raw.match(/\d+/)?.[0] || raw;
+  return /^\d+$/.test(digits) ? digits.padStart(6,'0') : normalizeKey(digits);
+}
+function leadingPhotoId(filename){
+  const stem=String(filename||'').replace(/\.[^.]+$/,'').trim();
+  const match=stem.match(/^(\d{1,})/);
+  return match ? normalizeEmployeeId(match[1]) : '';
+}
+function indexEmployeePhotos(files){
+  batchPhotoMap.clear(); batchPhotoIdMap.clear(); batchPhotoDuplicates.clear();
+  indexImageFiles(batchPhotoMap,files);
+  for(const file of files){
+    const id=leadingPhotoId(file.name);
+    if(!id) continue;
+    if(batchPhotoIdMap.has(id)){
+      const list=batchPhotoDuplicates.get(id) || [batchPhotoIdMap.get(id)];
+      list.push(file); batchPhotoDuplicates.set(id,list);
+    }else batchPhotoIdMap.set(id,file);
+  }
+}
+
 batchEl('batchPhotosInput')?.addEventListener('change', async e=>{
   const files=[...(e.target.files||[])];
-  indexImageFiles(batchPhotoMap,files);
-  updateBatchSummary(); batchMsg(`${files.length} employee photos loaded.`);
+  indexEmployeePhotos(files);
+  updateBatchSummary();
+  const duplicateCount=batchPhotoDuplicates.size;
+  batchMsg(`${files.length} employee photos loaded • ${batchPhotoIdMap.size} IDs matched${duplicateCount?` • ${duplicateCount} duplicate ID warning(s)`:''}.`);
 });
 
 batchEl('batchLogosInput')?.addEventListener('change', async e=>{
@@ -1434,15 +1462,21 @@ batchEl('batchBackgroundsInput')?.addEventListener('change', async e=>{
 
 function mappedValue(row,id){ const col=batchEl(id)?.value; return col ? String(row[col] ?? '').trim() : ''; }
 function findPhotoFile(row){
+  // Primary production rule: Excel Employee ID matches the LEADING digits of the photo filename.
+  // Example: ID 000006 automatically matches 000006-SAJEDABED.jpg.
+  const empId=normalizeEmployeeId(mappedValue(row,'mapId'));
+  if(empId && batchPhotoIdMap.has(empId)) return batchPhotoIdMap.get(empId);
+
+  // Optional legacy override only when a Photo Filename column is deliberately mapped.
   const named=mappedValue(row,'mapPhoto');
-  const empId=mappedValue(row,'mapId');
-  const empName=mappedValue(row,'mapName');
-  const candidates=[named,named.toLowerCase(),normalizeKey(named.replace(/\.[^.]+$/,'')),empId,normalizeKey(empId),empName,normalizeKey(empName)].filter(Boolean);
-  for(const c of candidates){
-    const low=String(c).toLowerCase();
-    if(batchPhotoMap.has(low)) return batchPhotoMap.get(low);
-    if(batchPhotoMap.has(normalizeKey(low))) return batchPhotoMap.get(normalizeKey(low));
-    for(const [key,file] of batchPhotoMap){ if(key.endsWith('/'+low)||normalizeKey(key.replace(/\.[^.]+$/,''))===normalizeKey(low)) return file; }
+  if(named){
+    const candidates=[named,named.toLowerCase(),normalizeKey(named.replace(/\.[^.]+$/,''))].filter(Boolean);
+    for(const c of candidates){
+      const low=String(c).toLowerCase();
+      if(batchPhotoMap.has(low)) return batchPhotoMap.get(low);
+      if(batchPhotoMap.has(normalizeKey(low))) return batchPhotoMap.get(normalizeKey(low));
+      for(const [key,file] of batchPhotoMap){ if(key.endsWith('/'+low)||normalizeKey(key.replace(/\.[^.]+$/,''))===normalizeKey(low)) return file; }
+    }
   }
   return null;
 }
@@ -1509,7 +1543,7 @@ async function applyBatchRecord(index){
   const photo=findPhotoFile(row);
   const logo=findLogoFile(row);
   const background=findBackgroundFile(row);
-  builderPhotoData=photo?await fileToDataUrl(photo):'';
+  builderPhotoData=photo?await v82TrimWhiteBorders(await fileToDataUrl(photo)):'';
   builderLogoData=logo?await fileToDataUrl(logo):'';
   builderBatchBackgroundData=background?await fileToDataUrl(background):'';
   await setBatchCanvasBackground(builderBatchBackgroundData);
@@ -1565,6 +1599,8 @@ function preflightBatchRange(startIndex,endIndex){
   for(let i=startIndex;i<=endIndex;i++){
     const row=batchRows[i];
     const label=`Record ${i+1} (${mappedValue(row,'mapName')||'Unnamed'})`;
+    const empId=normalizeEmployeeId(mappedValue(row,'mapId'));
+    if(empId && batchPhotoDuplicates.has(empId)) warnings.push(`${label}: duplicate photo ID ${empId}`);
     if(!findPhotoFile(row)) warnings.push(`${label}: missing employee photo`);
     if(batchLogoMap.size && !findLogoFile(row)) warnings.push(`${label}: company logo not matched`);
     if(batchBackgroundMap.size && !findBackgroundFile(row)) warnings.push(`${label}: background not matched`);
@@ -1654,6 +1690,64 @@ function v81LoadHtmlImage(dataUrl){
   });
 }
 
+async function v82TrimWhiteBorders(dataUrl){
+  const img=await v81LoadHtmlImage(dataUrl);
+  const canvasEl=document.createElement('canvas');
+  canvasEl.width=img.naturalWidth||img.width; canvasEl.height=img.naturalHeight||img.height;
+  const ctx=canvasEl.getContext('2d',{willReadFrequently:true}); ctx.drawImage(img,0,0);
+  const w=canvasEl.width,h=canvasEl.height,data=ctx.getImageData(0,0,w,h).data;
+  const isWhite=(x,y)=>{ const i=(y*w+x)*4; return data[i]>242&&data[i+1]>242&&data[i+2]>242&&data[i+3]>20; };
+  const rowWhite=y=>{ let n=0, step=Math.max(1,Math.floor(w/300)); for(let x=0;x<w;x+=step) if(isWhite(x,y)) n++; return n/Math.ceil(w/step)>0.88; };
+  const colWhite=x=>{ let n=0, step=Math.max(1,Math.floor(h/300)); for(let y=0;y<h;y+=step) if(isWhite(x,y)) n++; return n/Math.ceil(h/step)>0.88; };
+  let top=0,bottom=h-1,left=0,right=w-1;
+  while(top<h-2&&rowWhite(top)) top++;
+  while(bottom>top+1&&rowWhite(bottom)) bottom--;
+  while(left<w-2&&colWhite(left)) left++;
+  while(right>left+1&&colWhite(right)) right--;
+  // Keep conservative margins and avoid trimming ordinary white studio backgrounds too aggressively.
+  const removed=(top)+(h-1-bottom)+(left)+(w-1-right);
+  if(!removed || (right-left+1)<w*0.35 || (bottom-top+1)<h*0.35) return dataUrl;
+  const pad=Math.max(1,Math.round(Math.min(w,h)*0.004));
+  left=Math.max(0,left-pad); top=Math.max(0,top-pad); right=Math.min(w-1,right+pad); bottom=Math.min(h-1,bottom+pad);
+  const out=document.createElement('canvas'); out.width=right-left+1; out.height=bottom-top+1;
+  out.getContext('2d').drawImage(canvasEl,left,top,out.width,out.height,0,0,out.width,out.height);
+  return out.toDataURL('image/jpeg',0.96);
+}
+
+async function v82HeuristicFace(dataUrl){
+  const img=await v81LoadHtmlImage(dataUrl);
+  const maxW=180, scale=Math.min(1,maxW/(img.naturalWidth||img.width));
+  const w=Math.max(40,Math.round((img.naturalWidth||img.width)*scale));
+  const h=Math.max(40,Math.round((img.naturalHeight||img.height)*scale));
+  const c=document.createElement('canvas'); c.width=w;c.height=h;
+  const ctx=c.getContext('2d',{willReadFrequently:true}); ctx.drawImage(img,0,0,w,h);
+  const d=ctx.getImageData(0,0,w,h).data, mask=new Uint8Array(w*h);
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++){
+    const i=(y*w+x)*4,r=d[i],g=d[i+1],b=d[i+2];
+    const mx=Math.max(r,g,b),mn=Math.min(r,g,b);
+    // Broad skin-colour rule designed to cover light through dark complexions.
+    const skin=(r>35&&g>20&&b>15&&(mx-mn)>10&&r>g*0.88&&r>b*1.05) || (r>80&&g>45&&b>30&&r>g&&g>b);
+    if(skin && y<h*0.82) mask[y*w+x]=1;
+  }
+  const seen=new Uint8Array(w*h), comps=[];
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++){
+    const idx=y*w+x;if(!mask[idx]||seen[idx])continue;
+    const q=[idx];seen[idx]=1;let qi=0,minx=x,maxx=x,miny=y,maxy=y,count=0;
+    while(qi<q.length){const k=q[qi++],cy=Math.floor(k/w),cx=k-cy*w;count++;minx=Math.min(minx,cx);maxx=Math.max(maxx,cx);miny=Math.min(miny,cy);maxy=Math.max(maxy,cy);
+      for(const [nx,ny] of [[cx-1,cy],[cx+1,cy],[cx,cy-1],[cx,cy+1]]) if(nx>=0&&ny>=0&&nx<w&&ny<h){const ni=ny*w+nx;if(mask[ni]&&!seen[ni]){seen[ni]=1;q.push(ni);}}
+    }
+    const cw=maxx-minx+1,ch=maxy-miny+1,area=cw*ch,ratio=cw/ch,cy=(miny+maxy)/2;
+    if(count>45&&cw>w*0.08&&ch>h*0.08&&ratio>0.35&&ratio<1.8){
+      const score=count*(1.35-Math.min(1,cy/h))*Math.min(1.3,ch/(cw||1)); comps.push({minx,maxx,miny,maxy,count,score});
+    }
+  }
+  if(!comps.length) return [];
+  comps.sort((a,b)=>b.score-a.score); const f=comps[0];
+  const inv=1/scale, fw=(f.maxx-f.minx+1)*inv, fh=(f.maxy-f.miny+1)*inv;
+  // Expand skin cluster to approximate the whole head including hair and beard.
+  return [{x:Math.max(0,(f.minx*inv)-fw*0.22),y:Math.max(0,(f.miny*inv)-fh*0.30),width:fw*1.44,height:fh*1.55,heuristic:true}];
+}
+
 async function v81DetectFaces(dataUrl){
   if(!v81FaceCrop.enabled || !dataUrl) return [];
   if(v81FaceCrop.cache.has(dataUrl)) return v81FaceCrop.cache.get(dataUrl);
@@ -1668,7 +1762,10 @@ async function v81DetectFaces(dataUrl){
         width:f.boundingBox.width, height:f.boundingBox.height
       }));
     }
-  }catch(err){ console.warn('V8.1 face detection fallback:',err); }
+  }catch(err){ console.warn('V8.2 native face detection fallback:',err); }
+  if(!faces.length){
+    try{ faces=await v82HeuristicFace(dataUrl); }catch(err){ console.warn('V8.2 heuristic face detection failed:',err); }
+  }
   v81FaceCrop.cache.set(dataUrl,faces);
   return faces;
 }
@@ -1683,10 +1780,10 @@ function v81ApplyPhotoCrop(image, box, faces){
   if(faces.length===1){
     const face=faces[0];
     focusX=face.x+face.width/2;
-    focusY=face.y+face.height/2;
-    // Keep head size consistent while never exposing empty space.
-    scale=Math.max(cover,(box.width*0.43)/Math.max(face.width,1));
-    targetY=box.top+box.height*0.40;
+    focusY=face.y+face.height*0.48;
+    // ID portrait: consistent head width, eyes/head placed in upper third.
+    scale=Math.max(cover,(box.width*0.58)/Math.max(face.width,1));
+    targetY=box.top+box.height*0.37;
     v81FaceCrop.lastResult='one';
     v81FaceStatus('Face detected: centred and cropped automatically.');
   }else if(faces.length>1){
@@ -1724,4 +1821,4 @@ builderAddOrUpdateImage=async function(role,dataUrl,box){
   return image;
 };
 
-status('V8.1 Production Edition ready — Smart File Matching and Auto Face Center + Auto Crop.');
+status('V8.2 Crop Test ready — ID-only photo matching, white-border trim and improved face centring.');
