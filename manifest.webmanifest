@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "Tabaja Card Designer",
+  "name": "Tabaja Card Designer V11 Employee Manager",
   "short_name": "Tabaja Cards",
-  "description": "Professional CR80 PVC card design and batch printing suite.",
+  "description": "Professional CR80 card production with employee directory, batch tools and stable Zebra printing.",
   "lang": "en",
   "dir": "ltr",
   "start_url": "./?source=pwa",
