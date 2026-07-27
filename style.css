@@ -59,8 +59,3 @@ body[data-v8-view="dashboard"] #designerTopActions{display:none}
 body[data-v8-view="batch"] #designerTopActions button:not(#logoutBtn),body[data-v8-view="quality"] #designerTopActions button:not(#logoutBtn),body[data-v8-view="zebra"] #designerTopActions button:not(#logoutBtn){display:none}
 .v8-special-panel{border-color:#1684e8;box-shadow:0 0 0 1px #1684e822}.v8-panel-intro{color:#9eabc0;font-size:13px;line-height:1.5}.v8-quality-modes{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:12px 0}.v8-quality-modes button{padding:12px 6px}.v8-quality-modes button b,.v8-quality-modes button span{display:block}.v8-quality-modes button span{font-size:10px;color:#9eabc0;margin-top:4px}.v8-quality-modes button.active{background:#1684e8;border-color:#1684e8}.v8-quality-modes button.active span{color:#e7f5ff}.v8-quality-status{margin-top:12px;padding:10px;background:#10283a;border-radius:8px;color:#bfe1ff;font-size:12px;line-height:1.5}
 @media(max-width:1100px){.v8-dashboard-grid{grid-template-columns:repeat(2,1fr)}.v8-nav{top:0;overflow-x:auto}.v8-nav-btn span{white-space:nowrap}}@media(max-width:700px){.v8-dashboard-grid{grid-template-columns:1fr}.v8-hero{flex-direction:column}.v8-hero h2{font-size:28px}.v8-nav-btn span{display:none}}
-
-/* V8.1 Smart File Matching */
-.smart-match-report{line-height:1.55;border-left:4px solid #1684e8;margin-top:10px}
-.smart-match-report details{margin-top:8px}
-.smart-match-report details div{font-size:12px;padding:4px 0;border-top:1px solid rgba(0,0,0,.08);word-break:break-word}

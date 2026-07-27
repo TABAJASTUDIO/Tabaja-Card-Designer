@@ -1,3 +1,12 @@
+# Tabaja Card Designer V8.1 Production Edition
+
+## V8.1 Auto Face Crop Beta
+- Auto Face Center + Auto Crop for employee photos.
+- Consistent head sizing and safe photo-frame clipping.
+- Multiple-face warning.
+- Smart Center Crop fallback when face detection is unavailable.
+- Employee photo filenames may start with the ID and continue with the employee name.
+
 # Tabaja Card Designer V4.3
 
 Production update built on the original GitHub project.
@@ -62,11 +71,3 @@ The old `scripts` and `styles` folders are not used by this version.
 - Print bleed is applied only to the background layer.
 - Text, logos, QR codes, barcodes, photos and other foreground objects remain at exact CR80 size and position.
 - Prevents the bottom edge correction from cutting or enlarging important card content.
-
-
-## V8.1 Production Edition
-- Smart File Matching reads only the leading Employee ID digits from photo filenames.
-- Supported examples: `000001.jpg`, `000001 Sajed Tabaja.jpg`, `000001-Sajed.png`, `000001_Updated.webp`.
-- Text after the ID is ignored for matching and remains useful for identifying the employee.
-- Duplicate photos with the same leading ID are reported by Pre-flight instead of being silently selected.
-- Batch screen shows matched, missing and duplicate photo counts.

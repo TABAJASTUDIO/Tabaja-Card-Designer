@@ -41,26 +41,3 @@ header{display:flex;justify-content:space-between;gap:20px;align-items:center;pa
 .quality-tools[open] summary{margin-bottom:8px}
 .quality-tools label span{float:right;color:#8ecbff;font-weight:700}
 .quality-tools input[type=range]{accent-color:#1684e8}
-
-/* V8.0 Professional Beta — separated workspaces */
-body[data-v8-view="dashboard"] #v8Main{display:none}
-body:not([data-v8-view="dashboard"]) #v8Dashboard{display:none}
-.v8-nav{display:flex;gap:8px;padding:10px 20px;background:#11161d;border-bottom:1px solid #303746;position:sticky;top:77px;z-index:4}
-.v8-nav-btn{display:flex;align-items:center;gap:8px;padding:9px 14px;background:transparent;border-color:transparent;color:#aeb9c9}
-.v8-nav-btn.active{background:#1684e8;color:#fff;border-color:#1684e8}.v8-nav-btn span{font-weight:700}
-.v8-dashboard{padding:28px;max-width:1400px;margin:0 auto}.v8-hero{display:flex;justify-content:space-between;align-items:flex-start;gap:30px;padding:30px;border:1px solid #344052;border-radius:20px;background:linear-gradient(135deg,#1b2635,#121820);box-shadow:0 18px 50px #0005}.v8-kicker{font-size:11px;letter-spacing:3px;color:#66b7ff;font-weight:900}.v8-hero h2{font-size:34px;margin:10px 0 8px}.v8-hero p{color:#aeb9c9;max-width:700px;line-height:1.6}.v8-ready-badge{padding:10px 14px;border-radius:999px;background:#123b2d;color:#7ff0b6;font-size:12px;font-weight:900;white-space:nowrap}.v8-dashboard-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:20px}.v8-action-card{text-align:left;min-height:180px;padding:22px;border-radius:16px;background:#181f29;display:flex;flex-direction:column;align-items:flex-start}.v8-action-card.featured{border-color:#1684e8;box-shadow:0 0 0 1px #1684e844}.v8-action-card b{font-size:18px}.v8-action-card span{color:#9eabc0;line-height:1.5;margin-top:10px}.v8-action-card em{font-style:normal;color:#66b7ff;font-weight:800;margin-top:auto}.v8-workflow{margin-top:20px;padding:20px;border:1px solid #303746;border-radius:16px;background:#151b23}.v8-workflow h3{margin-top:0}.v8-steps{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.v8-steps span{padding:9px 12px;border-radius:8px;background:#202a37;color:#cfe6fb;font-weight:700}.v8-steps i{color:#62738a}
-body[data-v8-view="batch"] main{grid-template-columns:1fr 390px}body[data-v8-view="quality"] main,body[data-v8-view="zebra"] main{grid-template-columns:1fr 390px}body[data-v8-view="batch"] .tools,body[data-v8-view="quality"] .tools,body[data-v8-view="zebra"] .tools{display:none}
-.properties [data-v8-panel]{display:none}.properties .v8-properties-block{display:none}
-body[data-v8-view="designer"] .properties [data-v8-panel="designer"],body[data-v8-view="designer"] .properties .v8-properties-block{display:block}
-body[data-v8-view="batch"] .properties [data-v8-panel="batch"]{display:block}
-body[data-v8-view="quality"] .properties [data-v8-panel="quality"]{display:block}
-body[data-v8-view="zebra"] .properties [data-v8-panel="zebra"]{display:block}
-body[data-v8-view="dashboard"] #designerTopActions{display:none}
-body[data-v8-view="batch"] #designerTopActions button:not(#logoutBtn),body[data-v8-view="quality"] #designerTopActions button:not(#logoutBtn),body[data-v8-view="zebra"] #designerTopActions button:not(#logoutBtn){display:none}
-.v8-special-panel{border-color:#1684e8;box-shadow:0 0 0 1px #1684e822}.v8-panel-intro{color:#9eabc0;font-size:13px;line-height:1.5}.v8-quality-modes{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:12px 0}.v8-quality-modes button{padding:12px 6px}.v8-quality-modes button b,.v8-quality-modes button span{display:block}.v8-quality-modes button span{font-size:10px;color:#9eabc0;margin-top:4px}.v8-quality-modes button.active{background:#1684e8;border-color:#1684e8}.v8-quality-modes button.active span{color:#e7f5ff}.v8-quality-status{margin-top:12px;padding:10px;background:#10283a;border-radius:8px;color:#bfe1ff;font-size:12px;line-height:1.5}
-@media(max-width:1100px){.v8-dashboard-grid{grid-template-columns:repeat(2,1fr)}.v8-nav{top:0;overflow-x:auto}.v8-nav-btn span{white-space:nowrap}}@media(max-width:700px){.v8-dashboard-grid{grid-template-columns:1fr}.v8-hero{flex-direction:column}.v8-hero h2{font-size:28px}.v8-nav-btn span{display:none}}
-
-/* V8.1 Smart File Matching */
-.smart-match-report{line-height:1.55;border-left:4px solid #1684e8;margin-top:10px}
-.smart-match-report details{margin-top:8px}
-.smart-match-report details div{font-size:12px;padding:4px 0;border-top:1px solid rgba(0,0,0,.08);word-break:break-word}

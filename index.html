@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Tabaja Card Designer V8.1 Production Edition</title>
+  <title>Tabaja Card Designer V8.1 Professional Beta</title>
   <link rel="stylesheet" href="style.css?v=6.2-beta.1">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -31,7 +31,7 @@
   <div id="appShell" class="app-shell hidden">
     <header>
       <div>
-        <h1>Tabaja Card Designer V8.1 • Production Edition</h1>
+        <h1>Tabaja Card Designer V8.1 • Professional Beta</h1>
         <small id="pageSubtitle">Dashboard • Professional CR80 PVC Production Suite</small>
       </div>
       <div class="top-actions" id="designerTopActions">
@@ -160,12 +160,13 @@
           <input id="batchExcelInput" type="file" accept=".xlsx,.xls,.csv">
           <label>2. Upload Employee Photos Folder (optional)</label>
           <input id="batchPhotosInput" type="file" accept="image/*" webkitdirectory directory multiple>
+          <label class="background-sync-option"><input id="autoFaceCrop" type="checkbox" checked><span>Auto Face Center + Auto Crop</span></label>
+          <div id="faceCropStatus" class="batch-summary">Face crop: ready. Unsupported browsers use Smart Center Crop.</div>
           <label>3. Upload Company Logos Folder (optional)</label>
           <input id="batchLogosInput" type="file" accept="image/*" webkitdirectory directory multiple>
           <label>4. Upload Card Backgrounds Folder (optional)</label>
           <input id="batchBackgroundsInput" type="file" accept="image/*" webkitdirectory directory multiple>
           <div id="batchSummary" class="batch-summary">No batch loaded.</div>
-          <div id="batchMatchReport" class="batch-summary smart-match-report"><strong>Smart File Matching</strong><br>Photo filename may begin with Employee ID, followed by the employee name.</div>
           <label>Name Column</label><select id="mapName"></select>
           <label>ID Column</label><select id="mapId"></select>
           <label>Job Title Column</label><select id="mapJob"></select>
@@ -200,7 +201,7 @@
             <button id="batchResetBtn">Reset Batch</button>
           </div>
           <div id="batchProgress" class="batch-progress">Ready.</div>
-          <p class="builder-note">Missing photos are cleared and marked, never copied from another record. When a logo exists, only the logo is shown. Backgrounds reset for every record. Contact icons are added automatically only when a value exists. Smart photo matching: the filename must begin with Employee ID; any name may follow it (examples: 000001.jpg, 000001 Sajed Tabaja.jpg, 000001-Sajed.png). Duplicate IDs are reported before printing. Logo matching: company name (example B7S.png) or the optional Logo Filename column. One print dialog contains up to 50 cards.</p>
+          <p class="builder-note">Missing photos are cleared and marked, never copied from another record. When a logo exists, only the logo is shown. Backgrounds reset for every record. Contact icons are added automatically only when a value exists. Photo matching: Employee ID (example 000001.jpg). Logo matching: company name (example B7S.png) or the optional Logo Filename column. One print dialog contains up to 50 cards.</p>
         </div>
 
         <div class="builder-panel" data-v8-panel="designer">
@@ -304,7 +305,7 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <script src="app.js?v=8.1-production"></script>
-  <script src="v8-ui.js?v=8.1-production"></script>
+  <script src="app.js?v=8.1-face-crop-beta"></script>
+  <script src="v8-ui.js?v=8.1-face-crop-beta"></script>
 </body>
 </html>

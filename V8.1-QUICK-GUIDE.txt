@@ -1,14 +1,19 @@
-TABAJA CARD DESIGNER V8.1 — PRODUCTION EDITION
+TABAJA CARD DESIGNER V8.1 — AUTO FACE CROP BETA
 
-SMART PHOTO NAMING
-1. Start every employee photo filename with the Employee ID from Excel.
-2. You may write the employee name after the ID.
+1. Open Batch Printing.
+2. Upload Excel, photos and logos.
+3. Keep “Auto Face Center + Auto Crop” checked.
+4. Preview records before printing.
 
-Accepted examples:
-000001.jpg
+PHOTO NAMING
+The filename must start with the Employee ID. Text after the ID is allowed:
 000001 Sajed Tabaja.jpg
-000001-Sajed Tabaja.png
-000001_Updated Photo.webp
+000002-Mohamad.png
 
-The application reads only the leading number 000001 for matching.
-If two photos begin with the same ID, Pre-flight reports a duplicate and shows both filenames.
+AUTO FACE CROP
+- One detected face: centred, cropped and scaled automatically.
+- No detected face: Smart Center Crop is used.
+- Multiple faces: warning is displayed and Smart Center Crop is used for safety.
+- The feature uses the browser FaceDetector when available. Other browsers safely fall back to Smart Center Crop.
+
+Always review the preview before a large print job.
