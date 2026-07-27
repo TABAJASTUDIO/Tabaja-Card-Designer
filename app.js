@@ -602,6 +602,15 @@ function dataUrlToBytes(dataUrl) {
   return bytes;
 }
 
+function getDataUrlDimensions(dataUrl) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve({ width: img.naturalWidth || img.width, height: img.naturalHeight || img.height });
+    img.onerror = () => reject(new Error("Could not read exported image dimensions."));
+    img.src = dataUrl;
+  });
+}
+
 function asciiBytes(text) { return new TextEncoder().encode(text); }
 function concatBytes(parts) {
   const total = parts.reduce((n, p) => n + p.length, 0);
@@ -671,12 +680,14 @@ $("pdfBtn").onclick = async () => {
     const both = confirm("Export Front and Back?\nOK = both sides\nCancel = current side only");
     const list = both ? ["front", "back"] : [currentSide];
     const jpegBytes = [];
+    let exportSize = null;
     for (const side of list) {
       const jpeg = await exportSide(side, "jpeg", 0.98);
+      if (!exportSize) exportSize = await getDataUrlDimensions(jpeg);
       jpegBytes.push(dataUrlToBytes(jpeg));
     }
     const c = CARD[orientation];
-    const pdfBytes = buildJpegPdf(jpegBytes, W, H, c.mmW, c.mmH);
+    const pdfBytes = buildJpegPdf(jpegBytes, exportSize.width, exportSize.height, c.mmW, c.mmH);
     downloadBlob(new Blob([pdfBytes], { type: "application/pdf" }), `Tabaja-Card-${orientation}.pdf`);
     status("PDF exported.");
   } catch (e) { alert("PDF export failed: " + e.message); }
@@ -692,13 +703,15 @@ async function printSides(list) {
     // To preserve the real CR80 physical size, build a PDF whose MediaBox is
     // expressed in PDF points (85.60 × 53.98 mm), then download that exact file.
     const jpegBytes = [];
+    let exportSize = null;
     for (const side of list) {
       const jpeg = await exportSide(side, "jpeg", 1);
+      if (!exportSize) exportSize = await getDataUrlDimensions(jpeg);
       jpegBytes.push(dataUrlToBytes(jpeg));
     }
 
     const c = CARD[orientation];
-    const pdfBytes = buildPrintJpegPdf(jpegBytes, W, H, c.mmW, c.mmH);
+    const pdfBytes = buildPrintJpegPdf(jpegBytes, exportSize.width, exportSize.height, c.mmW, c.mmH);
     const fileName = list.length === 2
       ? `Tabaja-PRINT-Front-Back-${orientation}-CR80.pdf`
       : `Tabaja-PRINT-${list[0]}-${orientation}-CR80.pdf`;
@@ -714,15 +727,10 @@ async function printSides(list) {
 function buildPrintJpegPdf(images, pxW, pxH, mmW, mmH) {
   const pageW = mmW * 72 / 25.4;
   const pageH = mmH * 72 / 25.4;
-  // V6.6.3 Zebra ZC300 asymmetric calibration. The printer was leaving a
-  // persistent strip on the left and bottom, so those two edges receive
-  // stronger overscan while top/right keep a smaller safety bleed.
-  const bleedLeft = 2.40 * 72 / 25.4;
-  const bleedRight = 1.20 * 72 / 25.4;
-  const bleedTop = 1.20 * 72 / 25.4;
-  const bleedBottom = 2.40 * 72 / 25.4;
-  const drawW = pageW + bleedLeft + bleedRight;
-  const drawH = pageH + bleedTop + bleedBottom;
+  // Exact CR80 layout: no software overscan or asymmetric shifting.
+  // Printer edge alignment is handled separately in the Zebra driver.
+  const drawW = pageW;
+  const drawH = pageH;
   const objects = [];
   const addObj = bytes => { objects.push(bytes); return objects.length; };
   const pagesId = 2;
@@ -739,7 +747,7 @@ function buildPrintJpegPdf(images, pxW, pxH, mmW, mmH) {
     ]));
 
     const content = asciiBytes(
-      `q\n${drawW.toFixed(3)} 0 0 ${drawH.toFixed(3)} ${(-bleedLeft).toFixed(3)} ${(-bleedBottom).toFixed(3)} cm\n/Im${i + 1} Do\nQ`
+      `q\n${drawW.toFixed(3)} 0 0 ${drawH.toFixed(3)} 0 0 cm\n/Im${i + 1} Do\nQ`
     );
     const contentId = addObj(concatBytes([
       asciiBytes(`<< /Length ${content.length} >>\nstream\n`),
@@ -1821,4 +1829,4 @@ builderAddOrUpdateImage=async function(role,dataUrl,box){
   return image;
 };
 
-status('V8.2 Crop Test ready — ID-only photo matching, white-border trim and improved face centring.');
+status('V8.2.1 Size Fix ready — exact CR80 PDF dimensions with ID photo matching and crop test.');
