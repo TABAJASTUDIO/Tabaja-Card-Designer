@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Tabaja Card Designer V10.1 Cloud Foundation</title>
+  <title>Tabaja Card Designer V11.0 Employee Manager</title>
   <meta name="theme-color" content="#1684e8">
   <meta name="application-name" content="Tabaja Card Designer">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -12,7 +12,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style.css?v=10.1.0">
+  <link rel="stylesheet" href="style.css?v=11.0.0">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
@@ -34,7 +34,7 @@
           <div><b>Plan permissions</b><span>Features can be enabled by subscription.</span></div>
           <div><b>PWA ready</b><span>Runs as an installed Windows or Android app.</span></div>
         </div>
-        <small>V10.1 Cloud Foundation — real cloud accounts are now supported through Supabase.</small>
+        <small>V11.0 Employee Manager — company staff records are now managed inside the workspace.</small>
       </div>
 
       <div class="auth-card">
@@ -87,7 +87,7 @@
   <div id="appShell" class="app-shell hidden">
     <header>
       <div>
-        <h1>Tabaja Card Designer V10.1 • Cloud Foundation</h1>
+        <h1>Tabaja Card Designer V11.0 • Employee Manager</h1>
         <small id="pageSubtitle">Dashboard • Professional CR80 PVC Production Suite</small>
       </div>
       <div class="top-actions" id="designerTopActions">
@@ -109,6 +109,7 @@
     <nav class="v8-nav" aria-label="Main navigation">
       <button class="v8-nav-btn active" data-view="dashboard">⌂<span>Dashboard</span></button>
       <button class="v8-nav-btn" data-view="designer">✦<span>Card Designer</span></button>
+      <button class="v8-nav-btn" data-view="employees">👥<span>Employees</span></button>
       <button class="v8-nav-btn" data-view="batch">▦<span>Batch Printing</span></button>
       <button class="v8-nav-btn" data-view="quality">★<span>Print Quality</span></button>
       <button class="v8-nav-btn" data-view="zebra">▣<span>Zebra Settings</span></button>
@@ -130,6 +131,7 @@
         <div><span>Licence</span><b id="licenceStatus" class="status-active">ACTIVE</b><small id="licenceNote">Cloud licence status</small></div>
       </div>
       <div class="v8-dashboard-grid">
+        <button class="v8-action-card" data-go="employees"><b>Manage Employees</b><span>Add, search and maintain employee identity records.</span><em>Open Employees →</em></button>
         <button class="v8-action-card" data-go="designer"><b>Design One Card</b><span>Create or update a single employee card.</span><em>Open Designer →</em></button>
         <button class="v8-action-card featured" data-go="batch"><b>Print an Excel Batch</b><span>Import employees, photos, logos and print up to 50 cards.</span><em>Start Batch Wizard →</em></button>
         <button class="v8-action-card" data-go="quality"><b>Professional Quality</b><span>Photo enhancement, sharp text and high-resolution output.</span><em>Open Quality →</em></button>
@@ -138,6 +140,45 @@
       <div class="v8-workflow">
         <h3>Batch workflow</h3>
         <div class="v8-steps"><span>1 Excel</span><i>→</i><span>2 Photos</span><i>→</i><span>3 Logos</span><i>→</i><span>4 Preview</span><i>→</i><span>5 Pre-flight</span><i>→</i><span>6 Print</span></div>
+      </div>
+    </section>
+
+    <section id="employeeWorkspace" class="employee-workspace" aria-labelledby="employeeWorkspaceTitle">
+      <div class="employee-page-head">
+        <div>
+          <span class="v8-kicker">COMPANY DIRECTORY</span>
+          <h2 id="employeeWorkspaceTitle">Employee Manager</h2>
+          <p>Maintain employee records separately from the stable card-design and printing engine.</p>
+        </div>
+        <button id="addEmployeeBtn" class="primary employee-add-btn" type="button">+ Add Employee</button>
+      </div>
+
+      <div class="employee-stats" aria-label="Employee summary">
+        <div><span>Total Employees</span><b id="employeeTotal">0</b></div>
+        <div><span>Active</span><b id="employeeActive">0</b></div>
+        <div><span>Inactive</span><b id="employeeInactive">0</b></div>
+        <div><span>Departments</span><b id="employeeDepartments">0</b></div>
+      </div>
+
+      <div class="employee-toolbar">
+        <label class="employee-search"><span>⌕</span><input id="employeeSearch" type="search" placeholder="Search name, ID, department or job title"></label>
+        <select id="employeeStatusFilter" aria-label="Filter employee status"><option value="all">All statuses</option><option value="Active">Active</option><option value="Inactive">Inactive</option></select>
+        <button id="exportEmployeesBtn" type="button">Export Backup</button>
+        <button id="importEmployeesBtn" type="button">Import Backup</button>
+        <input id="importEmployeesFile" type="file" accept="application/json" hidden>
+      </div>
+
+      <div class="employee-table-card">
+        <div class="employee-table-wrap">
+          <table class="employee-table">
+            <thead><tr><th>Photo</th><th>Employee ID</th><th>Name</th><th>Department</th><th>Job Title</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="employeeTableBody"></tbody>
+          </table>
+        </div>
+        <div id="employeeEmptyState" class="employee-empty">
+          <div class="employee-empty-icon">👥</div><h3>No employees yet</h3><p>Add your first employee to start building the company directory.</p>
+          <button id="emptyAddEmployeeBtn" class="primary" type="button">+ Add First Employee</button>
+        </div>
       </div>
     </section>
 
@@ -369,6 +410,39 @@
   </div>
 
 
+  <div id="employeeModal" class="employee-modal hidden" role="dialog" aria-modal="true" aria-labelledby="employeeModalTitle">
+    <form id="employeeForm" class="employee-modal-card">
+      <button id="closeEmployeeModalBtn" class="employee-modal-close" type="button" aria-label="Close">×</button>
+      <span class="v8-kicker">EMPLOYEE RECORD</span>
+      <h2 id="employeeModalTitle">Add Employee</h2>
+      <input id="employeeRecordKey" type="hidden">
+      <div class="employee-form-layout">
+        <div class="employee-photo-column">
+          <div id="employeePhotoPreview" class="employee-photo-preview"><span>Photo</span></div>
+          <label class="employee-photo-button" for="employeePhotoInput">Choose Photo</label>
+          <input id="employeePhotoInput" type="file" accept="image/*" hidden>
+          <button id="removeEmployeePhotoBtn" class="link-button" type="button">Remove photo</button>
+        </div>
+        <div class="employee-form-grid">
+          <div><label for="employeeIdInput">Employee ID *</label><input id="employeeIdInput" required maxlength="40" placeholder="EMP-0001"></div>
+          <div><label for="employeeStatusInput">Status</label><select id="employeeStatusInput"><option>Active</option><option>Inactive</option></select></div>
+          <div><label for="employeeFirstNameInput">First Name *</label><input id="employeeFirstNameInput" required maxlength="80"></div>
+          <div><label for="employeeLastNameInput">Last Name</label><input id="employeeLastNameInput" maxlength="80"></div>
+          <div><label for="employeeDepartmentInput">Department</label><input id="employeeDepartmentInput" maxlength="100"></div>
+          <div><label for="employeeJobTitleInput">Job Title</label><input id="employeeJobTitleInput" maxlength="100"></div>
+          <div><label for="employeeCompanyInput">Company</label><input id="employeeCompanyInput" maxlength="120"></div>
+          <div><label for="employeePhoneInput">Phone</label><input id="employeePhoneInput" type="tel" maxlength="40"></div>
+          <div class="employee-span-2"><label for="employeeEmailInput">Email</label><input id="employeeEmailInput" type="email" maxlength="160"></div>
+          <div><label for="employeeIssueDateInput">Issue Date</label><input id="employeeIssueDateInput" type="date"></div>
+          <div><label for="employeeExpiryDateInput">Expiry Date</label><input id="employeeExpiryDateInput" type="date"></div>
+          <div class="employee-span-2"><label for="employeeNotesInput">Notes</label><textarea id="employeeNotesInput" rows="3" maxlength="500"></textarea></div>
+        </div>
+      </div>
+      <div id="employeeFormMessage" class="employee-form-message" aria-live="polite"></div>
+      <div class="employee-modal-actions"><button id="cancelEmployeeBtn" type="button">Cancel</button><button class="primary" type="submit">Save Employee</button></div>
+    </form>
+  </div>
+
   <div id="cloudSetupModal" class="cloud-modal hidden" role="dialog" aria-modal="true" aria-labelledby="cloudSetupTitle">
     <div class="cloud-modal-card">
       <button id="closeCloudSetupBtn" class="cloud-modal-close" type="button">×</button>
@@ -393,9 +467,10 @@
     <span>A new version is ready.</span>
     <button id="pwaUpdateBtn" type="button">Update now</button>
   </div>
-  <script src="cloud.js?v=10.1.0"></script>
-  <script src="app.js?v=10.1.0"></script>
-  <script src="v8-ui.js?v=10.1.0"></script>
-  <script src="pwa.js?v=10.1.0"></script>
+  <script src="cloud.js?v=11.0.0"></script>
+  <script src="app.js?v=11.0.0"></script>
+  <script src="v8-ui.js?v=11.0.0"></script>
+  <script src="employee-manager.js?v=11.0.0"></script>
+  <script src="pwa.js?v=11.0.0"></script>
 </body>
 </html>
