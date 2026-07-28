@@ -1,13 +1,14 @@
-const CACHE_VERSION = 'tabaja-v11-2-0-command-center';
+const CACHE_VERSION = 'tabaja-v11-2-2-navigation-stability';
 const APP_SHELL = [
   './',
   './index.html',
-  './style.css',
-  './app.js',
-  './cloud.js',
-  './v8-ui.js',
-  './employee-manager.js',
-  './pwa.js',
+  './style.css?v=11.2.2',
+  './app.js?v=11.2.2',
+  './cloud.js?v=11.2.2',
+  './v8-ui.js?v=11.2.2',
+  './employee-manager.js?v=11.2.2',
+  './command-center.js?v=11.2.2',
+  './pwa.js?v=11.2.2',
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',
@@ -21,31 +22,48 @@ self.addEventListener('install', event => {
 
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE_VERSION).map(key => caches.delete(key))))
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(key => key !== CACHE_VERSION).map(key => caches.delete(key))))
       .then(() => self.clients.claim())
   );
 });
+
+async function networkFirst(request, fallback) {
+  try {
+    const response = await fetch(request, { cache: 'no-store' });
+    if (response && response.ok) {
+      const cache = await caches.open(CACHE_VERSION);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    return (await caches.match(request)) || (fallback ? await caches.match(fallback) : Response.error());
+  }
+}
 
 self.addEventListener('fetch', event => {
   const request = event.request;
   if (request.method !== 'GET') return;
 
+  const url = new URL(request.url);
+  const sameOrigin = url.origin === self.location.origin;
+
   if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request).then(response => {
-        const copy = response.clone();
-        caches.open(CACHE_VERSION).then(cache => cache.put('./index.html', copy));
-        return response;
-      }).catch(() => caches.match('./index.html'))
-    );
+    event.respondWith(networkFirst(request, './index.html'));
+    return;
+  }
+
+  // HTML/CSS/JS always check the newest local build first. This prevents an old
+  // stylesheet from being paired with a new page and stacking module workspaces.
+  if (sameOrigin && /\.(?:html|css|js)$/.test(url.pathname)) {
+    event.respondWith(networkFirst(request));
     return;
   }
 
   event.respondWith(
     caches.match(request).then(cached => cached || fetch(request).then(response => {
       if (response && (response.status === 200 || response.type === 'opaque')) {
-        const copy = response.clone();
-        caches.open(CACHE_VERSION).then(cache => cache.put(request, copy));
+        caches.open(CACHE_VERSION).then(cache => cache.put(request, response.clone()));
       }
       return response;
     }))

@@ -11,12 +11,36 @@
     zebra: 'Print Center / Zebra Settings • ZC300 alignment and bleed controls'
   };
 
+  const designerViews = new Set(['designer', 'batch', 'quality', 'zebra']);
+
+  function enforceSingleWorkspace(view) {
+    // Navigation stability guard: only one workspace may be visible at a time.
+    // Inline visibility is intentional so a stale cached stylesheet cannot stack modules.
+    const visibility = {
+      v8Dashboard: view === 'dashboard',
+      employeeWorkspace: view === 'employees',
+      printCenterWorkspace: view === 'printcenter',
+      reportsWorkspace: view === 'reports',
+      nfcWorkspace: view === 'nfc',
+      v8Main: designerViews.has(view)
+    };
+
+    Object.entries(visibility).forEach(([id, visible]) => {
+      const element = document.getElementById(id);
+      if (!element) return;
+      element.style.display = visible ? '' : 'none';
+      element.setAttribute('aria-hidden', visible ? 'false' : 'true');
+    });
+  }
+
   function setView(view) {
     document.body.dataset.v8View = view;
+    enforceSingleWorkspace(view);
     document.querySelectorAll('.v8-nav-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.view === view));
     const sub = document.getElementById('pageSubtitle');
     if (sub) sub.textContent = subtitles[view] || subtitles.dashboard;
-    document.querySelector('header h1').textContent = ({dashboard:'Command Center',designer:'Identity Studio',employees:'Employee Center',printcenter:'Print Center',reports:'Reports',nfc:'NFC Studio',batch:'Batch Printing',quality:'Print Quality',zebra:'Zebra Settings'})[view] || 'Tabaja Solution';
+    const title = document.querySelector('header h1');
+    if (title) title.textContent = ({dashboard:'Command Center',designer:'Identity Studio',employees:'Employee Center',printcenter:'Print Center',reports:'Reports',nfc:'NFC Studio',batch:'Batch Printing',quality:'Print Quality',zebra:'Zebra Settings'})[view] || 'Tabaja Solution';
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
