@@ -604,6 +604,7 @@ $("orientationSelect").onchange = e => changeOrientation(e.target.value);
 
 $("newBtn").onclick = async () => {
   if (!confirm("Start a new project?")) return;
+  window.TabajaActivityStore?.startNewProject();
   orientation = "landscape";
   W = CARD.landscape.w; H = CARD.landscape.h;
   sides = { front: emptySnapshot(), back: emptySnapshot() };
@@ -644,6 +645,7 @@ $("projectInput").onchange = e => {
       await loadSnapshot(sides[currentSide]);
       $("frontBtn").classList.toggle("active", currentSide === "front");
       $("backBtn").classList.toggle("active", currentSide === "back");
+      window.TabajaActivityStore?.startNewProject();
       status("Project opened.");
     } catch (err) { alert("Invalid project file."); }
   };
