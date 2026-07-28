@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'tabaja-v12-3-commercial-stage2';
+const CACHE_VERSION = 'tabaja-v12-4-collection-library';
 const APP_SHELL = [
   './',
   './index.html',

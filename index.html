@@ -189,19 +189,44 @@
     <section id="templateGalleryWorkspace" class="template-gallery-workspace" aria-labelledby="templateGalleryTitle">
       <div class="tg-hero">
         <div>
-          <span class="tg-kicker">V12 COMMERCIAL COLLECTION</span>
-          <h2 id="templateGalleryTitle">Choose a card that sells the idea.</h2>
-          <p>Premium-ready starting points for white and black PVC cards. Pick a design, then customise every element inside Identity Studio.</p>
+          <span class="tg-kicker">V12.4 COMMERCIAL LIBRARY</span>
+          <h2 id="templateGalleryTitle">Choose a collection that opens the opportunity.</h2>
+          <p>A structured card library for government, corporate, healthcare, security and membership printing opportunities.</p>
           <div class="tg-proof" aria-label="Platform highlights">
-            <div><b>12</b><span>Ready Templates</span></div>
-            <div><b>8</b><span>Design Collections</span></div>
-            <div><b>2</b><span>Card Materials</span></div>
+            <div><b>12</b><span>Ready Designs</span></div>
+            <div><b>6</b><span>Visible Collections</span></div>
+            <div><b>2</b><span>Current Materials</span></div>
             <div><b>100%</b><span>Zebra Compatible</span></div>
           </div>
         </div>
         <button id="openBlankDesigner" class="tg-blank-btn" type="button"><span>＋</span><b>Start Blank Card</b><small>Build from a clean canvas</small></button>
       </div>
 
+      <section id="collectionHome" class="collection-home" aria-label="Card collections">
+        <div class="collection-home-head">
+          <div><span>DESIGN LIBRARY</span><h3>Explore by sector</h3><p>Choose a collection first, then open the exact card type you need.</p></div>
+          <button id="showAllTemplates" type="button">View all ready templates</button>
+        </div>
+        <div class="collection-home-grid">
+          <button class="collection-cover government" type="button" data-open-collection="government"><span class="collection-icon">♜</span><div><small>OFFICIAL DOCUMENTS</small><b>Government</b><p>National identity, driver licence, residence permit and public-sector credentials.</p><em>Explore collection →</em></div></button>
+          <button class="collection-cover corporate" type="button" data-open-collection="corporate"><span class="collection-icon">▥</span><div><small>BUSINESS IDENTITY</small><b>Corporate</b><p>Executive, employee, contractor and company access cards.</p><em>Explore collection →</em></div></button>
+          <button class="collection-cover healthcare" type="button" data-open-collection="healthcare"><span class="collection-icon">✚</span><div><small>MEDICAL IDENTITY</small><b>Healthcare</b><p>Doctors, nurses, laboratories, pharmacies and hospital staff.</p><em>Explore collection →</em></div></button>
+          <button class="collection-cover security" type="button" data-open-collection="security"><span class="collection-icon">◆</span><div><small>ACCESS CONTROL</small><b>Security</b><p>Guards, supervisors, visitors and restricted-access credentials.</p><em>Explore collection →</em></div></button>
+          <button class="collection-cover membership" type="button" data-open-collection="membership"><span class="collection-icon">★</span><div><small>LOYALTY & VIP</small><b>Membership</b><p>Clubs, loyalty programmes, premium members and events.</p><em>Explore collection →</em></div></button>
+          <button class="collection-cover education" type="button" data-open-collection="education"><span class="collection-icon">▰</span><div><small>SCHOOLS & CAMPUSES</small><b>Education</b><p>Student, teacher, library and campus access cards.</p><em>Collection structure ready →</em></div></button>
+        </div>
+      </section>
+
+      <section id="collectionDetail" class="collection-detail" hidden>
+        <div class="collection-detail-head">
+          <button id="backToCollections" type="button">← All collections</button>
+          <div><span id="collectionEyebrow">COLLECTION</span><h3 id="collectionTitle">Government</h3><p id="collectionDescription">Choose the exact document type.</p></div>
+          <small id="collectionReadyCount">0 ready designs</small>
+        </div>
+        <div id="collectionTypeGrid" class="collection-type-grid"></div>
+      </section>
+
+      <div id="templateBrowser" class="template-browser" hidden>
       <div class="tg-toolbar">
         <div class="tg-search"><span>⌕</span><input id="templateSearch" type="search" placeholder="Search templates, industries or styles…"></div>
         <div class="tg-filters" role="group" aria-label="Template filters">
@@ -264,7 +289,6 @@
           <div class="tg-preview black-silver"><div class="tp-silverring">V</div><div class="tp-brand">VANTAGE CLUB</div><div class="tp-lines"><b>VIP MEMBER</b><span>ABED TABAJA</span><small>NO. 0001</small></div><em>EST. 2026</em></div>
           <div class="tg-meta"><div><b>Midnight VIP</b><span>Membership • Black PVC</span></div><button type="button">Use Template</button></div>
         </article>
-      </div>
         <article class="tg-card" data-template-id="government-id" data-template-tags="government idcard identity official white premium">
           <div class="tg-preview government-id"><span class="tp-brand">GOVERNMENT OF SIERRA LEONE</span><div class="tp-photo"></div><div class="tp-lines"><b>IBRAHIM SESAY</b><span>CIVIL SERVANT</span><small>ID: GOV 25 0001</small><i></i></div><em>OFFICIAL ID</em></div>
           <div class="tg-meta"><div><b>Government ID</b><span>Government • White PVC</span></div><button type="button">Use Template</button></div>
@@ -281,6 +305,7 @@
           <div class="tg-preview doctor-card"><span class="tp-brand">CITY CARE HOSPITAL</span><div class="tp-photo round"></div><div class="tp-lines"><b>DR. SOPHIA LEE</b><span>CARDIOLOGIST</span><small>ID: HSP 5678</small><i></i></div><em>MEDICAL STAFF</em></div>
           <div class="tg-meta"><div><b>Doctor Professional</b><span>Healthcare • White PVC</span></div><button type="button">Use Template</button></div>
         </article>
+      </div>
       <div id="templateEmpty" class="tg-empty" hidden><span>◇</span><h3>No matching designs</h3><p>Try another material, category or search term.</p></div>
     </section>
 

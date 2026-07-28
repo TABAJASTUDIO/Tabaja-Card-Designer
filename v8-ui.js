@@ -1,7 +1,7 @@
 (() => {
   const subtitles = {
     dashboard: 'Dashboard • Professional CR80 PVC Production Suite',
-    templates: 'Template Gallery • Premium designs for white and black PVC cards',
+    templates: 'Card Design Center • Structured collections for professional card production',
     designer: 'Card Designer • Create and print one employee card',
     employees: 'Employees • Company identity records and staff directory',
     printcenter: 'Print Center • Production workflows and Zebra device controls',
@@ -42,7 +42,7 @@
     const sub = document.getElementById('pageSubtitle');
     if (sub) sub.textContent = subtitles[view] || subtitles.dashboard;
     const title = document.querySelector('header h1');
-    if (title) title.textContent = ({dashboard:'Command Center',templates:'Template Gallery',designer:'Identity Studio',employees:'Employee Center',printcenter:'Print Center',reports:'Reports',nfc:'NFC Studio',batch:'Batch Printing',quality:'Print Quality',zebra:'Zebra Settings'})[view] || 'Tabaja Solution';
+    if (title) title.textContent = ({dashboard:'Command Center',templates:'Card Design Center',designer:'Identity Studio',employees:'Employee Center',printcenter:'Print Center',reports:'Reports',nfc:'NFC Studio',batch:'Batch Printing',quality:'Print Quality',zebra:'Zebra Settings'})[view] || 'Tabaja Solution';
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
