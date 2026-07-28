@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Tabaja Solution V11.1 • Signature Edition</title>
+  <title>Tabaja Solution V11.2 • Command Center Preview</title>
   <meta name="theme-color" content="#090d1a">
   <meta name="application-name" content="Tabaja Card Designer">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -34,7 +34,7 @@
           <div><b>Plan permissions</b><span>Features can be enabled by subscription.</span></div>
           <div><b>PWA ready</b><span>Runs as an installed Windows or Android app.</span></div>
         </div>
-        <small>V11.1 Luxury Tech — premium identity production workspace.</small>
+        <small>V11.2 Luxury Tech — premium identity production workspace.</small>
       </div>
 
       <div class="auth-card">
@@ -107,44 +107,86 @@
     </header>
 
     <nav class="v8-nav" aria-label="Main navigation">
-      <button class="v8-nav-btn active" data-view="dashboard">⌂<span>Dashboard</span></button>
-      <button class="v8-nav-btn" data-view="designer">✦<span>Card Designer</span></button>
-      <button class="v8-nav-btn" data-view="employees">👥<span>Employees</span></button>
-      <button class="v8-nav-btn" data-view="batch">▦<span>Batch Printing</span></button>
-      <button class="v8-nav-btn" data-view="quality">★<span>Print Quality</span></button>
-      <button class="v8-nav-btn" data-view="zebra">▣<span>Zebra Settings</span></button>
+      <button class="v8-nav-btn active" data-view="dashboard">⌂<span>Command Center</span></button>
+      <button class="v8-nav-btn" data-view="designer">✦<span>Identity Studio</span></button>
+      <button class="v8-nav-btn" data-view="employees">👥<span>Employee Center</span></button>
+      <button class="v8-nav-btn" data-view="batch">▦<span>Print Center</span></button>
+      <button class="v8-nav-btn" data-view="quality">★<span>Reports</span></button>
+      <button class="v8-nav-btn" data-view="zebra">▣<span>NFC Studio</span></button>
     </nav>
 
-    <section id="v8Dashboard" class="v8-dashboard">
-      <div class="v8-hero">
-        <div class="hero-copy">
-          <span class="v8-kicker" id="workspaceKicker">TABAJA SIGNATURE WORKSPACE</span>
-          <h2>Identity production, beautifully controlled.</h2>
-          <p>Design one card, organise your people, or launch a complete production batch from one focused workspace.</p>
-          <div class="hero-quick-actions">
-            <button type="button" data-go="designer">Create a card <span>↗</span></button>
-            <button type="button" data-go="employees">Open directory <span>↗</span></button>
-          </div>
+    <section id="v8Dashboard" class="v8-dashboard command-center">
+      <div class="cc-topline">
+        <div>
+          <span class="cc-eyebrow">LIVE OPERATIONS</span>
+          <h2 id="ccGreeting">Good evening, Abed.</h2>
+          <p id="ccDate">Your identity production workspace is ready.</p>
         </div>
-        <div class="hero-orbit" aria-hidden="true"><span class="orbit-mark">T</span><i></i><i></i><i></i></div>
-        <div class="hero-status"><div class="v8-ready-badge">● SYSTEM READY</div><div id="cloudStatusBadge" class="cloud-status-badge">LOCAL PREVIEW</div><small>Zebra production environment</small></div>
+        <div class="cc-system-strip" aria-label="System status">
+          <span class="cc-live-dot"></span>
+          <div><b>System operational</b><small>Local workspace</small></div>
+          <time id="ccClock">00:00</time>
+        </div>
       </div>
-      <div class="account-summary-grid">
-        <div><span>Plan</span><b id="planName">Professional Preview</b><small>Account active</small></div>
-        <div><span>Company</span><b id="summaryCompany">Tabaja Solution</b><small>Private workspace</small></div>
-        <div><span>Users</span><b id="usersAllowance">1 of 3</b><small id="usersAllowanceNote">Plan allowance</small></div>
-        <div><span>Licence</span><b id="licenceStatus" class="status-active">ACTIVE</b><small id="licenceNote">Cloud licence status</small></div>
-      </div>
-      <div class="v8-dashboard-grid">
-        <button class="v8-action-card employees-card" data-go="employees"><span class="card-symbol">01</span><b>Manage Employees</b><span>Add, search and maintain employee identity records.</span><em>Open Employees →</em></button>
-        <button class="v8-action-card designer-card" data-go="designer"><span class="card-symbol">02</span><b>Design One Card</b><span>Create or update a single employee card.</span><em>Open Designer →</em></button>
-        <button class="v8-action-card featured batch-card" data-go="batch"><span class="card-symbol">03</span><b>Print an Excel Batch</b><span>Import employees, photos, logos and print up to 50 cards.</span><em>Start Batch Wizard →</em></button>
-        <button class="v8-action-card quality-card" data-go="quality"><span class="card-symbol">04</span><b>Professional Quality</b><span>Photo enhancement, sharp text and high-resolution output.</span><em>Open Quality →</em></button>
-        <button class="v8-action-card zebra-card" data-go="zebra"><span class="card-symbol">05</span><b>Zebra ZC300 Setup</b><span>Card offset, bleed and test-card controls.</span><em>Open Printer Setup →</em></button>
-      </div>
-      <div class="v8-workflow">
-        <h3>Batch workflow</h3>
-        <div class="v8-steps"><span>1 Excel</span><i>→</i><span>2 Photos</span><i>→</i><span>3 Logos</span><i>→</i><span>4 Preview</span><i>→</i><span>5 Pre-flight</span><i>→</i><span>6 Print</span></div>
+
+      <div class="cc-grid">
+        <article class="cc-panel cc-overview">
+          <div class="cc-panel-head"><div><span>PRODUCTION PULSE</span><h3>Today at a glance</h3></div><span class="cc-badge">LIVE</span></div>
+          <div class="cc-metrics">
+            <div class="cc-metric"><span>Today's Cards</span><b id="ccTodayCards">0</b><small>Printed today</small></div>
+            <div class="cc-metric"><span>Employees</span><b id="ccEmployeeCount">0</b><small>Directory records</small></div>
+            <div class="cc-metric"><span>Print Jobs</span><b id="ccTodayJobs">0</b><small>Jobs today</small></div>
+            <div class="cc-metric"><span>Templates</span><b id="ccTemplateCount">0</b><small>Saved designs</small></div>
+          </div>
+          <div class="cc-production-line"><span></span><i></i><i></i><i></i><i></i><small>Production activity will appear here as cards are printed.</small></div>
+        </article>
+
+        <article class="cc-panel cc-printer">
+          <div class="cc-panel-head"><div><span>DEVICE STATUS</span><h3>Print Station</h3></div><span class="cc-status-ready">READY</span></div>
+          <div class="cc-device-visual"><div class="cc-printer-icon">▰</div><div><b>Zebra ZC300</b><small>Professional card printer</small></div></div>
+          <div class="cc-device-rows"><div><span>Connection</span><b>Local / USB</b></div><div><span>Queue</span><b id="ccQueueCount">0 waiting</b></div><div><span>Environment</span><b>Production ready</b></div></div>
+          <button class="cc-link-btn" type="button" data-go="zebra">Open device centre <span>↗</span></button>
+        </article>
+
+        <article class="cc-panel cc-quick">
+          <div class="cc-panel-head"><div><span>QUICK ACTIONS</span><h3>Start something</h3></div></div>
+          <div class="cc-quick-grid">
+            <button type="button" data-go="designer"><i>✦</i><b>New Card</b><small>Open Identity Studio</small></button>
+            <button type="button" data-go="employees"><i>＋</i><b>New Employee</b><small>Open employee directory</small></button>
+            <button type="button" data-go="batch"><i>▦</i><b>Quick Print</b><small>Start a batch job</small></button>
+            <button type="button" data-go="zebra"><i>◉</i><b>Write NFC</b><small>Open NFC Studio</small></button>
+          </div>
+        </article>
+
+        <article class="cc-panel cc-recent">
+          <div class="cc-panel-head"><div><span>RECENT OUTPUT</span><h3>Latest 5 cards</h3></div><button type="button" data-go="designer">View studio</button></div>
+          <div id="ccRecentCards" class="cc-recent-list">
+            <div class="cc-empty-row"><span>◇</span><div><b>No cards printed yet</b><small>Your five most recent cards will appear here.</small></div></div>
+          </div>
+        </article>
+
+        <article class="cc-panel cc-batch">
+          <div class="cc-panel-head"><div><span>LAST BATCH</span><h3>Production run</h3></div><span id="ccBatchState" class="cc-neutral-badge">NO JOB</span></div>
+          <div class="cc-batch-main"><strong id="ccBatchName">No batch recorded</strong><p id="ccBatchNote">Start an Excel batch and its progress will be displayed here.</p></div>
+          <div class="cc-progress"><span id="ccBatchProgress"></span></div>
+          <div class="cc-batch-foot"><small id="ccBatchMeta">0 cards • 0 completed</small><button type="button" data-go="batch">Open Print Center →</button></div>
+        </article>
+
+        <article class="cc-panel cc-nfc">
+          <div class="cc-panel-head"><div><span>SMART IDENTITY</span><h3>NFC Reader</h3></div><span class="cc-neutral-badge">STANDBY</span></div>
+          <div class="cc-nfc-ring"><span>NFC</span></div>
+          <b>ACS ACR122U</b><small>Connect the reader to begin writing smart identity links.</small>
+          <button class="cc-link-btn" type="button" data-go="zebra">Open NFC Studio <span>↗</span></button>
+        </article>
+
+        <article class="cc-panel cc-activity">
+          <div class="cc-panel-head"><div><span>ACTIVITY</span><h3>Recent operations</h3></div><span>Today</span></div>
+          <div id="ccActivityList" class="cc-activity-list">
+            <div><i class="success"></i><span><b>Workspace started</b><small>Tabaja Solution is ready for production.</small></span><time>Now</time></div>
+            <div><i></i><span><b>Employee directory loaded</b><small id="ccActivityEmployees">0 records available.</small></span><time>Now</time></div>
+            <div><i></i><span><b>Print engine protected</b><small>Stable Zebra production engine unchanged.</small></span><time>System</time></div>
+          </div>
+        </article>
       </div>
     </section>
 
@@ -472,10 +514,11 @@
     <span>A new version is ready.</span>
     <button id="pwaUpdateBtn" type="button">Update now</button>
   </div>
-  <script src="cloud.js?v=11.0.0"></script>
-  <script src="app.js?v=11.0.0"></script>
-  <script src="v8-ui.js?v=11.0.0"></script>
-  <script src="employee-manager.js?v=11.0.0"></script>
-  <script src="pwa.js?v=11.0.0"></script>
+  <script src="cloud.js?v=11.2.0"></script>
+  <script src="app.js?v=11.2.0"></script>
+  <script src="v8-ui.js?v=11.2.0"></script>
+  <script src="employee-manager.js?v=11.2.0"></script>
+  <script src="command-center.js?v=11.2.0"></script>
+  <script src="pwa.js?v=11.2.0"></script>
 </body>
 </html>

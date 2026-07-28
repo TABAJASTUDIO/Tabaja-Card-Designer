@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'tabaja-v11-1-1-signature';
+const CACHE_VERSION = 'tabaja-v11-2-0-command-center';
 const APP_SHELL = [
   './',
   './index.html',
