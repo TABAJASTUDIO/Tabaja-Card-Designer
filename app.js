@@ -1968,3 +1968,55 @@ builderAddOrUpdateImage=async function(role,dataUrl,box){
 };
 
 status('V8.2.1 Size Fix ready — exact CR80 PDF dimensions with ID photo matching and crop test.');
+
+
+// ===== V12 Commercial Template API =====
+window.TabajaCommercialTemplates = (() => {
+  const palette = {
+    'white-executive': { bg:'#f7f5ef', accent:'#b9903d', dark:'#142033', title:'OLIVIA CARTER', job:'OPERATIONS DIRECTOR', brand:'NORTHSTAR', id:'ID 000284', photo:'rect' },
+    'white-wave': { bg:'#f7fbff', accent:'#1768d5', dark:'#10243e', title:'DANIEL MORGAN', job:'PROJECT MANAGER', brand:'VANTAGE', id:'EMPLOYEE 00192', photo:'circle' },
+    'white-security': { bg:'#ffffff', accent:'#125f88', dark:'#16202c', title:'MICHAEL KAMARA', job:'SECURITY OFFICER', brand:'SECURE ID', id:'ACCESS LEVEL 03', photo:'rect' },
+    'white-member': { bg:'#f6f0e4', accent:'#9a6b2f', dark:'#30271d', title:'AMINA SESAY', job:'PREMIUM MEMBER', brand:'AURELIA CLUB', id:'MEMBER 00841', photo:'none' },
+    'black-gold': { bg:'#0b0d10', accent:'#d3ad58', dark:'#f6f0df', title:'JAMES WILLIAMS', job:'EXECUTIVE DIRECTOR', brand:'TABAJA GROUP', id:'ID 000017', photo:'rect' },
+    'black-carbon': { bg:'#11151b', accent:'#56b4d8', dark:'#eef7fb', title:'SARAH JOHNSON', job:'SYSTEMS ENGINEER', brand:'NEXUS TECH', id:'NT-0429', photo:'circle' },
+    'black-security': { bg:'#111215', accent:'#e43e47', dark:'#ffffff', title:'IBRAHIM CONTEH', job:'FIELD SUPERVISOR', brand:'APEX SECURITY', id:'LEVEL 04 • ACTIVE', photo:'rect' },
+    'black-silver': { bg:'#111216', accent:'#bdc5cf', dark:'#f4f6f8', title:'ABED TABAJA', job:'VIP MEMBER', brand:'VANTAGE CLUB', id:'NO. 0001', photo:'none' }
+  };
+  function text(value,left,top,size,fill,weight='normal',extra={}) { return new fabric.Text(value,{left,top,fontFamily:'Arial',fontSize:size,fill,fontWeight:weight,selectable:true,...extra}); }
+  function apply(id) {
+    const t=palette[id]; if(!t) return false;
+    orientation='landscape'; W=CARD.landscape.w; H=CARD.landscape.h; currentSide='front';
+    sides={front:emptySnapshot(),back:emptySnapshot()}; canvas.clear(); canvas.setDimensions({width:W,height:H});
+    $('canvasShell').className='canvas-shell landscape'; $('orientationSelect').value='landscape'; updateCardInfo();
+    canvas.setBackgroundColor(t.bg,()=>{});
+    const isDark=id.startsWith('black');
+    canvas.add(new fabric.Rect({left:0,top:0,width:W,height:18,fill:t.accent,selectable:false,evented:false}));
+    if(id==='white-wave') canvas.add(new fabric.Path(`M 0 500 Q 360 360 1011 470 L 1011 638 L 0 638 Z`,{fill:t.accent,opacity:.96,selectable:false,evented:false}));
+    else if(id==='black-carbon') { for(let x=-200;x<1200;x+=70) canvas.add(new fabric.Line([x,0,x+430,638],{stroke:'#202a35',strokeWidth:18,opacity:.35,selectable:false,evented:false})); }
+    else if(id==='white-security') canvas.add(new fabric.Rect({left:0,top:0,width:135,height:H,fill:t.accent,selectable:false,evented:false}));
+    else if(id==='black-security') canvas.add(new fabric.Rect({left:0,top:0,width:30,height:H,fill:t.accent,selectable:false,evented:false}));
+    else canvas.add(new fabric.Rect({left:W-210,top:0,width:210,height:H,fill:t.accent,opacity:isDark?.13:.08,selectable:false,evented:false}));
+    canvas.add(text(t.brand,62,55,25,t.dark,'bold',{charSpacing:120}));
+    if(t.photo!=='none') {
+      const circle=t.photo==='circle';
+      canvas.add(new fabric.Rect({left:65,top:155,width:circle?250:275,height:circle?250:330,fill:isDark?'#252a31':'#e2e7ea',stroke:t.accent,strokeWidth:5,rx:circle?125:24,ry:circle?125:24,role:'employeePhotoPlaceholder'}));
+      canvas.add(text('PHOTO',circle?137:147,circle?263:300,27,isDark?'#7d8793':'#87919a','bold'));
+    } else {
+      canvas.add(new fabric.Circle({left:80,top:190,radius:88,fill:'transparent',stroke:t.accent,strokeWidth:6}));
+      canvas.add(text(t.brand.split(' ').map(x=>x[0]).join('').slice(0,2),126,244,50,t.accent,'bold'));
+    }
+    const left=t.photo==='none'?330:390;
+    canvas.add(text(t.title,left,220,42,t.dark,'bold'));
+    canvas.add(text(t.job,left,278,19,t.accent,'bold',{charSpacing:90}));
+    canvas.add(new fabric.Rect({left,top:330,width:310,height:3,fill:t.accent,selectable:false,evented:false}));
+    canvas.add(text(t.id,left,360,18,t.dark,'normal'));
+    canvas.add(text('www.company.com',left,430,16,t.dark,'normal',{opacity:.75}));
+    canvas.add(text('Powered by Tabaja Solution',W-295,H-42,14,isDark?'#cbd2d9':'#58606a','normal',{role:'poweredBy'}));
+    canvas.getObjects().filter(o=>o.selectable===false).forEach(o=>canvas.sendToBack(o));
+    canvas.discardActiveObject(); canvas.requestRenderAll(); saveCurrentSide();
+    status('V12 template loaded — customise every text, colour, logo and photo.');
+    window.TabajaActivityStore?.recordTemplateUse?.(id);
+    return true;
+  }
+  return { apply, list:()=>Object.keys(palette) };
+})();

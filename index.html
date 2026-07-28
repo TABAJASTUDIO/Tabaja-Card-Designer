@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Tabaja Solution V11.2.3 • Architecture Fix</title>
+  <title>Tabaja Solution V12 • Commercial Preview</title>
   <meta name="theme-color" content="#090d1a">
   <meta name="application-name" content="Tabaja Card Designer">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -12,7 +12,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style.css?v=11.2.3">
+  <link rel="stylesheet" href="style.css?v=12.0.0">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
@@ -108,6 +108,7 @@
 
     <nav class="v8-nav" aria-label="Main navigation">
       <button class="v8-nav-btn active" data-view="dashboard">⌂<span>Command Center</span></button>
+      <button class="v8-nav-btn" data-view="templates">▦<span>Template Gallery</span></button>
       <button class="v8-nav-btn" data-view="designer">✦<span>Identity Studio</span></button>
       <button class="v8-nav-btn" data-view="employees">👥<span>Employee Center</span></button>
       <button class="v8-nav-btn" data-view="printcenter">▦<span>Print Center</span></button>
@@ -190,6 +191,66 @@
       </div>
     </section>
 
+
+    <section id="templateGalleryWorkspace" class="template-gallery-workspace" aria-labelledby="templateGalleryTitle">
+      <div class="tg-hero">
+        <div>
+          <span class="tg-kicker">V12 COMMERCIAL COLLECTION</span>
+          <h2 id="templateGalleryTitle">Choose a card that sells the idea.</h2>
+          <p>Premium-ready starting points for white and black PVC cards. Pick a design, then customise every element inside Identity Studio.</p>
+        </div>
+        <button id="openBlankDesigner" class="tg-blank-btn" type="button"><span>＋</span> Start Blank Card</button>
+      </div>
+
+      <div class="tg-toolbar">
+        <div class="tg-search"><span>⌕</span><input id="templateSearch" type="search" placeholder="Search templates, industries or styles…"></div>
+        <div class="tg-filters" role="group" aria-label="Template filters">
+          <button class="active" type="button" data-template-filter="all">All Designs</button>
+          <button type="button" data-template-filter="white">White PVC</button>
+          <button type="button" data-template-filter="black">Black PVC</button>
+          <button type="button" data-template-filter="corporate">Corporate</button>
+          <button type="button" data-template-filter="security">Security</button>
+          <button type="button" data-template-filter="membership">Membership</button>
+        </div>
+      </div>
+
+      <div class="tg-section-head"><div><span>CURATED COLLECTION</span><h3>Signature Templates</h3></div><small id="templateResultCount">8 designs</small></div>
+      <div id="templateGrid" class="tg-grid">
+        <article class="tg-card" data-template-tags="white corporate executive clean" data-template-id="white-executive">
+          <div class="tg-preview white-executive"><div class="tp-brand">NORTHSTAR</div><div class="tp-photo"></div><div class="tp-lines"><b>OLIVIA CARTER</b><span>OPERATIONS DIRECTOR</span><i></i><small>ID 000284</small></div><em>EXECUTIVE</em></div>
+          <div class="tg-meta"><div><b>White Executive</b><span>Corporate • White PVC</span></div><button type="button">Use Template</button></div>
+        </article>
+        <article class="tg-card" data-template-tags="white corporate blue modern" data-template-id="white-wave">
+          <div class="tg-preview white-wave"><div class="tp-wave"></div><div class="tp-brand">VANTAGE</div><div class="tp-photo round"></div><div class="tp-lines"><b>DANIEL MORGAN</b><span>PROJECT MANAGER</span><small>EMPLOYEE 00192</small></div></div>
+          <div class="tg-meta"><div><b>Modern Wave</b><span>Corporate • White PVC</span></div><button type="button">Use Template</button></div>
+        </article>
+        <article class="tg-card" data-template-tags="white security access minimal" data-template-id="white-security">
+          <div class="tg-preview white-security"><div class="tp-side"></div><div class="tp-shield">S</div><div class="tp-photo"></div><div class="tp-lines"><b>MICHAEL KAMARA</b><span>SECURITY OFFICER</span><small>ACCESS LEVEL 03</small></div><em>SECURE ID</em></div>
+          <div class="tg-meta"><div><b>Secure Access</b><span>Security • White PVC</span></div><button type="button">Use Template</button></div>
+        </article>
+        <article class="tg-card" data-template-tags="white membership luxury elegant" data-template-id="white-member">
+          <div class="tg-preview white-member"><div class="tp-brand">AURELIA CLUB</div><div class="tp-monogram">AC</div><div class="tp-lines"><b>PREMIUM MEMBER</b><span>AMINA SESAY</span><small>VALID THROUGH 2028</small></div><em>MEMBER 00841</em></div>
+          <div class="tg-meta"><div><b>Ivory Membership</b><span>Membership • White PVC</span></div><button type="button">Use Template</button></div>
+        </article>
+        <article class="tg-card" data-template-tags="black luxury gold executive premium" data-template-id="black-gold">
+          <div class="tg-preview black-gold"><div class="tp-goldline"></div><div class="tp-brand">TABAJA GROUP</div><div class="tp-photo"></div><div class="tp-lines"><b>JAMES WILLIAMS</b><span>EXECUTIVE DIRECTOR</span><small>ID 000017</small></div><em>PREMIUM ID</em></div>
+          <div class="tg-meta"><div><b>Black Gold</b><span>Executive • Black PVC</span></div><button type="button">Use Template</button></div>
+        </article>
+        <article class="tg-card" data-template-tags="black corporate carbon technology" data-template-id="black-carbon">
+          <div class="tg-preview black-carbon"><div class="tp-carbon"></div><div class="tp-brand">NEXUS TECH</div><div class="tp-photo round"></div><div class="tp-lines"><b>SARAH JOHNSON</b><span>SYSTEMS ENGINEER</span><small>NT-0429</small></div></div>
+          <div class="tg-meta"><div><b>Carbon Tech</b><span>Technology • Black PVC</span></div><button type="button">Use Template</button></div>
+        </article>
+        <article class="tg-card" data-template-tags="black security red access bold" data-template-id="black-security">
+          <div class="tg-preview black-security"><div class="tp-redbar"></div><div class="tp-brand">APEX SECURITY</div><div class="tp-photo"></div><div class="tp-lines"><b>IBRAHIM CONTEH</b><span>FIELD SUPERVISOR</span><small>LEVEL 04 • ACTIVE</small></div><em>AUTHORISED</em></div>
+          <div class="tg-meta"><div><b>Black Sentinel</b><span>Security • Black PVC</span></div><button type="button">Use Template</button></div>
+        </article>
+        <article class="tg-card" data-template-tags="black membership silver vip premium" data-template-id="black-silver">
+          <div class="tg-preview black-silver"><div class="tp-silverring">V</div><div class="tp-brand">VANTAGE CLUB</div><div class="tp-lines"><b>VIP MEMBER</b><span>ABED TABAJA</span><small>NO. 0001</small></div><em>EST. 2026</em></div>
+          <div class="tg-meta"><div><b>Midnight VIP</b><span>Membership • Black PVC</span></div><button type="button">Use Template</button></div>
+        </article>
+      </div>
+      <div id="templateEmpty" class="tg-empty" hidden><span>◇</span><h3>No matching designs</h3><p>Try another material, category or search term.</p></div>
+    </section>
 
     <section id="printCenterWorkspace" class="module-workspace">
       <div class="module-head"><div><span class="v8-kicker">PRODUCTION CONTROL</span><h2>Print Center</h2><p>Choose the printing workflow you need. Zebra settings and stable print engines remain protected.</p></div><span class="module-status ready">PRINTER READY</span></div>
@@ -536,12 +597,13 @@
     <span>A new version is ready.</span>
     <button id="pwaUpdateBtn" type="button">Update now</button>
   </div>
-  <script src="cloud.js?v=11.2.3"></script>
-  <script src="app.js?v=11.2.3"></script>
-  <script src="v8-ui.js?v=11.2.3"></script>
-  <script src="employee-manager.js?v=11.2.3"></script>
-  <script src="activity-store.js?v=11.2.3"></script>
-  <script src="command-center.js?v=11.2.3"></script>
-  <script src="pwa.js?v=11.2.3"></script>
+  <script src="cloud.js?v=12.0.0"></script>
+  <script src="app.js?v=12.0.0"></script>
+  <script src="commercial-templates.js?v=12.0.0"></script>
+  <script src="v8-ui.js?v=12.0.0"></script>
+  <script src="employee-manager.js?v=12.0.0"></script>
+  <script src="activity-store.js?v=12.0.0"></script>
+  <script src="command-center.js?v=12.0.0"></script>
+  <script src="pwa.js?v=12.0.0"></script>
 </body>
 </html>
