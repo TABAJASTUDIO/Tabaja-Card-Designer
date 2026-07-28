@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "Tabaja Solution V11.2 Signature Command Center Preview",
-  "short_name": "Tabaja Cards",
-  "description": "Professional CR80 card production with employee directory, batch tools and stable Zebra printing.",
+  "name": "Tabaja Solution \u2014 Smart Identity Platform",
+  "short_name": "Tabaja Solution",
+  "description": "Professional identity, card design, NFC and Zebra printing platform.",
   "lang": "en",
   "dir": "ltr",
   "start_url": "./?source=pwa",
@@ -14,8 +14,8 @@
     "minimal-ui"
   ],
   "orientation": "any",
-  "background_color": "#f4f3f8",
-  "theme_color": "#17203b",
+  "background_color": "#0b1020",
+  "theme_color": "#121a36",
   "categories": [
     "business",
     "productivity",
