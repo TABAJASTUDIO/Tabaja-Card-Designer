@@ -1,6 +1,6 @@
 {
   "id": "./",
-  "name": "Tabaja Card Designer V11 Employee Manager",
+  "name": "Tabaja Solution V11.1 Luxury Tech",
   "short_name": "Tabaja Cards",
   "description": "Professional CR80 card production with employee directory, batch tools and stable Zebra printing.",
   "lang": "en",
@@ -14,8 +14,8 @@
     "minimal-ui"
   ],
   "orientation": "any",
-  "background_color": "#0b1118",
-  "theme_color": "#1684e8",
+  "background_color": "#f4f3f8",
+  "theme_color": "#17203b",
   "categories": [
     "business",
     "productivity",

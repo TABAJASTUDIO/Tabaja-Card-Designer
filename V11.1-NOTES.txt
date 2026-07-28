@@ -1,16 +1,15 @@
-Tabaja Card Designer V11.1.0 — Royal Blue Colour Refresh
+TABAJA SOLUTION V11.1 — LUXURY TECH PREVIEW
 
-NEW
-- Modern Royal Blue colour system
-- Light professional workspace and property panels
-- Refined dashboard, navigation, employee table and login colours
-- Improved button, input, border and hover states
+Visual upgrade only:
+- Luxury pearl workspace background
+- Signature midnight navigation
+- Sapphire + violet premium accents
+- Glass dashboard cards and bento layout
+- Premium login and employee screens
+- Updated version/cache branding
 
-SAFETY
-- No changes to Zebra printing engine
-- No changes to canvas logic
-- No changes to PDF/PNG export logic
-- No changes to employee data logic
-
-IMPORTANT
-After uploading, refresh the page. If installed as a PWA, use Update now or close and reopen the app so cache V11.1.0 loads.
+LOCKED / UNTOUCHED:
+- Zebra printing engine
+- Stable print functions
+- Canvas dimensions and behaviour
+- PNG/PDF/vector export logic
