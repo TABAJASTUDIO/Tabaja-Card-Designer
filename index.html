@@ -85,30 +85,24 @@
   </section>
 
   <div id="appShell" class="app-shell hidden">
-    <header>
-      <div>
-        <h1>Command Center</h1>
-        <small id="pageSubtitle">Tabaja Solution • Smart Identity Platform</small>
+    <header class="ts-header">
+      <div class="ts-header-top">
+        <div class="ts-page-title"><h1>Card Design Center</h1><small id="pageSubtitle">Tabaja Solution • Smart Identity Platform</small></div>
+        <label class="ts-global-search"><span>⌕</span><input type="search" placeholder="Search templates, collections…"><kbd>Ctrl + K</kbd></label>
+        <div class="ts-account-zone"><button class="ts-icon-btn" type="button" title="Notifications">♢</button><button class="ts-icon-btn" type="button" title="Settings">⚙</button><div class="account-chip"><span class="account-avatar" id="accountAvatar">T</span><span><b id="accountName">Tabaja Admin</b><small id="accountCompany">Tabaja Solution</small></span></div><button id="cloudSetupBtn" type="button">Cloud</button><button id="logoutBtn">Logout</button></div>
       </div>
-      <div class="top-actions" id="designerTopActions">
-        <button id="newBtn">New</button>
-        <button id="saveBtn">Save</button>
-        <button id="openBtn">Open Project</button>
-        <button id="pngBtn">Export PNG</button>
-        <button id="pdfBtn">Export PDF (Stable)</button>
-        <button class="primary" id="vectorPdfBtn">Export Vector PDF</button>
-        <button class="primary" id="printBtn">Print Current (Stable)</button>
-        <button class="primary" id="vectorPrintBtn">Print Vector</button>
-        <button class="primary" id="printBothBtn">Print Front + Back (Exact)</button>
-        <button id="installAppBtn" class="install-app-btn" type="button" disabled>⬇ Install App</button>
-        <div class="account-chip"><span class="account-avatar" id="accountAvatar">T</span><span><b id="accountName">Tabaja Admin</b><small id="accountCompany">Tabaja Solution</small></span></div><button id="cloudSetupBtn" type="button">Cloud Setup</button><button id="logoutBtn">Logout</button>
+      <div class="top-actions ts-toolbar" id="designerTopActions">
+        <div class="ts-tool-group"><span>FILE</span><button id="newBtn">＋ New</button><button id="openBtn">▱ Open</button><button id="saveBtn">▣ Save</button></div>
+        <div class="ts-tool-group"><span>EXPORT</span><button id="pngBtn">PNG</button><button id="pdfBtn">PDF Stable</button><button class="primary" id="vectorPdfBtn">Vector PDF</button></div>
+        <div class="ts-tool-group"><span>PRINT</span><button class="primary" id="printBtn">Current Stable</button><button class="primary" id="printBothBtn">Front + Back</button><button class="primary" id="vectorPrintBtn">Vector</button></div>
+        <button id="installAppBtn" class="install-app-btn ts-install" type="button" disabled>✓ App Installed</button>
         <small id="pwaInstallStatus" class="pwa-install-status">Preparing install…</small>
       </div>
     </header>
 
     <nav class="v8-nav" aria-label="Main navigation">
       <button class="v8-nav-btn active" data-view="dashboard">⌂<span>Command Center</span></button>
-      <button class="v8-nav-btn" data-view="templates">▦<span>Template Gallery</span></button>
+      <button class="v8-nav-btn" data-view="templates">▦<span>Card Design Center</span></button>
       <button class="v8-nav-btn" data-view="designer">✦<span>Identity Studio</span></button>
       <button class="v8-nav-btn" data-view="employees">👥<span>Employee Center</span></button>
       <button class="v8-nav-btn" data-view="printcenter">▦<span>Print Center</span></button>
@@ -199,9 +193,9 @@
           <h2 id="templateGalleryTitle">Choose a card that sells the idea.</h2>
           <p>Premium-ready starting points for white and black PVC cards. Pick a design, then customise every element inside Identity Studio.</p>
           <div class="tg-proof" aria-label="Platform highlights">
-            <div><b>128+</b><span>Premium Templates</span></div>
-            <div><b>6</b><span>Collections</span></div>
-            <div><b>4</b><span>Card Materials</span></div>
+            <div><b>12</b><span>Ready Templates</span></div>
+            <div><b>8</b><span>Design Collections</span></div>
+            <div><b>2</b><span>Card Materials</span></div>
             <div><b>100%</b><span>Zebra Compatible</span></div>
           </div>
         </div>
@@ -214,13 +208,29 @@
           <button class="active" type="button" data-template-filter="all">All Designs</button>
           <button type="button" data-template-filter="white">White PVC</button>
           <button type="button" data-template-filter="black">Black PVC</button>
+          <button type="button" data-template-filter="government">Government</button>
+          <button type="button" data-template-filter="idcard">ID Card</button>
+          <button type="button" data-template-filter="driver">Driver License</button>
+          <button type="button" data-template-filter="residence">Residence Permit</button>
+          <button type="button" data-template-filter="healthcare">Healthcare</button>
           <button type="button" data-template-filter="corporate">Corporate</button>
           <button type="button" data-template-filter="security">Security</button>
           <button type="button" data-template-filter="membership">Membership</button>
         </div>
       </div>
 
-      <div class="tg-section-head"><div><span>CURATED COLLECTION</span><h3>Signature Templates</h3></div><small id="templateResultCount">8 designs</small></div>
+      <div class="tg-collection-strip" aria-label="Design collections">
+        <button type="button" data-collection-filter="corporate"><i>▥</i><span><b>Corporate</b><small>Executive & staff</small></span></button>
+        <button type="button" data-collection-filter="government"><i>♜</i><span><b>Government</b><small>Official identities</small></span></button>
+        <button type="button" data-collection-filter="idcard"><i>▣</i><span><b>ID Card</b><small>General identity</small></span></button>
+        <button type="button" data-collection-filter="driver"><i>▤</i><span><b>Driver License</b><small>Road credentials</small></span></button>
+        <button type="button" data-collection-filter="residence"><i>⌂</i><span><b>Residence Permit</b><small>Residential cards</small></span></button>
+        <button type="button" data-collection-filter="healthcare"><i>✚</i><span><b>Healthcare</b><small>Doctors & hospitals</small></span></button>
+        <button type="button" data-collection-filter="security"><i>◆</i><span><b>Security</b><small>Access & guards</small></span></button>
+        <button type="button" data-collection-filter="membership"><i>★</i><span><b>Membership</b><small>VIP & loyalty</small></span></button>
+      </div>
+
+      <div class="tg-section-head"><div><span>CURATED COLLECTION</span><h3>Signature Templates</h3></div><small id="templateResultCount">12 designs</small></div>
       <div id="templateGrid" class="tg-grid">
         <article class="tg-card" data-template-tags="white corporate executive clean" data-template-id="white-executive">
           <div class="tg-preview white-executive"><div class="tp-brand">NORTHSTAR</div><div class="tp-photo"></div><div class="tp-lines"><b>OLIVIA CARTER</b><span>OPERATIONS DIRECTOR</span><i></i><small>ID 000284</small></div><em>EXECUTIVE</em></div>
@@ -255,6 +265,22 @@
           <div class="tg-meta"><div><b>Midnight VIP</b><span>Membership • Black PVC</span></div><button type="button">Use Template</button></div>
         </article>
       </div>
+        <article class="tg-card" data-template-id="government-id" data-template-tags="government idcard identity official white premium">
+          <div class="tg-preview government-id"><span class="tp-brand">GOVERNMENT OF SIERRA LEONE</span><div class="tp-photo"></div><div class="tp-lines"><b>IBRAHIM SESAY</b><span>CIVIL SERVANT</span><small>ID: GOV 25 0001</small><i></i></div><em>OFFICIAL ID</em></div>
+          <div class="tg-meta"><div><b>Government ID</b><span>Government • White PVC</span></div><button type="button">Use Template</button></div>
+        </article>
+        <article class="tg-card" data-template-id="driver-license" data-template-tags="government driver license idcard white premium road">
+          <div class="tg-preview driver-license"><span class="tp-brand">REPUBLIC OF SIERRA LEONE</span><div class="tp-photo"></div><div class="tp-lines"><b>MOHAMED KAMARA</b><span>DRIVER LICENCE</span><small>SL 25 1234567</small><i></i></div><em>CLASS B</em></div>
+          <div class="tg-meta"><div><b>Driver License</b><span>Government • White PVC</span></div><button type="button">Use Template</button></div>
+        </article>
+        <article class="tg-card" data-template-id="residence-permit" data-template-tags="government residence residential permit idcard white immigration premium">
+          <div class="tg-preview residence-permit"><span class="tp-brand">RESIDENCE PERMIT</span><div class="tp-photo"></div><div class="tp-lines"><b>AMADOU DIALLO</b><span>RESIDENT</span><small>RP-2026-00421</small><i></i></div><em>VALID 2028</em></div>
+          <div class="tg-meta"><div><b>Residence Permit</b><span>Identity • White PVC</span></div><button type="button">Use Template</button></div>
+        </article>
+        <article class="tg-card" data-template-id="doctor-card" data-template-tags="healthcare doctor hospital medical idcard white premium">
+          <div class="tg-preview doctor-card"><span class="tp-brand">CITY CARE HOSPITAL</span><div class="tp-photo round"></div><div class="tp-lines"><b>DR. SOPHIA LEE</b><span>CARDIOLOGIST</span><small>ID: HSP 5678</small><i></i></div><em>MEDICAL STAFF</em></div>
+          <div class="tg-meta"><div><b>Doctor Professional</b><span>Healthcare • White PVC</span></div><button type="button">Use Template</button></div>
+        </article>
       <div id="templateEmpty" class="tg-empty" hidden><span>◇</span><h3>No matching designs</h3><p>Try another material, category or search term.</p></div>
     </section>
 

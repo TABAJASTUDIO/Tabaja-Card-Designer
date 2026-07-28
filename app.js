@@ -1980,7 +1980,11 @@ window.TabajaCommercialTemplates = (() => {
     'black-gold': { bg:'#0b0d10', accent:'#d3ad58', dark:'#f6f0df', title:'JAMES WILLIAMS', job:'EXECUTIVE DIRECTOR', brand:'TABAJA GROUP', id:'ID 000017', photo:'rect' },
     'black-carbon': { bg:'#11151b', accent:'#56b4d8', dark:'#eef7fb', title:'SARAH JOHNSON', job:'SYSTEMS ENGINEER', brand:'NEXUS TECH', id:'NT-0429', photo:'circle' },
     'black-security': { bg:'#111215', accent:'#e43e47', dark:'#ffffff', title:'IBRAHIM CONTEH', job:'FIELD SUPERVISOR', brand:'APEX SECURITY', id:'LEVEL 04 • ACTIVE', photo:'rect' },
-    'black-silver': { bg:'#111216', accent:'#bdc5cf', dark:'#f4f6f8', title:'ABED TABAJA', job:'VIP MEMBER', brand:'VANTAGE CLUB', id:'NO. 0001', photo:'none' }
+    'black-silver': { bg:'#111216', accent:'#bdc5cf', dark:'#f4f6f8', title:'ABED TABAJA', job:'VIP MEMBER', brand:'VANTAGE CLUB', id:'NO. 0001', photo:'none' },
+    'government-id': { bg:'#f8fbff', accent:'#1b7f5a', dark:'#123027', title:'IBRAHIM SESAY', job:'CIVIL SERVANT', brand:'GOVERNMENT OF SIERRA LEONE', id:'ID: GOV 25 0001', photo:'rect' },
+    'driver-license': { bg:'#f7fbff', accent:'#1765b5', dark:'#132c49', title:'MOHAMED KAMARA', job:'DRIVER LICENCE • CLASS B', brand:'REPUBLIC OF SIERRA LEONE', id:'SL 25 1234567', photo:'rect' },
+    'residence-permit': { bg:'#f8fbfa', accent:'#1e8b83', dark:'#123b39', title:'AMADOU DIALLO', job:'RESIDENCE PERMIT', brand:'IMMIGRATION SERVICES', id:'RP-2026-00421 • VALID 2028', photo:'rect' },
+    'doctor-card': { bg:'#f7fcff', accent:'#1a9ca6', dark:'#14343a', title:'DR. SOPHIA LEE', job:'CARDIOLOGIST', brand:'CITY CARE HOSPITAL', id:'ID: HSP 5678', photo:'circle' }
   };
   function text(value,left,top,size,fill,weight='normal',extra={}) { return new fabric.Text(value,{left,top,fontFamily:'Arial',fontSize:size,fill,fontWeight:weight,selectable:true,...extra}); }
   function apply(id) {

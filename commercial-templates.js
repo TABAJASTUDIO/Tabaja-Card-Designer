@@ -24,6 +24,10 @@
     };
     filters.forEach(btn=>btn.addEventListener('click',()=>{filters.forEach(x=>x.classList.remove('active'));btn.classList.add('active');filter=btn.dataset.templateFilter;refresh();}));
     search?.addEventListener('input',refresh);
+    document.querySelectorAll('[data-collection-filter]').forEach(btn=>btn.addEventListener('click',()=>{
+      const wanted=btn.dataset.collectionFilter; const match=filters.find(x=>x.dataset.templateFilter===wanted);
+      if(match) match.click(); document.getElementById('templateGrid')?.scrollIntoView({behavior:'smooth',block:'start'});
+    }));
     grid?.addEventListener('click',event=>{ const card=event.target.closest('.tg-card'); if(!card)return; if(window.TabajaCommercialTemplates?.apply(card.dataset.templateId)){ go('designer'); }});
     document.getElementById('openBlankDesigner')?.addEventListener('click',()=>go('designer'));
     document.querySelectorAll('[data-bg-type]').forEach(btn=>btn.addEventListener('click',()=>{
