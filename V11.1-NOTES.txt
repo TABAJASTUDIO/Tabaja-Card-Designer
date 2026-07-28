@@ -1,15 +1,15 @@
-TABAJA SOLUTION V11.1 — LUXURY TECH PREVIEW
+TABAJA SOLUTION V11.1.1 — SIGNATURE EDITION
 
-Visual upgrade only:
-- Luxury pearl workspace background
-- Signature midnight navigation
-- Sapphire + violet premium accents
-- Glass dashboard cards and bento layout
-- Premium login and employee screens
-- Updated version/cache branding
+NEW VISUAL SYSTEM
+- Signature midnight sidebar
+- Sculpted command header
+- Asymmetric production dashboard
+- Gold, sapphire and emerald accent language
+- Custom hero and numbered workflow cards
+- Premium glass and depth effects
 
-LOCKED / UNTOUCHED:
-- Zebra printing engine
-- Stable print functions
-- Canvas dimensions and behaviour
-- PNG/PDF/vector export logic
+PROTECTED
+- Zebra printing engine unchanged
+- Canvas logic unchanged
+- PNG/PDF export unchanged
+- Existing employee and batch logic unchanged

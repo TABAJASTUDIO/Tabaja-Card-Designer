@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Tabaja Solution V11.1 • Luxury Tech</title>
-  <meta name="theme-color" content="#1684e8">
+  <title>Tabaja Solution V11.1 • Signature Edition</title>
+  <meta name="theme-color" content="#090d1a">
   <meta name="application-name" content="Tabaja Card Designer">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -12,7 +12,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style.css?v=11.1.0">
+  <link rel="stylesheet" href="style.css?v=11.1.1">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
@@ -87,8 +87,8 @@
   <div id="appShell" class="app-shell hidden">
     <header>
       <div>
-        <h1>TABAJA SOLUTION</h1>
-        <small id="pageSubtitle">Professional Identity & Smart Card Platform • V11.1</small>
+        <h1>Command Center</h1>
+        <small id="pageSubtitle">Tabaja Solution • Professional Identity Platform</small>
       </div>
       <div class="top-actions" id="designerTopActions">
         <button id="newBtn">New</button>
@@ -117,12 +117,17 @@
 
     <section id="v8Dashboard" class="v8-dashboard">
       <div class="v8-hero">
-        <div>
-          <span class="v8-kicker" id="workspaceKicker">TABAJA SOLUTION WORKSPACE</span>
-          <h2>What are you printing today?</h2>
-          <p>Single employee cards and large Excel batches are now separated, so the workspace stays clean and easy to use.</p>
+        <div class="hero-copy">
+          <span class="v8-kicker" id="workspaceKicker">TABAJA SIGNATURE WORKSPACE</span>
+          <h2>Identity production, beautifully controlled.</h2>
+          <p>Design one card, organise your people, or launch a complete production batch from one focused workspace.</p>
+          <div class="hero-quick-actions">
+            <button type="button" data-go="designer">Create a card <span>↗</span></button>
+            <button type="button" data-go="employees">Open directory <span>↗</span></button>
+          </div>
         </div>
-        <div><div class="v8-ready-badge">● SYSTEM READY</div><div id="cloudStatusBadge" class="cloud-status-badge">LOCAL PREVIEW</div></div>
+        <div class="hero-orbit" aria-hidden="true"><span class="orbit-mark">T</span><i></i><i></i><i></i></div>
+        <div class="hero-status"><div class="v8-ready-badge">● SYSTEM READY</div><div id="cloudStatusBadge" class="cloud-status-badge">LOCAL PREVIEW</div><small>Zebra production environment</small></div>
       </div>
       <div class="account-summary-grid">
         <div><span>Plan</span><b id="planName">Professional Preview</b><small>Account active</small></div>
@@ -131,11 +136,11 @@
         <div><span>Licence</span><b id="licenceStatus" class="status-active">ACTIVE</b><small id="licenceNote">Cloud licence status</small></div>
       </div>
       <div class="v8-dashboard-grid">
-        <button class="v8-action-card" data-go="employees"><b>Manage Employees</b><span>Add, search and maintain employee identity records.</span><em>Open Employees →</em></button>
-        <button class="v8-action-card" data-go="designer"><b>Design One Card</b><span>Create or update a single employee card.</span><em>Open Designer →</em></button>
-        <button class="v8-action-card featured" data-go="batch"><b>Print an Excel Batch</b><span>Import employees, photos, logos and print up to 50 cards.</span><em>Start Batch Wizard →</em></button>
-        <button class="v8-action-card" data-go="quality"><b>Professional Quality</b><span>Photo enhancement, sharp text and high-resolution output.</span><em>Open Quality →</em></button>
-        <button class="v8-action-card" data-go="zebra"><b>Zebra ZC300 Setup</b><span>Card offset, bleed and test-card controls.</span><em>Open Printer Setup →</em></button>
+        <button class="v8-action-card employees-card" data-go="employees"><span class="card-symbol">01</span><b>Manage Employees</b><span>Add, search and maintain employee identity records.</span><em>Open Employees →</em></button>
+        <button class="v8-action-card designer-card" data-go="designer"><span class="card-symbol">02</span><b>Design One Card</b><span>Create or update a single employee card.</span><em>Open Designer →</em></button>
+        <button class="v8-action-card featured batch-card" data-go="batch"><span class="card-symbol">03</span><b>Print an Excel Batch</b><span>Import employees, photos, logos and print up to 50 cards.</span><em>Start Batch Wizard →</em></button>
+        <button class="v8-action-card quality-card" data-go="quality"><span class="card-symbol">04</span><b>Professional Quality</b><span>Photo enhancement, sharp text and high-resolution output.</span><em>Open Quality →</em></button>
+        <button class="v8-action-card zebra-card" data-go="zebra"><span class="card-symbol">05</span><b>Zebra ZC300 Setup</b><span>Card offset, bleed and test-card controls.</span><em>Open Printer Setup →</em></button>
       </div>
       <div class="v8-workflow">
         <h3>Batch workflow</h3>
