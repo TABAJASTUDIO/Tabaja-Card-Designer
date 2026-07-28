@@ -3,9 +3,12 @@
     dashboard: 'Dashboard • Professional CR80 PVC Production Suite',
     designer: 'Card Designer • Create and print one employee card',
     employees: 'Employees • Company identity records and staff directory',
-    batch: 'Batch Printing • Excel workflow for up to 50 cards',
-    quality: 'Print Quality • Professional photo and text rendering',
-    zebra: 'Zebra Settings • ZC300 alignment and bleed controls'
+    printcenter: 'Print Center • Production workflows and Zebra device controls',
+    reports: 'Reports • Production statistics and operational summaries',
+    nfc: 'NFC Studio • ACS ACR122U smart identity operations',
+    batch: 'Print Center / Batch Printing • Excel workflow for up to 50 cards',
+    quality: 'Print Center / Print Quality • Professional photo and text rendering',
+    zebra: 'Print Center / Zebra Settings • ZC300 alignment and bleed controls'
   };
 
   function setView(view) {
@@ -13,6 +16,7 @@
     document.querySelectorAll('.v8-nav-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.view === view));
     const sub = document.getElementById('pageSubtitle');
     if (sub) sub.textContent = subtitles[view] || subtitles.dashboard;
+    document.querySelector('header h1').textContent = ({dashboard:'Command Center',designer:'Identity Studio',employees:'Employee Center',printcenter:'Print Center',reports:'Reports',nfc:'NFC Studio',batch:'Batch Printing',quality:'Print Quality',zebra:'Zebra Settings'})[view] || 'Tabaja Solution';
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 

@@ -43,6 +43,7 @@
     setText('ccTodayCards', todayCards);
     setText('ccTemplateCount', templates.length);
     setText('ccQueueCount', `${jobs.filter((j) => j.status === 'queued').length} waiting`);
+    setText('reportCardsToday', todayCards); setText('reportEmployees', employees.length); setText('reportJobs', jobs.length); setText('reportTemplates', templates.length);
     updateClock(); renderRecentCards(); renderLastBatch();
     window.setInterval(updateClock, 30000);
   });
