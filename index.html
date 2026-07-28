@@ -12,7 +12,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style.css?v=12.0.0">
+  <link rel="stylesheet" href="style.css?v=12.1.0">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
@@ -88,7 +88,7 @@
     <header>
       <div>
         <h1>Command Center</h1>
-        <small id="pageSubtitle">Tabaja Solution • Professional Identity Platform</small>
+        <small id="pageSubtitle">Tabaja Solution • Smart Identity Platform</small>
       </div>
       <div class="top-actions" id="designerTopActions">
         <button id="newBtn">New</button>
@@ -198,8 +198,14 @@
           <span class="tg-kicker">V12 COMMERCIAL COLLECTION</span>
           <h2 id="templateGalleryTitle">Choose a card that sells the idea.</h2>
           <p>Premium-ready starting points for white and black PVC cards. Pick a design, then customise every element inside Identity Studio.</p>
+          <div class="tg-proof" aria-label="Platform highlights">
+            <div><b>128+</b><span>Premium Templates</span></div>
+            <div><b>6</b><span>Collections</span></div>
+            <div><b>4</b><span>Card Materials</span></div>
+            <div><b>100%</b><span>Zebra Compatible</span></div>
+          </div>
         </div>
-        <button id="openBlankDesigner" class="tg-blank-btn" type="button"><span>＋</span> Start Blank Card</button>
+        <button id="openBlankDesigner" class="tg-blank-btn" type="button"><span>＋</span><b>Start Blank Card</b><small>Build from a clean canvas</small></button>
       </div>
 
       <div class="tg-toolbar">
@@ -356,37 +362,35 @@
       <aside class="properties">
 
         <div class="builder-panel background-panel" data-v8-panel="designer">
-          <h3>🎨 Card Background</h3>
-          <label>Solid Color</label>
-          <div class="background-color-row">
-            <input id="cardBgSolidColor" type="color" value="#ffffff">
-            <button id="applySolidBackgroundBtn">Apply Color</button>
+          <div class="panel-heading-row"><div><h3>Background</h3><p class="panel-subtitle">Choose one clean background workflow.</p></div><span class="panel-badge">LIVE</span></div>
+          <div class="background-type-tabs" role="tablist" aria-label="Background type">
+            <button class="active" type="button" data-bg-type="solid">Solid</button>
+            <button type="button" data-bg-type="gradient">Gradient</button>
+            <button type="button" data-bg-type="image">Image</button>
+            <button type="button" data-bg-type="split">Split</button>
           </div>
-          <label class="background-sync-option">
-            <input id="syncBackgroundBothSides" type="checkbox" checked>
-            <span>Same background on Front &amp; Back</span>
-          </label>
-
-          <label>Gradient Colors</label>
-          <div class="background-gradient-colors">
-            <input id="cardBgGradient1" type="color" value="#0d3155">
-            <input id="cardBgGradient2" type="color" value="#1684e8">
+          <div class="background-type-panel active" data-bg-panel="solid">
+            <label>Solid Colour</label>
+            <div class="background-color-row"><input id="cardBgSolidColor" type="color" value="#ffffff"><button id="applySolidBackgroundBtn">Apply Colour</button></div>
+            <div class="builder-actions background-actions"><button id="transparentBackgroundBtn">Transparent</button><button id="resetWhiteBackgroundBtn">Reset White</button></div>
           </div>
-          <label>Gradient Direction</label>
-          <select id="cardBgGradientDirection">
-            <option value="horizontal">Left → Right</option>
-            <option value="vertical">Top → Bottom</option>
-            <option value="diagonal">Diagonal ↘</option>
-            <option value="diagonalReverse">Diagonal ↙</option>
-          </select>
-          <button class="background-full-button" id="applyGradientBackgroundBtn">Apply Gradient</button>
-
-          <div class="builder-actions background-actions">
-            <button id="transparentBackgroundBtn">Transparent</button>
-            <button id="cardBackgroundImageBtn">Image</button>
+          <div class="background-type-panel" data-bg-panel="gradient">
+            <label>Gradient Colours</label>
+            <div class="background-gradient-colors"><input id="cardBgGradient1" type="color" value="#0d3155"><input id="cardBgGradient2" type="color" value="#1684e8"></div>
+            <label>Direction</label>
+            <select id="cardBgGradientDirection"><option value="horizontal">Left → Right</option><option value="vertical">Top → Bottom</option><option value="diagonal">Diagonal ↘</option><option value="diagonalReverse">Diagonal ↙</option></select>
+            <button class="background-full-button" id="applyGradientBackgroundBtn">Apply Gradient</button>
           </div>
-          <button class="background-full-button" id="resetWhiteBackgroundBtn">Reset White</button>
-          <p class="builder-note">The background stays behind every element and is included in PNG, PDF and printing.</p>
+          <div class="background-type-panel" data-bg-panel="image">
+            <div class="background-upload-card"><span>▧</span><b>Use a full-card image</b><small>Upload artwork, texture or a finished background.</small><button id="cardBackgroundImageBtn" type="button">Choose Background Image</button></div>
+          </div>
+          <div class="background-type-panel" data-bg-panel="split">
+            <div class="split-preview"><i></i><i></i></div>
+            <p class="builder-note">Split Design is prepared for the next template pack. Use Gradient today for a two-colour result without changing the stable canvas engine.</p>
+            <button type="button" id="useSplitGradientBtn" class="background-full-button">Create Split with Gradient</button>
+          </div>
+          <label class="background-sync-option"><input id="syncBackgroundBothSides" type="checkbox" checked><span>Apply the same background to Front &amp; Back</span></label>
+          <p class="builder-note">Background output remains included in PNG, PDF and Zebra printing.</p>
         </div>
 
         <div class="builder-panel batch-panel" data-v8-panel="batch">
@@ -440,10 +444,10 @@
         </div>
 
         <div class="builder-panel" data-v8-panel="designer">
-          <h3>Employee Card Builder</h3>
-          <label>Company Name</label><input id="builderCompany" placeholder="Company name">
-          <label>Employee Name</label><input id="builderName" placeholder="Full name">
-          <label>Job Title</label><input id="builderJob" placeholder="Job title">
+          <h3>Card Properties</h3><p class="panel-subtitle">Edit the primary identity content without limiting the card to one industry.</p>
+          <label>Brand Name</label><input id="builderCompany" placeholder="Company, school, club or organisation">
+          <label>Primary Title</label><input id="builderName" placeholder="Cardholder, member or primary title">
+          <label>Subtitle</label><input id="builderJob" placeholder="Role, membership type or secondary line">
           <label>Phone</label><input id="builderPhone" placeholder="Phone (optional)">
           <label>WhatsApp</label><input id="builderWhatsApp" placeholder="WhatsApp (optional)">
           <label>Email</label><input id="builderEmail" placeholder="Email (optional)">
@@ -452,11 +456,11 @@
           <label>Instagram</label><input id="builderInstagram" placeholder="Instagram username (optional)">
           <label>X / Twitter</label><input id="builderTwitter" placeholder="X / Twitter username (optional)">
           <label>LinkedIn</label><input id="builderLinkedIn" placeholder="LinkedIn username / link (optional)">
-          <label>Employee Photo</label><input id="builderPhoto" type="file" accept="image/*">
-          <label>Company Logo</label><input id="builderLogo" type="file" accept="image/*">
+          <label>Primary Photo</label><input id="builderPhoto" type="file" accept="image/*">
+          <label>Brand Logo</label><input id="builderLogo" type="file" accept="image/*">
           <details class="quality-tools" id="qualityTools" open>
             <summary>Advanced Image &amp; Print Quality</summary>
-            <label class="background-sync-option"><input id="autoEnhancePhotos" type="checkbox" checked><span>Auto-enhance employee photos</span></label>
+            <label class="background-sync-option"><input id="autoEnhancePhotos" type="checkbox" checked><span>Auto-enhance primary photos</span></label>
             <label>Photo brightness <span id="brightnessValue">3%</span></label>
             <input id="photoBrightness" type="range" min="-20" max="20" value="3" step="1">
             <label>Photo contrast <span id="contrastValue">6%</span></label>
@@ -470,17 +474,17 @@
               <button id="applyEnhanceBtn" type="button">Apply to Current Photo</button>
               <button id="resetEnhanceBtn" type="button">Reset Quality</button>
             </div>
-            <p class="builder-note">Enhancement applies only to employee photos—not logos or backgrounds. High-quality text is automatic and remains enabled by default.</p>
+            <p class="builder-note">Enhancement applies only to primary photos—not logos or backgrounds. High-quality text is automatic and remains enabled by default.</p>
           </details>
           <div class="builder-actions">
-            <button class="primary" id="generateEmployeeBtn">Generate / Update Card</button>
+            <button class="primary" id="generateEmployeeBtn">Generate / Update Design</button>
             <button id="replacePhotoBtn">Replace Photo</button>
           </div>
           <div class="builder-actions">
             <button id="saveTemplateBtn">Save Template</button>
             <button id="loadTemplateBtn">Load Template</button>
           </div>
-          <p class="builder-note">You can move and resize the generated elements. Updating the employee keeps their positions.</p>
+          <p class="builder-note">You can move and resize the generated elements. Updating the content keeps every element in its current position.</p>
         </div>
         <div id="v8QualityPanel" class="builder-panel v8-special-panel" data-v8-panel="quality">
           <h3>★ Professional Print Quality</h3>
@@ -597,13 +601,13 @@
     <span>A new version is ready.</span>
     <button id="pwaUpdateBtn" type="button">Update now</button>
   </div>
-  <script src="cloud.js?v=12.0.0"></script>
-  <script src="app.js?v=12.0.0"></script>
-  <script src="commercial-templates.js?v=12.0.0"></script>
-  <script src="v8-ui.js?v=12.0.0"></script>
-  <script src="employee-manager.js?v=12.0.0"></script>
-  <script src="activity-store.js?v=12.0.0"></script>
-  <script src="command-center.js?v=12.0.0"></script>
-  <script src="pwa.js?v=12.0.0"></script>
+  <script src="cloud.js?v=12.1.0"></script>
+  <script src="app.js?v=12.1.0"></script>
+  <script src="commercial-templates.js?v=12.1.0"></script>
+  <script src="v8-ui.js?v=12.1.0"></script>
+  <script src="employee-manager.js?v=12.1.0"></script>
+  <script src="activity-store.js?v=12.1.0"></script>
+  <script src="command-center.js?v=12.1.0"></script>
+  <script src="pwa.js?v=12.1.0"></script>
 </body>
 </html>

@@ -5,6 +5,15 @@
     const search=document.getElementById('templateSearch');
     const filters=[...document.querySelectorAll('[data-template-filter]')];
     const cards=[...document.querySelectorAll('.tg-card')];
+    cards.forEach(card=>{
+      if(card.querySelector('.tg-card-badges')) return;
+      const tags=(card.dataset.templateTags||'').toLowerCase();
+      const badges=document.createElement('div'); badges.className='tg-card-badges';
+      const material=tags.includes('black')?'BLACK PVC':'WHITE PVC';
+      const premium=/(luxury|premium|gold|silver|executive)/.test(tags);
+      badges.innerHTML=`<span>${material}</span>${premium?'<span class="premium">PREMIUM</span>':''}`;
+      card.querySelector('.tg-preview')?.appendChild(badges);
+    });
     const count=document.getElementById('templateResultCount');
     const empty=document.getElementById('templateEmpty');
     let filter='all';
@@ -17,6 +26,13 @@
     search?.addEventListener('input',refresh);
     grid?.addEventListener('click',event=>{ const card=event.target.closest('.tg-card'); if(!card)return; if(window.TabajaCommercialTemplates?.apply(card.dataset.templateId)){ go('designer'); }});
     document.getElementById('openBlankDesigner')?.addEventListener('click',()=>go('designer'));
+    document.querySelectorAll('[data-bg-type]').forEach(btn=>btn.addEventListener('click',()=>{
+      document.querySelectorAll('[data-bg-type]').forEach(x=>x.classList.toggle('active',x===btn));
+      document.querySelectorAll('[data-bg-panel]').forEach(x=>x.classList.toggle('active',x.dataset.bgPanel===btn.dataset.bgType));
+    }));
+    document.getElementById('useSplitGradientBtn')?.addEventListener('click',()=>{
+      document.querySelector('[data-bg-type="gradient"]')?.click();
+    });
     refresh();
   }
   window.addEventListener('DOMContentLoaded',init);
