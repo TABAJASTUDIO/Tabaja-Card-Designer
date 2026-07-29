@@ -489,3 +489,93 @@ body[data-v8-view="designer"] #v8Main{min-height:calc(100vh - 64px)}
   .ts-global-search{order:3}
   .v8-nav{padding-top:0!important}
 }
+
+
+/* ===== V12.7 STEP 2 — Commercial Visual Refinement =====
+   UI/UX and branding only. Print, canvas, PNG and PDF logic remain untouched. */
+:root{
+  --ts-v127-navy:#0d1528;
+  --ts-v127-panel:#111c33;
+  --ts-v127-blue:#2e6de6;
+  --ts-v127-violet:#6657de;
+  --ts-v127-gold:#d8b76b;
+  --ts-v127-line:rgba(255,255,255,.075);
+}
+
+/* Compact premium header */
+.ts-header{position:sticky!important;top:0!important;z-index:40!important}
+.ts-header-top{
+  min-height:52px!important;
+  grid-template-columns:minmax(230px,.78fr) minmax(320px,1.25fr) auto!important;
+  gap:12px!important;padding:6px 14px!important;
+  background:rgba(251,252,254,.98)!important;
+  backdrop-filter:blur(16px)
+}
+.ts-brand-mark{width:32px!important;height:32px!important;flex-basis:32px!important;border-radius:10px!important;background:linear-gradient(145deg,#111c35,#273e74 58%,#6657de)!important;box-shadow:0 6px 14px rgba(31,49,92,.24)!important}
+.ts-brand-mark span{font-family:Inter,Segoe UI,sans-serif!important;font-size:10px!important;letter-spacing:-.04em!important;font-weight:950!important;color:#f6dfaa!important}
+.ts-page-kicker{font-size:6px!important;letter-spacing:.18em!important}
+.ts-page-title h1{font-size:15px!important;letter-spacing:-.02em!important}
+.ts-page-title small{font-size:8px!important}
+.ts-global-search{height:33px!important;max-width:610px!important;justify-self:center!important}
+.ts-account-zone{white-space:nowrap!important}
+.ts-account-zone>button,.ts-icon-btn{height:29px!important;padding:5px 8px!important;font-size:9px!important}
+.ts-icon-btn{width:29px!important}
+.account-chip{height:29px!important}.account-avatar{width:21px!important;height:21px!important}.account-chip small{display:none!important}
+
+.ts-toolbar{min-height:40px!important;padding:4px 14px!important;gap:6px!important;background:#edf1f6!important}
+.ts-tool-group{min-height:31px!important;padding:11px 4px 3px!important;border-radius:8px!important}
+.ts-tool-group>span{top:2px!important;font-size:5.5px!important}
+.ts-toolbar .ts-tool-group button{min-height:21px!important;padding:4px 7px!important;font-size:8px!important}
+.ts-install{height:29px!important;min-width:98px!important;font-size:8px!important}
+.pwa-install-status{display:none!important}
+
+/* Sidebar identity and spacing */
+.v8-nav{width:226px!important;padding:100px 13px 74px!important;background:radial-gradient(circle at 15% 0,rgba(75,81,166,.18),transparent 24%),linear-gradient(180deg,#111a2d 0%,#0b1221 100%)!important}
+.app-shell{padding-left:226px!important}
+.v8-nav:before{content:"TS"!important;left:17px!important;top:20px!important;width:44px!important;height:44px!important;border-radius:14px!important;font:900 13px/1 Inter,Segoe UI,sans-serif!important;letter-spacing:-.05em!important;color:#f6dfaa!important;background:linear-gradient(145deg,#15233f,#273e74 60%,#6657de)!important;border-color:rgba(216,183,107,.42)!important}
+.v8-nav:after{content:"TABAJA SOLUTION\A SMART IDENTITY PLATFORM"!important;left:73px!important;top:23px!important;font-size:9px!important;line-height:1.5!important;letter-spacing:.09em!important;color:#f2f5fb!important}
+.v8-nav-btn{min-height:40px!important;padding:10px 12px!important;border-radius:10px!important;font-size:13px!important;gap:9px!important}
+.v8-nav-btn:first-of-type{margin-top:5px!important}.v8-nav-btn:nth-of-type(3),.v8-nav-btn:nth-of-type(5){margin-top:19px!important}
+.v8-nav-btn:nth-of-type(3):before,.v8-nav-btn:nth-of-type(5):before{top:-16px!important;font-size:7px!important;color:#62708a!important}
+.v8-nav-btn.active{box-shadow:inset 3px 0 0 var(--ts-v127-gold),0 9px 21px rgba(0,0,0,.14)!important}
+.ts-build-badge{left:13px!important;right:13px!important;bottom:13px!important;padding:9px 10px!important}
+
+/* More efficient content spacing */
+.template-gallery-workspace{padding:18px 22px 42px!important;background:linear-gradient(180deg,#0c1425,#10192c 52%,#0b1322)!important}
+.tg-hero{min-height:204px!important;padding:24px 27px!important;border-radius:18px!important;grid-template-columns:minmax(0,1fr) 205px!important;gap:22px!important;background:radial-gradient(circle at 82% 28%,rgba(89,74,209,.40),transparent 25%),radial-gradient(circle at 55% 105%,rgba(38,116,190,.15),transparent 34%),linear-gradient(135deg,#121d36,#19193d 58%,#101a2d)!important}
+.tg-kicker{font-size:8px!important;letter-spacing:.18em!important}
+.tg-hero h2{max-width:670px!important;margin-top:8px!important;font-size:28px!important;line-height:1.06!important}
+.tg-hero p{margin-top:8px!important;font-size:11px!important;line-height:1.5!important}
+.tg-proof{margin-top:16px!important;grid-template-columns:repeat(4,minmax(100px,1fr))!important}
+.tg-proof>div{padding:11px 12px!important}.tg-proof b{font-size:17px!important}.tg-proof span{font-size:7px!important}
+.tg-blank-btn{min-width:0!important;width:205px!important;padding:17px!important;border-radius:14px!important;transform:none!important}
+.tg-blank-btn b{font-size:12px!important}.tg-blank-btn small{font-size:8px!important}
+
+.design-quick-start{margin:12px 0 17px!important;gap:8px!important}
+.design-quick-start>button{grid-template-columns:38px 1fr auto!important;padding:11px 12px!important;border-radius:12px!important}
+.design-quick-start>button>span{width:38px!important;height:38px!important;border-radius:11px!important;font-size:17px!important}
+.design-quick-start b{font-size:11px!important}.design-quick-start small{font-size:8px!important}.design-quick-start em{font-size:8px!important}
+
+.collection-home{padding:16px!important;border-radius:16px!important}
+.collection-home-head{margin-bottom:14px!important}.collection-home-head h3{font-size:18px!important}.collection-home-head p{font-size:9px!important}
+.collection-home-grid{grid-auto-rows:162px!important}.collection-cover{height:162px!important;min-height:162px!important;padding:18px!important}
+.collection-cover b{font-size:19px!important}.collection-cover p{font-size:9px!important;line-height:1.45!important}.collection-cover em{font-size:8px!important}
+
+/* Cleaner elements library */
+.elements-library{padding:16px!important;border-radius:16px!important;background:linear-gradient(145deg,rgba(26,29,61,.98),rgba(14,24,44,.98))!important}
+.elements-library-head h3{font-size:19px!important}.elements-library-head p{font-size:9px!important}
+.elements-category{margin-top:14px!important}.elements-category-title{margin-bottom:9px!important}.elements-category-title>span{width:30px!important;height:30px!important}
+.elements-grid{grid-template-columns:repeat(12,minmax(40px,1fr))!important}.elements-grid button{min-height:42px!important;font-size:20px!important}
+.elements-grid.flags{grid-template-columns:repeat(8,minmax(82px,1fr))!important}.elements-grid.flags button{font-size:21px!important}.elements-grid.flags small{font-size:7px!important}
+
+@media(max-width:1250px){
+  .v8-nav{width:204px!important}.app-shell{padding-left:204px!important}
+  .ts-header-top{grid-template-columns:minmax(210px,.8fr) minmax(280px,1fr)!important}.ts-account-zone{grid-column:1/-1!important}
+  .tg-hero{grid-template-columns:1fr 180px!important}.tg-blank-btn{width:180px!important}
+  .elements-grid{grid-template-columns:repeat(8,1fr)!important}.elements-grid.flags{grid-template-columns:repeat(4,1fr)!important}
+}
+@media(max-width:850px){
+  .app-shell{padding-left:0!important}.v8-nav{width:100%!important;padding:9px!important}
+  .ts-header{position:static!important}.ts-header-top{grid-template-columns:1fr!important}.ts-account-zone{overflow-x:auto!important}
+  .tg-hero{grid-template-columns:1fr!important}.tg-blank-btn{width:100%!important}
+}
