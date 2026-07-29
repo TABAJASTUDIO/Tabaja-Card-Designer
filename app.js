@@ -2024,3 +2024,21 @@ window.TabajaCommercialTemplates = (() => {
   }
   return { apply, list:()=>Object.keys(palette) };
 })();
+
+
+// ===== V12.6 Elements Library: safe canvas additions only =====
+window.TabajaElements = {
+  addSymbol(symbol) {
+    if (!symbol || !window.fabric || !canvas) return false;
+    const item = new fabric.IText(symbol, {
+      left: W / 2, top: H / 2, originX: "center", originY: "center",
+      fontSize: 72, fill: "#111111", fontFamily: "Arial",
+      objectCaching: false
+    });
+    canvas.add(item); canvas.setActiveObject(item); canvas.requestRenderAll();
+    if (typeof saveCurrentSide === "function") saveCurrentSide();
+    const status = document.getElementById("status");
+    if (status) status.textContent = `Element ${symbol} added. Resize, rotate or move it freely.`;
+    return true;
+  }
+};

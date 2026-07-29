@@ -53,6 +53,20 @@
     const back=document.createElement('button');back.type='button';back.className='template-browser-back';back.textContent='← Back to collections';back.addEventListener('click',showHome);browser?.prepend(back);
     grid?.addEventListener('click',event=>{const card=event.target.closest('.tg-card');if(!card)return;if(window.TabajaCommercialTemplates?.apply(card.dataset.templateId)){go('designer');}});
     document.getElementById('openBlankDesigner')?.addEventListener('click',()=>go('designer'));
+    const elements=document.getElementById('elementsLibrary');
+    document.querySelector('[data-quick-go="collections"]')?.addEventListener('click',()=>document.getElementById('collectionHome')?.scrollIntoView({behavior:'smooth'}));
+    document.querySelector('[data-quick-go="templates"]')?.addEventListener('click',()=>openBrowser('all'));
+    document.querySelector('[data-quick-go="elements"]')?.addEventListener('click',()=>{elements.hidden=false;elements.scrollIntoView({behavior:'smooth',block:'start'});});
+    document.getElementById('closeElementsLibrary')?.addEventListener('click',()=>{elements.hidden=true;document.getElementById('collectionHome')?.scrollIntoView({behavior:'smooth'});});
+    document.getElementById('openElementsBtn')?.addEventListener('click',()=>{go('templates');setTimeout(()=>{elements.hidden=false;elements.scrollIntoView({behavior:'smooth',block:'start'});},100);});
+    document.querySelectorAll('[data-card-symbol]').forEach(btn=>btn.addEventListener('click',()=>{
+      const symbol=btn.dataset.cardSymbol;
+      if(window.TabajaElements?.addSymbol(symbol)){go('designer');}
+    }));
+    const globalSearch=document.getElementById('globalTemplateSearch');
+    globalSearch?.addEventListener('focus',()=>go('templates'));
+    globalSearch?.addEventListener('input',()=>{if(search){search.value=globalSearch.value;openBrowser('all');refresh();}});
+    document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();globalSearch?.focus();}});
     document.querySelectorAll('[data-bg-type]').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('[data-bg-type]').forEach(x=>x.classList.toggle('active',x===btn));document.querySelectorAll('[data-bg-panel]').forEach(x=>x.classList.toggle('active',x.dataset.bgPanel===btn.dataset.bgType));}));
     document.getElementById('useSplitGradientBtn')?.addEventListener('click',()=>document.querySelector('[data-bg-type="gradient"]')?.click());
     refresh();showHome();
