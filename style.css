@@ -386,3 +386,106 @@ body[data-v8-view="designer"] #v8Main{min-height:calc(100vh - 64px)}
 @media(max-width:1200px){.collection-home-grid{grid-template-columns:repeat(2,minmax(250px,1fr))!important}.collection-type-grid{grid-template-columns:repeat(3,minmax(180px,1fr))!important}}
 @media(max-width:760px){.collection-home-grid,.collection-type-grid{grid-template-columns:1fr!important}.collection-cover{height:auto!important;min-height:176px!important}}
 \n\n/* ===== V12.6 Premium Card Design Center & Header ===== */\n.ts-header{background:rgba(248,250,253,.96)!important;border-bottom:1px solid #dbe2ec!important;box-shadow:0 12px 36px rgba(28,39,63,.08)!important}\n.ts-header-top{min-height:74px;grid-template-columns:minmax(260px,.9fr) minmax(340px,1.15fr) minmax(360px,1fr)!important;padding:12px 22px!important;background:linear-gradient(180deg,#fff,#f7f9fc)!important}\n.ts-page-title{min-width:0}.ts-page-kicker{display:block;margin-bottom:3px;color:#6c55d9;font-size:8px;font-weight:900;letter-spacing:.17em}.ts-page-title h1{font-size:20px!important;line-height:1.12!important;white-space:nowrap}.ts-page-title small{display:flex!important;align-items:center;gap:7px;font-size:11px!important;white-space:nowrap!important;overflow:visible!important}.ts-page-title small i{width:4px;height:4px;border-radius:50%;background:#7e62e6}\n.ts-global-search{height:43px!important;border-radius:13px!important;border-color:#d8deea!important;box-shadow:0 7px 20px rgba(30,43,70,.07)!important}.ts-global-search:focus-within{border-color:#8168e6!important;box-shadow:0 0 0 3px rgba(105,79,220,.12),0 9px 25px rgba(30,43,70,.08)!important}.ts-global-search input{font-size:12px!important}.account-chip{border:1px solid #dce2eb;background:#fff;padding:5px 9px;border-radius:11px}.ts-account-zone>button{height:36px!important}.ts-toolbar{padding:8px 22px!important;gap:8px!important;background:#edf1f7!important}.ts-tool-group{min-height:48px;padding:17px 7px 5px!important;border-radius:12px!important}.ts-tool-group>span{font-size:7px!important}.ts-toolbar .ts-tool-group button{padding:7px 10px!important;font-size:10px!important;border-radius:8px!important}.ts-install{min-width:120px}\n.template-gallery-workspace{background:linear-gradient(180deg,#0e1527 0,#11192d 55%,#0d1425 100%)!important;padding:28px 32px 60px!important}.tg-hero{min-height:285px!important;padding:34px 38px!important;border-radius:24px!important;background:radial-gradient(circle at 78% 32%,rgba(119,83,239,.43),transparent 27%),radial-gradient(circle at 58% 90%,rgba(26,139,192,.18),transparent 31%),linear-gradient(135deg,#121b35,#19183f 58%,#111a2e)!important;box-shadow:0 28px 75px rgba(0,0,0,.3)!important}.tg-hero h2{max-width:700px;font-size:34px!important;line-height:1.08!important;letter-spacing:-.035em!important}.tg-hero p{max-width:680px;font-size:13px!important;line-height:1.7!important}.tg-kicker{color:#a99bff!important}.tg-proof{margin-top:26px!important;border-radius:15px!important;overflow:hidden}.tg-blank-btn{min-width:220px!important;padding:22px!important;border-radius:18px!important;transform:translateY(6px)}\n.design-quick-start{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin:20px 0 26px}.design-quick-start>button{display:grid;grid-template-columns:45px 1fr auto;align-items:center;gap:12px;padding:16px;border:1px solid rgba(255,255,255,.1);border-radius:16px;background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.028));text-align:left;transition:.2s}.design-quick-start>button:hover{transform:translateY(-3px);border-color:rgba(132,108,242,.65);background:linear-gradient(145deg,rgba(105,75,229,.22),rgba(46,111,185,.11))}.design-quick-start>button>span{width:45px;height:45px;display:grid;place-items:center;border-radius:13px;background:linear-gradient(135deg,#694de2,#367fda);font-size:21px}.design-quick-start b,.design-quick-start small{display:block}.design-quick-start b{font-size:12px}.design-quick-start small{margin-top:4px;color:#91a0b8;font-size:9px}.design-quick-start em{color:#9b8cf1;font-size:9px;font-style:normal;font-weight:800}.collection-home{padding:24px!important;border:1px solid rgba(255,255,255,.07);border-radius:22px;background:rgba(255,255,255,.025)}.collection-home-head{margin-bottom:20px!important}.collection-home-grid{gap:14px!important}.collection-cover{min-height:208px!important;border-radius:18px!important;box-shadow:0 18px 40px rgba(0,0,0,.16)!important}.collection-cover:hover{transform:translateY(-5px) scale(1.008)!important}.collection-cover b{font-size:22px!important}.collection-cover p{line-height:1.55!important}.collection-cover em{font-size:10px!important}\n.elements-library{margin:22px 0;padding:24px;border:1px solid rgba(146,127,238,.25);border-radius:22px;background:linear-gradient(145deg,rgba(35,35,74,.94),rgba(17,27,49,.96));box-shadow:0 28px 65px rgba(0,0,0,.26)}.elements-library[hidden]{display:none!important}.elements-library-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,.08)}.elements-library-head span,.elements-category-title small{color:#9387da}.elements-library-head h3{margin:4px 0 5px;font-size:25px}.elements-library-head p{margin:0;color:#93a0b5;font-size:11px}.elements-library-head button{background:rgba(255,255,255,.07)}.elements-category{margin-top:22px}.elements-category-title{display:flex;align-items:center;gap:10px;margin-bottom:12px}.elements-category-title>span{width:34px;height:34px;display:grid;place-items:center;border-radius:10px;background:#282553}.elements-category-title b,.elements-category-title small{display:block}.elements-category-title b{font-size:12px}.elements-category-title small{margin-top:3px;font-size:9px}.elements-grid{display:grid;grid-template-columns:repeat(12,minmax(46px,1fr));gap:8px}.elements-grid button{min-height:52px;padding:8px;border:1px solid rgba(255,255,255,.09);border-radius:12px;background:rgba(255,255,255,.045);font-size:25px;transition:.18s}.elements-grid button:hover{transform:translateY(-3px) scale(1.04);border-color:#8c75f0;background:rgba(104,78,218,.22)}.elements-grid.flags{grid-template-columns:repeat(8,minmax(90px,1fr))}.elements-grid.flags button{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:25px}.elements-grid.flags small{color:#aab4c5;font-size:8px}.tools #openElementsBtn{background:linear-gradient(135deg,rgba(112,80,230,.28),rgba(41,112,197,.24));border-color:rgba(127,104,238,.5)}\n@media(max-width:1250px){.ts-header-top{grid-template-columns:1fr 1fr!important}.ts-account-zone{grid-column:1/-1}.design-quick-start{grid-template-columns:1fr}.elements-grid{grid-template-columns:repeat(6,1fr)}.elements-grid.flags{grid-template-columns:repeat(4,1fr)}}\n@media(max-width:760px){.template-gallery-workspace{padding:18px 14px 40px!important}.tg-hero{padding:24px!important}.tg-hero h2{font-size:27px!important}.elements-grid{grid-template-columns:repeat(4,1fr)}.elements-grid.flags{grid-template-columns:repeat(2,1fr)}}\n
+
+/* ===== V12.7 STEP 1 — Refined UI / UX Foundation =====
+   Scope: visual polish only. Stable canvas, export and Zebra print logic untouched. */
+:root{
+  --ts-brand-950:#10172a;
+  --ts-brand-900:#151f37;
+  --ts-brand-700:#4f46cf;
+  --ts-brand-600:#6557df;
+  --ts-accent:#2f7dde;
+  --ts-surface:#ffffff;
+  --ts-surface-soft:#f4f7fb;
+  --ts-border:#dce3ed;
+  --ts-text:#172238;
+  --ts-muted:#6d7b90;
+  --ts-radius-sm:9px;
+  --ts-radius-md:13px;
+  --ts-shadow-sm:0 4px 14px rgba(24,38,66,.07);
+}
+
+.ts-header{
+  background:rgba(248,250,253,.97)!important;
+  box-shadow:0 8px 24px rgba(25,38,65,.07)!important;
+}
+.ts-header-top{
+  min-height:58px!important;
+  grid-template-columns:minmax(235px,.85fr) minmax(300px,1.05fr) minmax(345px,1fr)!important;
+  gap:13px!important;
+  padding:7px 16px!important;
+  background:linear-gradient(180deg,#fff 0%,#f8fafd 100%)!important;
+}
+.ts-page-title{display:flex;align-items:center;gap:10px;min-width:0!important}
+.ts-brand-mark{
+  width:35px;height:35px;flex:0 0 35px;display:grid;place-items:center;
+  border-radius:11px;background:linear-gradient(145deg,var(--ts-brand-900),var(--ts-brand-700) 68%,#7b69ed);
+  color:#fff;box-shadow:0 7px 16px rgba(70,61,183,.24),inset 0 1px 0 rgba(255,255,255,.18)
+}
+.ts-brand-mark span{font:800 18px/1 Georgia,serif;letter-spacing:-1px}
+.ts-title-copy{min-width:0}
+.ts-page-kicker{margin-bottom:2px!important;color:var(--ts-brand-600)!important;font-size:7px!important;letter-spacing:.15em!important}
+.ts-page-title h1{font-size:17px!important;line-height:1.05!important;letter-spacing:-.018em!important}
+.ts-page-title small{margin-top:2px!important;font-size:9px!important;color:var(--ts-muted)!important}
+.ts-page-title small i{background:var(--ts-brand-600)!important}
+
+.ts-global-search{
+  height:36px!important;padding:0 10px!important;border-radius:var(--ts-radius-sm)!important;
+  border-color:var(--ts-border)!important;box-shadow:none!important;background:#fff!important
+}
+.ts-global-search:focus-within{border-color:#8f82e6!important;box-shadow:0 0 0 3px rgba(101,87,223,.10)!important}
+.ts-global-search input{font-size:11px!important}
+.ts-global-search kbd{font-size:8px!important;background:#f5f7fa!important}
+
+.ts-account-zone{gap:5px!important}
+.ts-account-zone>button,.ts-icon-btn{height:32px!important;padding:6px 9px!important;border-radius:8px!important;border-color:var(--ts-border)!important;font-size:10px!important}
+.ts-icon-btn{width:32px!important;padding:0!important}
+.account-chip{height:32px;box-sizing:border-box;padding:3px 8px 3px 4px!important;border-radius:9px!important;box-shadow:none!important}
+.account-avatar{width:24px!important;height:24px!important;font-size:9px!important}
+.account-chip b{font-size:9px!important}.account-chip small{font-size:7px!important}
+
+.ts-toolbar{
+  min-height:46px!important;padding:5px 16px!important;gap:7px!important;
+  background:#eef2f7!important;border-top:0!important
+}
+.ts-tool-group{
+  min-height:36px!important;padding:13px 5px 4px!important;gap:4px!important;
+  border-radius:9px!important;border-color:#dbe2ec!important;box-shadow:none!important
+}
+.ts-tool-group>span{top:3px!important;left:7px!important;font-size:6px!important;letter-spacing:.11em!important}
+.ts-toolbar .ts-tool-group button{padding:5px 8px!important;font-size:9px!important;border-radius:7px!important;min-height:24px!important}
+.ts-install{min-width:108px!important;height:32px!important;font-size:9px!important;box-shadow:0 5px 13px rgba(84,55,190,.20)!important}
+.pwa-install-status{font-size:8px!important;align-self:center!important}
+
+.v8-nav{padding-top:91px!important;background:linear-gradient(180deg,#11192c,#0d1424)!important}
+.v8-nav-btn{border-radius:11px!important}
+.v8-nav-btn.active{background:linear-gradient(135deg,rgba(101,87,223,.30),rgba(47,125,222,.19))!important}
+.ts-build-badge{border-radius:10px!important;background:rgba(255,255,255,.028)!important}
+
+.template-gallery-workspace{padding:22px 26px 48px!important}
+.tg-hero{min-height:242px!important;padding:27px 30px!important;border-radius:20px!important}
+.tg-hero h2{font-size:30px!important}.tg-hero p{line-height:1.55!important}
+.tg-proof{margin-top:20px!important}.tg-blank-btn{padding:18px!important;border-radius:15px!important}
+.design-quick-start{gap:10px!important;margin:15px 0 20px!important}
+.design-quick-start>button{padding:13px!important;border-radius:13px!important}
+.collection-home{padding:19px!important;border-radius:18px!important}
+.collection-home-grid{gap:11px!important}
+.collection-cover{border-radius:15px!important}
+
+.elements-library{margin:16px 0!important;padding:19px!important;border-radius:18px!important}
+.elements-library-head{padding-bottom:14px!important}
+.elements-library-head h3{font-size:21px!important}
+.elements-category{margin-top:17px!important}
+.elements-grid{gap:6px!important}
+.elements-grid button{min-height:46px!important;border-radius:10px!important;font-size:22px!important}
+
+@media(max-width:1250px){
+  .ts-header-top{grid-template-columns:1fr 1.15fr!important}
+  .ts-account-zone{grid-column:1/-1;justify-content:flex-start!important}
+  .v8-nav{padding-top:126px!important}
+}
+@media(max-width:850px){
+  .ts-header-top{grid-template-columns:1fr!important}
+  .ts-global-search{order:3}
+  .v8-nav{padding-top:0!important}
+}
