@@ -182,15 +182,13 @@ function Send-Html($context, [int]$status, [string]$html) {
 
 function Normalize-Url([string]$value) {
   if ([string]::IsNullOrWhiteSpace($value)) { return '' }
-  try {
-    $uri = [Uri]$value
-    $host = $uri.Host.ToLowerInvariant() -replace '^www\\.', ''
-    $path = $uri.AbsolutePath
-    if ($path.Length -gt 1) { $path = $path.TrimEnd('/') }
-    return ($uri.Scheme.ToLowerInvariant() + '://' + $host + $path + $uri.Query + $uri.Fragment)
-  } catch {
-    return (($value.Trim().ToLowerInvariant() -replace '^https?://(?:www\\.)?', '')).TrimEnd('/')
-  }
+  # Verification only: compare the effective web address, not the NDEF URI prefix
+  # compression. Writing logic is intentionally unchanged.
+  $normalized = $value.Trim().ToLowerInvariant()
+  $normalized = $normalized -replace '^https?://', ''
+  $normalized = $normalized -replace '^www\.', ''
+  $normalized = $normalized.TrimEnd('/')
+  return $normalized
 }
 
 function Get-LocalStudioHtml {

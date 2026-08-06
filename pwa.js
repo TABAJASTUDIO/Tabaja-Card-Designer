@@ -55,11 +55,8 @@
     if (status) status.textContent = 'Installed successfully';
   });
 
-  if (localNfcApp) {
-    if (status) status.textContent = 'Local NFC mode — hardware enabled';
-    setInstallState('Local NFC Mode', false);
-    if ('serviceWorker' in navigator) navigator.serviceWorker.getRegistrations().then(items => items.forEach(item => item.unregister()));
-    return;
+  if (localNfcApp && status) {
+    status.textContent = standalone ? 'Local NFC PWA — hardware enabled' : 'Local NFC mode — ready to install';
   }
 
   if ('serviceWorker' in navigator) {

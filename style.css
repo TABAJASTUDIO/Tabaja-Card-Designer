@@ -579,3 +579,13 @@ body[data-v8-view="designer"] #v8Main{min-height:calc(100vh - 64px)}
   .ts-header{position:static!important}.ts-header-top{grid-template-columns:1fr!important}.ts-account-zone{overflow-x:auto!important}
   .tg-hero{grid-template-columns:1fr!important}.tg-blank-btn{width:100%!important}
 }
+
+
+/* ===== V12.9.3 Local PWA polish =====
+   NFC view uses its own controls; hide the designer toolbar completely.
+   This removes the three empty FILE / EXPORT / PRINT group shells. */
+body[data-v8-view="nfc"] #designerTopActions{display:none!important}
+
+/* When installed as a regular standalone PWA the browser title bar stays outside
+   the document instead of overlaying Cloud / Logout. */
+html[data-pwa="installed"] .ts-header{top:0!important}

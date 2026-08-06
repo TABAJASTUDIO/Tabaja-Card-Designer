@@ -1,6 +1,6 @@
 {
   "id": "./",
-  "name": "Tabaja Solution \u2014 Smart Identity Platform",
+  "name": "Tabaja Solution — Smart Identity Platform",
   "short_name": "Tabaja Solution",
   "description": "Professional identity, card design, NFC and Zebra printing platform.",
   "lang": "en",
@@ -9,9 +9,7 @@
   "scope": "./",
   "display": "standalone",
   "display_override": [
-    "window-controls-overlay",
-    "standalone",
-    "minimal-ui"
+    "standalone"
   ],
   "orientation": "any",
   "background_color": "#0b1020",
