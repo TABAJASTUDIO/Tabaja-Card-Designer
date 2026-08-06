@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const BRIDGE = 'http://127.0.0.1:8766';
+  const BRIDGE_ORIGIN = 'http://127.0.0.1:8766';
   const $ = id => document.getElementById(id);
   const els = {
     module: $('nfcModuleStatus'), reader: $('nfcReaderStatus'), card: $('nfcCardStatus'), uid: $('nfcCardUid'),
@@ -10,12 +10,11 @@
   };
   if (!els.module) return;
 
+  let bridgeWindow = null;
   let bridgeOnline = false;
   let cardPresent = false;
-  let previousPresent = false;
-  let autoArmed = true;
   let busy = false;
-  let lastWrittenUrl = '';
+  let lastStatusAt = 0;
 
   const setButtons = () => {
     const enabled = bridgeOnline && cardPresent && !busy;
@@ -30,105 +29,132 @@
     els.log.innerHTML = `<span style="display:inline-grid;place-items:center;width:32px;height:32px;border-radius:50%;background:${ok ? '#eaf8f1' : '#fff1f1'};color:${ok ? '#087443' : '#b42318'}">${ok ? '✓' : '!'}</span><div><b>${title}</b><small style="display:block;margin-top:4px;color:#7c8796">${detail}${detail ? ' · ' : ''}${time}</small></div>`;
   };
 
-  async function request(path, options = {}) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 2500);
-    try {
-      const requestOptions = {
-        ...options,
-        mode: 'cors',
-        headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
-        signal: controller.signal,
-        cache: 'no-store'
-      };
-
-      // Chromium Local Network Access: explicitly declare that this request targets
-      // the computer's loopback address. Older browsers safely ignore this option.
-      requestOptions.targetAddressSpace = 'loopback';
-
-      const response = await fetch(BRIDGE + path, requestOptions);
-      const data = await response.json();
-      if (!response.ok || data.ok === false) throw new Error(data.error || `Bridge error ${response.status}`);
-      return data;
-    } finally { clearTimeout(timer); }
-  }
-
-  async function refreshStatus() {
-    try {
-      const data = await request('/status');
-      bridgeOnline = true;
-      cardPresent = !!data.cardPresent;
-      els.module.textContent = cardPresent ? 'CARD READY' : 'READER READY';
-      els.module.classList.toggle('ready', true);
-      els.module.classList.toggle('standby', false);
-      els.reader.textContent = data.reader || 'ACR122U connected';
-      els.card.textContent = cardPresent ? 'Card detected' : 'Place a card on reader';
-      els.uid.textContent = data.uid || '—';
-      els.hint.innerHTML = cardPresent ? 'Reader and card are ready.' : 'Reader connected. Place one card in the center.';
-
-      if (els.auto.checked) {
-        if (!cardPresent) autoArmed = true;
-        if (cardPresent && !previousPresent && autoArmed && !busy) {
-          autoArmed = false;
-          setTimeout(writeUrl, 180);
-        }
-      }
-      previousPresent = cardPresent;
-    } catch (error) {
-      bridgeOnline = false; cardPresent = false; previousPresent = false;
-      els.module.textContent = 'BRIDGE OFFLINE';
-      els.module.classList.remove('ready'); els.module.classList.add('standby');
-      els.reader.textContent = 'Waiting for bridge'; els.card.textContent = 'No card detected'; els.uid.textContent = '—';
-      els.hint.innerHTML = `
-        <div style="display:grid;gap:10px">
-          <span>Edge is blocking the installed PWA from reaching the local reader. Keep the bridge window open, then use the local NFC writer.</span>
-          <button id="nfcOpenLocalWriter" type="button" style="border:0;border-radius:10px;padding:11px 14px;font-weight:800;background:#173b7a;color:#fff;cursor:pointer">Open Local NFC Writer</button>
-        </div>`;
-      const openButton = document.getElementById('nfcOpenLocalWriter');
-      if (openButton) openButton.onclick = () => window.open('http://127.0.0.1:8766/studio', '_blank', 'noopener');
-    }
+  function renderDisconnected() {
+    bridgeOnline = false;
+    cardPresent = false;
+    els.module.textContent = 'CONNECT BRIDGE';
+    els.module.classList.remove('ready');
+    els.module.classList.add('standby');
+    els.reader.textContent = 'Waiting for local writer';
+    els.card.textContent = 'No card detected';
+    els.uid.textContent = '—';
+    els.hint.innerHTML = `
+      <div style="display:grid;gap:10px">
+        <span>Run <b>NFC-Bridge\\Start-NFC-Bridge.bat</b>, then connect the local writer once.</span>
+        <button id="nfcConnectBridge" type="button" style="border:0;border-radius:10px;padding:11px 14px;font-weight:800;background:#173b7a;color:#fff;cursor:pointer">Connect NFC Bridge</button>
+      </div>`;
+    const button = $('nfcConnectBridge');
+    if (button) button.onclick = connectBridge;
     setButtons();
   }
 
-  async function withBusy(fn) {
-    if (busy) return;
-    busy = true; setButtons();
-    try { await fn(); } catch (e) { addLog('Operation failed', e.message || String(e), false); }
-    finally { busy = false; setButtons(); refreshStatus(); }
+  function renderStatus(data) {
+    bridgeOnline = true;
+    cardPresent = !!data.cardPresent;
+    lastStatusAt = Date.now();
+    els.module.textContent = cardPresent ? 'CARD READY' : 'BRIDGE ONLINE';
+    els.module.classList.add('ready');
+    els.module.classList.remove('standby');
+    els.reader.textContent = data.reader || 'Bridge online — connect ACR122U';
+    els.card.textContent = cardPresent ? 'Card detected' : 'Place a card on reader';
+    els.uid.textContent = data.uid || '—';
+    els.hint.innerHTML = cardPresent
+      ? 'Bridge, reader and card are ready. You can read, write or verify from this page.'
+      : 'Bridge is online. Connect the ACR122U and place one card in the center.';
+    setButtons();
   }
 
-  async function readCard() {
-    await withBusy(async () => {
-      const data = await request('/read');
-      addLog('Card read successfully', data.url ? `URL: ${data.url}` : `UID: ${data.uid || 'unknown'}`);
-      if (data.url) els.url.value = data.url;
-    });
+  function connectBridge() {
+    bridgeWindow = window.open(`${BRIDGE_ORIGIN}/studio?controller=tabaja`, 'tabajaNfcBridge', 'width=540,height=720,resizable=yes,scrollbars=yes');
+    if (!bridgeWindow) {
+      addLog('Popup blocked', 'Allow pop-ups for Tabaja, then press Connect NFC Bridge again.', false);
+      return;
+    }
+    addLog('Connecting to NFC Bridge', 'Keep the local writer window open or minimized.');
+    setTimeout(() => sendCommand('ping'), 600);
   }
 
-  async function writeUrl() {
+  function sendCommand(action, extra = {}) {
+    if (!bridgeWindow || bridgeWindow.closed) {
+      renderDisconnected();
+      addLog('Bridge window is not connected', 'Press Connect NFC Bridge first.', false);
+      return false;
+    }
+    bridgeWindow.postMessage({ source: 'tabaja-nfc-app', action, ...extra }, BRIDGE_ORIGIN);
+    return true;
+  }
+
+  function setBusy(value) {
+    busy = value;
+    setButtons();
+  }
+
+  window.addEventListener('message', event => {
+    if (event.origin !== BRIDGE_ORIGIN || !event.data || event.data.source !== 'tabaja-nfc-bridge') return;
+    const msg = event.data;
+    if (msg.type === 'status') {
+      renderStatus(msg.data || {});
+      return;
+    }
+    if (msg.type === 'result') {
+      setBusy(false);
+      const data = msg.data || {};
+      if (msg.action === 'read') {
+        if (data.url) els.url.value = data.url;
+        addLog('Card read successfully', data.url ? `URL: ${data.url}` : `UID: ${data.uid || 'unknown'}`);
+      } else if (msg.action === 'write') {
+        addLog(data.verified === false ? 'Link written — verify recommended' : 'Website link written and verified', `${data.url || els.url.value} · UID ${data.uid || ''}`, data.verified !== false);
+      } else if (msg.action === 'verify') {
+        addLog(data.match ? 'Card verified successfully' : 'Verification mismatch', data.match ? (data.url || '') : `Found: ${data.url || 'no URL'}`, !!data.match);
+      }
+      return;
+    }
+    if (msg.type === 'error') {
+      setBusy(false);
+      addLog('Operation failed', msg.error || 'Unknown bridge error', false);
+    }
+  });
+
+  function validateUrl() {
     const url = els.url.value.trim();
     if (!/^https?:\/\//i.test(url)) {
-      addLog('Invalid website link', 'The link must begin with https:// or http://', false); return;
+      addLog('Invalid website link', 'The link must begin with https:// or http://', false);
+      return null;
     }
-    await withBusy(async () => {
-      const data = await request('/write', { method: 'POST', body: JSON.stringify({ url }) });
-      lastWrittenUrl = url;
-      addLog('Website link written', `${url} · UID ${data.uid || ''}`);
-    });
+    return url;
   }
 
-  async function verifyCard() {
-    const expected = els.url.value.trim() || lastWrittenUrl;
-    await withBusy(async () => {
-      const data = await request('/verify', { method: 'POST', body: JSON.stringify({ url: expected }) });
-      addLog(data.match ? 'Card verified successfully' : 'Verification mismatch', data.match ? data.url : `Found: ${data.url || 'no URL'}`, !!data.match);
-    });
-  }
+  els.read.addEventListener('click', () => {
+    if (sendCommand('read')) setBusy(true);
+  });
 
-  els.read.addEventListener('click', readCard);
-  els.write.addEventListener('click', writeUrl);
-  els.verify.addEventListener('click', verifyCard);
-  els.auto.addEventListener('change', () => { autoArmed = true; });
-  refreshStatus();
-  setInterval(refreshStatus, 900);
+  els.write.addEventListener('click', () => {
+    const url = validateUrl();
+    if (!url) return;
+    if (sendCommand('write', { url })) setBusy(true);
+  });
+
+  els.verify.addEventListener('click', () => {
+    const url = validateUrl();
+    if (!url) return;
+    if (sendCommand('verify', { url })) setBusy(true);
+  });
+
+  els.auto.addEventListener('change', () => {
+    const url = validateUrl();
+    if (!url && els.auto.checked) { els.auto.checked = false; return; }
+    sendCommand('setAuto', { enabled: els.auto.checked, url: url || els.url.value.trim() });
+    addLog(els.auto.checked ? 'Auto-write enabled' : 'Auto-write disabled', els.auto.checked ? 'Each new card will receive the same website link.' : 'Manual writing restored.');
+  });
+
+  els.url.addEventListener('change', () => {
+    if (bridgeOnline) sendCommand('setUrl', { url: els.url.value.trim() });
+  });
+
+  setInterval(() => {
+    if (bridgeOnline && Date.now() - lastStatusAt > 3000) renderDisconnected();
+    if (bridgeWindow && bridgeWindow.closed && bridgeOnline) renderDisconnected();
+  }, 1000);
+
+  renderDisconnected();
 })();

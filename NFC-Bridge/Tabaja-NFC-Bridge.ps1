@@ -142,6 +142,25 @@ function Parse-NdefUri([byte[]]$bytes) {
   return $null
 }
 
+
+function Normalize-Url([string]$url) {
+  if ([string]::IsNullOrWhiteSpace($url)) { return '' }
+  $value = $url.Trim().ToLowerInvariant()
+  $value = $value -replace '^https?://', ''
+  $value = $value -replace '^www\.', ''
+  $value = $value.TrimEnd('/')
+  return $value
+}
+
+function Read-NdefUriWithRetry($session, [int]$attempts = 3) {
+  for ($try = 1; $try -le $attempts; $try++) {
+    $url = Parse-NdefUri (Read-Pages $session 4 256)
+    if (-not [string]::IsNullOrWhiteSpace($url)) { return $url }
+    Start-Sleep -Milliseconds (80 * $try)
+  }
+  return $null
+}
+
 function Get-Status {
   [IntPtr]$ctx=[IntPtr]::Zero
   $rc=[PcscNative]::SCardEstablishContext([PcscNative]::SCARD_SCOPE_USER,[IntPtr]::Zero,[IntPtr]::Zero,[ref]$ctx)
@@ -190,16 +209,18 @@ body{font-family:Segoe UI,Arial,sans-serif;margin:0;background:#f4f6fa;color:#14
 <div class="card"><label><b>Website link</b></label><input id="url" value="https://www.dtasl.co"><label class="auto"><input id="auto" type="checkbox"> Auto-write the same link when the next card is placed</label><div class="row"><button id="read" class="secondary">Read NFC Card</button><button id="write">Write Website Link</button></div><div style="margin-top:12px"><button id="verify" class="secondary">Verify Written Card</button></div></div>
 <div class="card"><b>Activity</b><div id="log" class="log">Ready.</div></div>
 </div><script>
-const $=id=>document.getElementById(id);let present=false,previous=false,busy=false,armed=true;
+const $=id=>document.getElementById(id);let present=false,previous=false,busy=false,armed=true,controllerMode=new URLSearchParams(location.search).get('controller')==='tabaja';
+function notify(type,payload={}){try{if(window.opener&&!window.opener.closed)window.opener.postMessage({source:'tabaja-nfc-bridge',type,...payload},'*')}catch(e){}}
 async function api(path,opt={}){const r=await fetch(path,{...opt,headers:{'Content-Type':'application/json',...(opt.headers||{})},cache:'no-store'});const d=await r.json();if(!r.ok||d.ok===false)throw new Error(d.error||'Bridge error');return d}
 function buttons(){const e=present&&!busy;$('read').disabled=!e;$('write').disabled=!e;$('verify').disabled=!e}
 function log(t,ok=true){$('log').textContent=(ok?'✓ ':'! ')+t+' — '+new Date().toLocaleTimeString()}
-async function status(){try{const d=await api('/status');present=!!d.cardPresent;$('status').textContent=present?'CARD READY':'READER READY';$('status').className='status ok';$('reader').textContent='Reader: '+(d.reader||'Not connected');$('card').textContent=present?'Card detected':'Place one card in the center';$('uid').textContent=d.uid?'UID: '+d.uid:'';if($('auto').checked){if(!present)armed=true;if(present&&!previous&&armed&&!busy){armed=false;setTimeout(write,150)}}previous=present}catch(e){present=false;$('status').textContent='BRIDGE ERROR';$('status').className='status bad';$('reader').textContent=e.message}buttons()}
-async function run(fn){if(busy)return;busy=true;buttons();try{await fn()}catch(e){log(e.message,false)}finally{busy=false;buttons();status()}}
-async function read(){run(async()=>{const d=await api('/read');if(d.url)$('url').value=d.url;log(d.url?'Read: '+d.url:'Card UID: '+d.uid)})}
-async function write(){const u=$('url').value.trim();if(!/^https?:\/\//i.test(u)){log('Link must start with https:// or http://',false);return}run(async()=>{const d=await api('/write',{method:'POST',body:JSON.stringify({url:u})});log('Written and verified: '+d.url)})}
-async function verify(){const u=$('url').value.trim();run(async()=>{const d=await api('/verify',{method:'POST',body:JSON.stringify({url:u})});log(d.match?'Verified: '+d.url:'Mismatch. Found: '+(d.url||'no URL'),d.match)})}
-$('read').onclick=read;$('write').onclick=write;$('verify').onclick=verify;$('auto').onchange=()=>armed=true;status();setInterval(status,700);
+async function status(){try{const d=await api('/status');present=!!d.cardPresent;$('status').textContent=present?'CARD READY':'BRIDGE ONLINE';$('status').className='status ok';$('reader').textContent='Reader: '+(d.reader||'Bridge online — reader not connected');$('card').textContent=present?'Card detected':'Place one card in the center';$('uid').textContent=d.uid?'UID: '+d.uid:'';notify('status',{data:d});if($('auto').checked){if(!present)armed=true;if(present&&!previous&&armed&&!busy){armed=false;setTimeout(write,180)}}previous=present}catch(e){present=false;$('status').textContent='BRIDGE ERROR';$('status').className='status bad';$('reader').textContent=e.message;notify('error',{error:e.message})}buttons()}
+async function run(action,fn){if(busy)return;busy=true;buttons();try{const d=await fn();notify('result',{action,data:d});return d}catch(e){log(e.message,false);notify('error',{action,error:e.message})}finally{busy=false;buttons();status()}}
+async function read(){return run('read',async()=>{const d=await api('/read');if(d.url)$('url').value=d.url;log(d.url?'Read: '+d.url:'Card UID: '+d.uid);return d})}
+async function write(customUrl){const u=(customUrl||$('url').value).trim();$('url').value=u;if(!/^https?:\/\//i.test(u)){log('Link must start with https:// or http://',false);notify('error',{action:'write',error:'Link must start with https:// or http://'});return}return run('write',async()=>{const d=await api('/write',{method:'POST',body:JSON.stringify({url:u})});log(d.verified===false?'Written — verify recommended: '+d.url:'Written and verified: '+d.url,d.verified!==false);return d})}
+async function verify(customUrl){const u=(customUrl||$('url').value).trim();$('url').value=u;return run('verify',async()=>{const d=await api('/verify',{method:'POST',body:JSON.stringify({url:u})});log(d.match?'Verified: '+d.url:'Mismatch. Found: '+(d.url||'no URL'),d.match);return d})}
+window.addEventListener('message',e=>{const m=e.data||{};if(m.source!=='tabaja-nfc-app')return;switch(m.action){case'ping':status();break;case'read':read();break;case'write':write(m.url);break;case'verify':verify(m.url);break;case'setUrl':if(m.url)$('url').value=m.url;break;case'setAuto':if(m.url)$('url').value=m.url;$('auto').checked=!!m.enabled;armed=true;log($('auto').checked?'Auto-write enabled':'Auto-write disabled');break;}});
+$('read').onclick=()=>read();$('write').onclick=()=>write();$('verify').onclick=()=>verify();$('auto').onchange=()=>{armed=true;notify('result',{action:'auto',data:{enabled:$('auto').checked}})};status();setInterval(status,700);if(controllerMode)document.title='Tabaja NFC Bridge — Connected';
 </script></body></html>
 '@
 }
@@ -244,11 +265,27 @@ while($listener.IsListening){
         $s=Open-Card; try { $uid=Get-Uid $s; $raw=Read-Pages $s 4 256; $url=Parse-NdefUri $raw; Send-Json $ctx 200 @{ok=$true;uid=$uid;url=$url} } finally { Close-Card $s }
       }
       '/write' {
-        $url=[string]$body.url; if($url-notmatch'^https?://'){throw'Link must start with https:// or http://'}
-        $s=Open-Card; try { $uid=Get-Uid $s; Write-NdefUri $s $url; $verify=Parse-NdefUri (Read-Pages $s 4 256); if ($verify -ne $url) { throw "Write verification failed. Read back: $verify" }; Send-Json $ctx 200 @{ok=$true;uid=$uid;url=$verify} } finally { Close-Card $s }
+        $url=[string]$body.url
+        if($url-notmatch'^https?://'){ throw 'Link must start with https:// or http://' }
+        $s=Open-Card
+        try {
+          $uid=Get-Uid $s
+          Write-NdefUri $s $url
+          Start-Sleep -Milliseconds 120
+          $readBack=Read-NdefUriWithRetry $s 4
+          $verified=((Normalize-Url $readBack) -eq (Normalize-Url $url))
+          Send-Json $ctx 200 @{ok=$true;uid=$uid;url=($(if($readBack){$readBack}else{$url}));requestedUrl=$url;verified=$verified}
+        } finally { Close-Card $s }
       }
       '/verify' {
-        $expected=[string]$body.url; $s=Open-Card; try { $uid=Get-Uid $s; $url=Parse-NdefUri (Read-Pages $s 4 256); Send-Json $ctx 200 @{ok=$true;uid=$uid;url=$url;match=($url-eq$expected)} } finally { Close-Card $s }
+        $expected=[string]$body.url
+        $s=Open-Card
+        try {
+          $uid=Get-Uid $s
+          $url=Read-NdefUriWithRetry $s 3
+          $match=((Normalize-Url $url) -eq (Normalize-Url $expected))
+          Send-Json $ctx 200 @{ok=$true;uid=$uid;url=$url;expected=$expected;match=$match}
+        } finally { Close-Card $s }
       }
       default { Send-Json $ctx 404 @{ok=$false;error='Unknown endpoint'} }
     }
