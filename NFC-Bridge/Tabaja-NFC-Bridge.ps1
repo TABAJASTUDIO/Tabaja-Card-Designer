@@ -142,23 +142,19 @@ function Parse-NdefUri([byte[]]$bytes) {
   return $null
 }
 
-
-function Normalize-Url([string]$url) {
+function Normalize-NfcUrl([string]$url) {
   if ([string]::IsNullOrWhiteSpace($url)) { return '' }
-  $value = $url.Trim().ToLowerInvariant()
-  $value = $value -replace '^https?://', ''
-  $value = $value -replace '^www\.', ''
-  $value = $value.TrimEnd('/')
-  return $value
-}
-
-function Read-NdefUriWithRetry($session, [int]$attempts = 3) {
-  for ($try = 1; $try -le $attempts; $try++) {
-    $url = Parse-NdefUri (Read-Pages $session 4 256)
-    if (-not [string]::IsNullOrWhiteSpace($url)) { return $url }
-    Start-Sleep -Milliseconds (80 * $try)
+  $value = $url.Trim()
+  try {
+    $uri = [Uri]$value
+    $host = $uri.Host.ToLowerInvariant()
+    if ($host.StartsWith('www.')) { $host = $host.Substring(4) }
+    $path = $uri.AbsolutePath.TrimEnd('/')
+    if ([string]::IsNullOrEmpty($path)) { $path = '/' }
+    return ($uri.Scheme.ToLowerInvariant() + '://' + $host + $path + $uri.Query + $uri.Fragment)
+  } catch {
+    return ($value.ToLowerInvariant() -replace '^https?://(www\.)?', '' -replace '/+$', '')
   }
-  return $null
 }
 
 function Get-Status {
@@ -201,26 +197,27 @@ function Send-Html($context, [int]$status, [string]$html) {
 function Get-LocalStudioHtml {
 @'
 <!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Tabaja Local NFC Writer</title>
+<title>Tabaja NFC Bridge</title>
 <style>
 body{font-family:Segoe UI,Arial,sans-serif;margin:0;background:#f4f6fa;color:#14213d}.wrap{max-width:760px;margin:32px auto;padding:20px}.card{background:white;border-radius:18px;padding:22px;box-shadow:0 12px 35px rgba(25,42,70,.10);margin-bottom:16px}.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.status{font-weight:800;padding:10px 14px;border-radius:999px;display:inline-block;background:#fff3cd}.ok{background:#def7e7;color:#12643a}.bad{background:#fde3e3;color:#8a1c1c}input{width:100%;box-sizing:border-box;padding:13px;border:1px solid #cfd7e6;border-radius:10px;font-size:16px}button{width:100%;padding:13px;border:0;border-radius:10px;font-weight:800;cursor:pointer;background:#173b7a;color:#fff}button.secondary{background:#e9edf5;color:#173b7a}button:disabled{opacity:.45;cursor:not-allowed}.small{color:#667085;font-size:13px}.log{min-height:56px;padding:12px;border-radius:10px;background:#f7f9fc;white-space:pre-wrap}.auto{display:flex;gap:9px;align-items:center;margin:12px 0}.auto input{width:auto}@media(max-width:650px){.row{grid-template-columns:1fr}}
 </style></head><body><div class="wrap">
-<div class="card"><h1>Tabaja Local NFC Writer</h1><p class="small">This page runs directly from the bridge, so Edge cannot block the reader connection.</p><div id="status" class="status">Checking bridge…</div><p id="reader" class="small"></p><p id="card"></p><p id="uid" class="small"></p></div>
+<div class="card"><h1>Tabaja NFC Bridge</h1><p class="small">Keep this window open or minimized. The main Tabaja NFC Studio can now read, write, verify, and auto-write through this bridge.</p><div id="status" class="status">Checking bridge…</div><p id="reader" class="small"></p><p id="card"></p><p id="uid" class="small"></p></div>
 <div class="card"><label><b>Website link</b></label><input id="url" value="https://www.dtasl.co"><label class="auto"><input id="auto" type="checkbox"> Auto-write the same link when the next card is placed</label><div class="row"><button id="read" class="secondary">Read NFC Card</button><button id="write">Write Website Link</button></div><div style="margin-top:12px"><button id="verify" class="secondary">Verify Written Card</button></div></div>
-<div class="card"><b>Activity</b><div id="log" class="log">Ready.</div></div>
+<div class="card"><b>Activity</b><div id="log" class="log">Bridge ready. You may return to the main Tabaja page.</div></div>
 </div><script>
-const $=id=>document.getElementById(id);let present=false,previous=false,busy=false,armed=true,controllerMode=new URLSearchParams(location.search).get('controller')==='tabaja';
-function notify(type,payload={}){try{if(window.opener&&!window.opener.closed)window.opener.postMessage({source:'tabaja-nfc-bridge',type,...payload},'*')}catch(e){}}
+const $=id=>document.getElementById(id);let present=false,previous=false,busy=false,armed=true,lastStatus={ok:true,reader:null,cardPresent:false,uid:null};
 async function api(path,opt={}){const r=await fetch(path,{...opt,headers:{'Content-Type':'application/json',...(opt.headers||{})},cache:'no-store'});const d=await r.json();if(!r.ok||d.ok===false)throw new Error(d.error||'Bridge error');return d}
 function buttons(){const e=present&&!busy;$('read').disabled=!e;$('write').disabled=!e;$('verify').disabled=!e}
 function log(t,ok=true){$('log').textContent=(ok?'✓ ':'! ')+t+' — '+new Date().toLocaleTimeString()}
-async function status(){try{const d=await api('/status');present=!!d.cardPresent;$('status').textContent=present?'CARD READY':'BRIDGE ONLINE';$('status').className='status ok';$('reader').textContent='Reader: '+(d.reader||'Bridge online — reader not connected');$('card').textContent=present?'Card detected':'Place one card in the center';$('uid').textContent=d.uid?'UID: '+d.uid:'';notify('status',{data:d});if($('auto').checked){if(!present)armed=true;if(present&&!previous&&armed&&!busy){armed=false;setTimeout(write,180)}}previous=present}catch(e){present=false;$('status').textContent='BRIDGE ERROR';$('status').className='status bad';$('reader').textContent=e.message;notify('error',{error:e.message})}buttons()}
-async function run(action,fn){if(busy)return;busy=true;buttons();try{const d=await fn();notify('result',{action,data:d});return d}catch(e){log(e.message,false);notify('error',{action,error:e.message})}finally{busy=false;buttons();status()}}
-async function read(){return run('read',async()=>{const d=await api('/read');if(d.url)$('url').value=d.url;log(d.url?'Read: '+d.url:'Card UID: '+d.uid);return d})}
-async function write(customUrl){const u=(customUrl||$('url').value).trim();$('url').value=u;if(!/^https?:\/\//i.test(u)){log('Link must start with https:// or http://',false);notify('error',{action:'write',error:'Link must start with https:// or http://'});return}return run('write',async()=>{const d=await api('/write',{method:'POST',body:JSON.stringify({url:u})});log(d.verified===false?'Written — verify recommended: '+d.url:'Written and verified: '+d.url,d.verified!==false);return d})}
-async function verify(customUrl){const u=(customUrl||$('url').value).trim();$('url').value=u;return run('verify',async()=>{const d=await api('/verify',{method:'POST',body:JSON.stringify({url:u})});log(d.match?'Verified: '+d.url:'Mismatch. Found: '+(d.url||'no URL'),d.match);return d})}
-window.addEventListener('message',e=>{const m=e.data||{};if(m.source!=='tabaja-nfc-app')return;switch(m.action){case'ping':status();break;case'read':read();break;case'write':write(m.url);break;case'verify':verify(m.url);break;case'setUrl':if(m.url)$('url').value=m.url;break;case'setAuto':if(m.url)$('url').value=m.url;$('auto').checked=!!m.enabled;armed=true;log($('auto').checked?'Auto-write enabled':'Auto-write disabled');break;}});
-$('read').onclick=()=>read();$('write').onclick=()=>write();$('verify').onclick=()=>verify();$('auto').onchange=()=>{armed=true;notify('result',{action:'auto',data:{enabled:$('auto').checked}})};status();setInterval(status,700);if(controllerMode)document.title='Tabaja NFC Bridge — Connected';
+function send(message){try{if(window.opener&&!window.opener.closed)window.opener.postMessage({source:'tabaja-nfc-bridge',...message},'*')}catch(_){}}
+async function getStatus(){try{const d=await api('/status');lastStatus=d;present=!!d.cardPresent;$('status').textContent=present?'CARD READY':'READER READY';$('status').className='status ok';$('reader').textContent='Reader: '+(d.reader||'Not connected');$('card').textContent=present?'Card detected':'Place one card in the center';$('uid').textContent=d.uid?'UID: '+d.uid:'';send({type:'status',status:d});if($('auto').checked){if(!present)armed=true;if(present&&!previous&&armed&&!busy){armed=false;setTimeout(write,180)}}previous=present}catch(e){present=false;$('status').textContent='BRIDGE ERROR';$('status').className='status bad';$('reader').textContent=e.message;send({type:'status',status:{ok:false,reader:null,cardPresent:false,uid:null,error:e.message}})}buttons()}
+async function execute(command,payload={}){if(command==='status')return api('/status');if(command==='read')return api('/read');if(command==='write')return api('/write',{method:'POST',body:JSON.stringify({url:payload.url})});if(command==='verify')return api('/verify',{method:'POST',body:JSON.stringify({url:payload.url})});throw new Error('Unknown NFC command.')}
+async function run(fn){if(busy)return;busy=true;buttons();try{await fn()}catch(e){log(e.message,false)}finally{busy=false;buttons();getStatus()}}
+async function read(){run(async()=>{const d=await execute('read');if(d.url)$('url').value=d.url;log(d.url?'Read: '+d.url:'Card UID: '+d.uid)})}
+async function write(){const u=$('url').value.trim();if(!/^https?:\/\//i.test(u)){log('Link must start with https:// or http://',false);return}run(async()=>{const d=await execute('write',{url:u});log('Written and verified: '+d.url)})}
+async function verify(){const u=$('url').value.trim();run(async()=>{const d=await execute('verify',{url:u});log(d.match?'Verified: '+d.url:'Mismatch. Found: '+(d.url||'no URL'),d.match)})}
+window.addEventListener('message',async event=>{const m=event.data||{};if(m.source!=='tabaja-nfc-app')return;if(m.type==='hello'){send({type:'ready'});send({type:'status',status:lastStatus});return}if(m.type==='status-request'){send({type:'status',status:lastStatus});return}if(m.type==='command'){try{const result=await execute(m.command,m.payload||{});send({type:'response',requestId:m.requestId,ok:true,result});await getStatus()}catch(e){send({type:'response',requestId:m.requestId,ok:false,error:e.message||String(e)});await getStatus()}}});
+$('read').onclick=read;$('write').onclick=write;$('verify').onclick=verify;$('auto').onchange=()=>armed=true;send({type:'ready'});getStatus();setInterval(getStatus,700);
 </script></body></html>
 '@
 }
@@ -265,26 +262,32 @@ while($listener.IsListening){
         $s=Open-Card; try { $uid=Get-Uid $s; $raw=Read-Pages $s 4 256; $url=Parse-NdefUri $raw; Send-Json $ctx 200 @{ok=$true;uid=$uid;url=$url} } finally { Close-Card $s }
       }
       '/write' {
-        $url=[string]$body.url
-        if($url-notmatch'^https?://'){ throw 'Link must start with https:// or http://' }
-        $s=Open-Card
+        $url = [string]$body.url
+        if ($url -notmatch '^https?://') { throw 'Link must start with https:// or http://' }
+        $s = Open-Card
         try {
-          $uid=Get-Uid $s
+          $uid = Get-Uid $s
           Write-NdefUri $s $url
-          Start-Sleep -Milliseconds 120
-          $readBack=Read-NdefUriWithRetry $s 4
-          $verified=((Normalize-Url $readBack) -eq (Normalize-Url $url))
-          Send-Json $ctx 200 @{ok=$true;uid=$uid;url=($(if($readBack){$readBack}else{$url}));requestedUrl=$url;verified=$verified}
+          $verify = $null
+          for ($attempt = 1; $attempt -le 3; $attempt++) {
+            Start-Sleep -Milliseconds (80 * $attempt)
+            $verify = Parse-NdefUri (Read-Pages $s 4 256)
+            if ((Normalize-NfcUrl $verify) -eq (Normalize-NfcUrl $url)) { break }
+          }
+          if ((Normalize-NfcUrl $verify) -ne (Normalize-NfcUrl $url)) {
+            throw "Write verification failed. Read back: $verify"
+          }
+          Send-Json $ctx 200 @{ok=$true;uid=$uid;url=$verify;verified=$true}
         } finally { Close-Card $s }
       }
       '/verify' {
-        $expected=[string]$body.url
-        $s=Open-Card
+        $expected = [string]$body.url
+        $s = Open-Card
         try {
-          $uid=Get-Uid $s
-          $url=Read-NdefUriWithRetry $s 3
-          $match=((Normalize-Url $url) -eq (Normalize-Url $expected))
-          Send-Json $ctx 200 @{ok=$true;uid=$uid;url=$url;expected=$expected;match=$match}
+          $uid = Get-Uid $s
+          $url = Parse-NdefUri (Read-Pages $s 4 256)
+          $match = (Normalize-NfcUrl $url) -eq (Normalize-NfcUrl $expected)
+          Send-Json $ctx 200 @{ok=$true;uid=$uid;url=$url;match=$match}
         } finally { Close-Card $s }
       }
       default { Send-Json $ctx 404 @{ok=$false;error='Unknown endpoint'} }

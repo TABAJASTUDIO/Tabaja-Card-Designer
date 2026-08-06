@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const BRIDGE_ORIGIN = 'http://127.0.0.1:8766';
+  const BRIDGE_STUDIO = 'http://127.0.0.1:8766/studio';
   const $ = id => document.getElementById(id);
   const els = {
     module: $('nfcModuleStatus'), reader: $('nfcReaderStatus'), card: $('nfcCardStatus'), uid: $('nfcCardUid'),
@@ -13,8 +13,24 @@
   let bridgeWindow = null;
   let bridgeOnline = false;
   let cardPresent = false;
+  let previousPresent = false;
+  let autoArmed = true;
   let busy = false;
+  let lastWrittenUrl = '';
   let lastStatusAt = 0;
+  let requestSequence = 0;
+  const pending = new Map();
+
+  function normalizeUrl(value) {
+    try {
+      const url = new URL(String(value || '').trim());
+      const host = url.hostname.toLowerCase().replace(/^www\./, '');
+      const pathname = (url.pathname || '/').replace(/\/+$/, '') || '/';
+      return `${url.protocol.toLowerCase()}//${host}${pathname}${url.search}${url.hash}`;
+    } catch (_) {
+      return String(value || '').trim().toLowerCase().replace(/^https?:\/\/(www\.)?/, '').replace(/\/+$/, '');
+    }
+  }
 
   const setButtons = () => {
     const enabled = bridgeOnline && cardPresent && !busy;
@@ -29,132 +45,158 @@
     els.log.innerHTML = `<span style="display:inline-grid;place-items:center;width:32px;height:32px;border-radius:50%;background:${ok ? '#eaf8f1' : '#fff1f1'};color:${ok ? '#087443' : '#b42318'}">${ok ? '✓' : '!'}</span><div><b>${title}</b><small style="display:block;margin-top:4px;color:#7c8796">${detail}${detail ? ' · ' : ''}${time}</small></div>`;
   };
 
-  function renderDisconnected() {
+  function renderConnectState(message = 'Start the NFC Bridge, then connect it once.') {
     bridgeOnline = false;
     cardPresent = false;
-    els.module.textContent = 'CONNECT BRIDGE';
+    previousPresent = false;
+    els.module.textContent = 'BRIDGE OFFLINE';
     els.module.classList.remove('ready');
     els.module.classList.add('standby');
-    els.reader.textContent = 'Waiting for local writer';
+    els.reader.textContent = 'Waiting for bridge';
     els.card.textContent = 'No card detected';
     els.uid.textContent = '—';
-    els.hint.innerHTML = `
-      <div style="display:grid;gap:10px">
-        <span>Run <b>NFC-Bridge\\Start-NFC-Bridge.bat</b>, then connect the local writer once.</span>
-        <button id="nfcConnectBridge" type="button" style="border:0;border-radius:10px;padding:11px 14px;font-weight:800;background:#173b7a;color:#fff;cursor:pointer">Connect NFC Bridge</button>
-      </div>`;
+    els.hint.innerHTML = `<div style="display:grid;gap:10px"><span>${message}</span><button id="nfcConnectBridge" type="button" style="border:0;border-radius:10px;padding:11px 14px;font-weight:800;background:#173b7a;color:#fff;cursor:pointer">Connect NFC Bridge</button></div>`;
     const button = $('nfcConnectBridge');
     if (button) button.onclick = connectBridge;
     setButtons();
   }
 
-  function renderStatus(data) {
-    bridgeOnline = true;
-    cardPresent = !!data.cardPresent;
-    lastStatusAt = Date.now();
-    els.module.textContent = cardPresent ? 'CARD READY' : 'BRIDGE ONLINE';
-    els.module.classList.add('ready');
-    els.module.classList.remove('standby');
-    els.reader.textContent = data.reader || 'Bridge online — connect ACR122U';
-    els.card.textContent = cardPresent ? 'Card detected' : 'Place a card on reader';
-    els.uid.textContent = data.uid || '—';
-    els.hint.innerHTML = cardPresent
-      ? 'Bridge, reader and card are ready. You can read, write or verify from this page.'
-      : 'Bridge is online. Connect the ACR122U and place one card in the center.';
-    setButtons();
-  }
-
   function connectBridge() {
-    bridgeWindow = window.open(`${BRIDGE_ORIGIN}/studio?controller=tabaja`, 'tabajaNfcBridge', 'width=540,height=720,resizable=yes,scrollbars=yes');
+    bridgeWindow = window.open(BRIDGE_STUDIO, 'TabajaNfcBridgeAgent', 'width=820,height=760,resizable=yes,scrollbars=yes');
     if (!bridgeWindow) {
-      addLog('Popup blocked', 'Allow pop-ups for Tabaja, then press Connect NFC Bridge again.', false);
+      addLog('Bridge window blocked', 'Allow pop-ups for Tabaja Solution, then press Connect NFC Bridge again.', false);
       return;
     }
-    addLog('Connecting to NFC Bridge', 'Keep the local writer window open or minimized.');
-    setTimeout(() => sendCommand('ping'), 600);
+    els.hint.textContent = 'Connecting to the local NFC Bridge… Keep the bridge window open or minimized.';
+    const hello = setInterval(() => {
+      if (!bridgeWindow || bridgeWindow.closed) {
+        clearInterval(hello);
+        renderConnectState('The NFC Bridge window was closed. Open it again to continue.');
+        return;
+      }
+      bridgeWindow.postMessage({ source: 'tabaja-nfc-app', type: 'hello' }, '*');
+      if (bridgeOnline) clearInterval(hello);
+    }, 500);
   }
 
-  function sendCommand(action, extra = {}) {
-    if (!bridgeWindow || bridgeWindow.closed) {
-      renderDisconnected();
-      addLog('Bridge window is not connected', 'Press Connect NFC Bridge first.', false);
-      return false;
+  function bridgeCommand(command, payload = {}) {
+    if (!bridgeWindow || bridgeWindow.closed || !bridgeOnline) {
+      renderConnectState('Connect the NFC Bridge before using Read, Write, or Verify.');
+      return Promise.reject(new Error('NFC Bridge is not connected.'));
     }
-    bridgeWindow.postMessage({ source: 'tabaja-nfc-app', action, ...extra }, BRIDGE_ORIGIN);
-    return true;
+    const requestId = `nfc-${Date.now()}-${++requestSequence}`;
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        pending.delete(requestId);
+        reject(new Error('NFC Bridge did not answer in time.'));
+      }, 8000);
+      pending.set(requestId, { resolve, reject, timeout });
+      bridgeWindow.postMessage({ source: 'tabaja-nfc-app', type: 'command', command, payload, requestId }, '*');
+    });
   }
 
-  function setBusy(value) {
-    busy = value;
+  function applyStatus(data) {
+    lastStatusAt = Date.now();
+    bridgeOnline = true;
+    cardPresent = !!data.cardPresent;
+    els.module.textContent = cardPresent ? 'CARD READY' : 'READER READY';
+    els.module.classList.add('ready');
+    els.module.classList.remove('standby');
+    els.reader.textContent = data.reader || 'ACR122U not connected';
+    els.card.textContent = cardPresent ? 'Card detected' : 'Place a card on reader';
+    els.uid.textContent = data.uid || '—';
+    els.hint.textContent = cardPresent
+      ? 'Reader and card are ready. Read, write, and verify directly from this page.'
+      : 'Bridge connected. Connect the reader and place one card in the center.';
+
+    if (els.auto.checked) {
+      if (!cardPresent) autoArmed = true;
+      if (cardPresent && !previousPresent && autoArmed && !busy) {
+        autoArmed = false;
+        setTimeout(writeUrl, 220);
+      }
+    }
+    previousPresent = cardPresent;
     setButtons();
   }
 
   window.addEventListener('message', event => {
-    if (event.origin !== BRIDGE_ORIGIN || !event.data || event.data.source !== 'tabaja-nfc-bridge') return;
-    const msg = event.data;
-    if (msg.type === 'status') {
-      renderStatus(msg.data || {});
+    const data = event.data || {};
+    if (data.source !== 'tabaja-nfc-bridge') return;
+    if (!bridgeWindow && event.source) bridgeWindow = event.source;
+
+    if (data.type === 'ready') {
+      bridgeOnline = true;
+      lastStatusAt = Date.now();
+      if (bridgeWindow) bridgeWindow.postMessage({ source: 'tabaja-nfc-app', type: 'status-request' }, '*');
       return;
     }
-    if (msg.type === 'result') {
-      setBusy(false);
-      const data = msg.data || {};
-      if (msg.action === 'read') {
-        if (data.url) els.url.value = data.url;
-        addLog('Card read successfully', data.url ? `URL: ${data.url}` : `UID: ${data.uid || 'unknown'}`);
-      } else if (msg.action === 'write') {
-        addLog(data.verified === false ? 'Link written — verify recommended' : 'Website link written and verified', `${data.url || els.url.value} · UID ${data.uid || ''}`, data.verified !== false);
-      } else if (msg.action === 'verify') {
-        addLog(data.match ? 'Card verified successfully' : 'Verification mismatch', data.match ? (data.url || '') : `Found: ${data.url || 'no URL'}`, !!data.match);
-      }
+    if (data.type === 'status') {
+      applyStatus(data.status || {});
       return;
     }
-    if (msg.type === 'error') {
-      setBusy(false);
-      addLog('Operation failed', msg.error || 'Unknown bridge error', false);
+    if (data.type === 'response') {
+      const item = pending.get(data.requestId);
+      if (!item) return;
+      clearTimeout(item.timeout);
+      pending.delete(data.requestId);
+      if (data.ok) item.resolve(data.result || {});
+      else item.reject(new Error(data.error || 'NFC Bridge operation failed.'));
     }
   });
 
-  function validateUrl() {
+  async function withBusy(fn) {
+    if (busy) return;
+    busy = true;
+    setButtons();
+    try { await fn(); }
+    catch (error) { addLog('Operation failed', error.message || String(error), false); }
+    finally { busy = false; setButtons(); }
+  }
+
+  async function readCard() {
+    await withBusy(async () => {
+      const data = await bridgeCommand('read');
+      if (data.url) els.url.value = data.url;
+      addLog('Card read successfully', data.url ? `URL: ${data.url}` : `UID: ${data.uid || 'unknown'}`);
+    });
+  }
+
+  async function writeUrl() {
     const url = els.url.value.trim();
     if (!/^https?:\/\//i.test(url)) {
       addLog('Invalid website link', 'The link must begin with https:// or http://', false);
-      return null;
+      return;
     }
-    return url;
+    await withBusy(async () => {
+      const data = await bridgeCommand('write', { url });
+      lastWrittenUrl = url;
+      const verified = normalizeUrl(data.url) === normalizeUrl(url);
+      addLog(verified ? 'Website link written and verified' : 'Website link written', `${data.url || url} · UID ${data.uid || ''}`, verified);
+    });
   }
 
-  els.read.addEventListener('click', () => {
-    if (sendCommand('read')) setBusy(true);
-  });
+  async function verifyCard() {
+    const expected = els.url.value.trim() || lastWrittenUrl;
+    await withBusy(async () => {
+      const data = await bridgeCommand('verify', { url: expected });
+      const match = data.match || normalizeUrl(data.url) === normalizeUrl(expected);
+      addLog(match ? 'Card verified successfully' : 'Verification mismatch', match ? (data.url || expected) : `Found: ${data.url || 'no URL'}`, match);
+    });
+  }
 
-  els.write.addEventListener('click', () => {
-    const url = validateUrl();
-    if (!url) return;
-    if (sendCommand('write', { url })) setBusy(true);
-  });
+  els.read.addEventListener('click', readCard);
+  els.write.addEventListener('click', writeUrl);
+  els.verify.addEventListener('click', verifyCard);
+  els.auto.addEventListener('change', () => { autoArmed = true; });
 
-  els.verify.addEventListener('click', () => {
-    const url = validateUrl();
-    if (!url) return;
-    if (sendCommand('verify', { url })) setBusy(true);
-  });
-
-  els.auto.addEventListener('change', () => {
-    const url = validateUrl();
-    if (!url && els.auto.checked) { els.auto.checked = false; return; }
-    sendCommand('setAuto', { enabled: els.auto.checked, url: url || els.url.value.trim() });
-    addLog(els.auto.checked ? 'Auto-write enabled' : 'Auto-write disabled', els.auto.checked ? 'Each new card will receive the same website link.' : 'Manual writing restored.');
-  });
-
-  els.url.addEventListener('change', () => {
-    if (bridgeOnline) sendCommand('setUrl', { url: els.url.value.trim() });
-  });
-
+  renderConnectState();
   setInterval(() => {
-    if (bridgeOnline && Date.now() - lastStatusAt > 3000) renderDisconnected();
-    if (bridgeWindow && bridgeWindow.closed && bridgeOnline) renderDisconnected();
-  }, 1000);
-
-  renderDisconnected();
+    if (bridgeOnline && Date.now() - lastStatusAt > 2500) {
+      renderConnectState('Connection to the NFC Bridge was lost. Open it again to continue.');
+    }
+    if (bridgeWindow && !bridgeWindow.closed) {
+      bridgeWindow.postMessage({ source: 'tabaja-nfc-app', type: 'status-request' }, '*');
+    }
+  }, 900);
 })();
