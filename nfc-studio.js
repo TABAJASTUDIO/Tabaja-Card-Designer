@@ -74,12 +74,18 @@
         }
       }
       previousPresent = cardPresent;
-    } catch (_) {
+    } catch (error) {
       bridgeOnline = false; cardPresent = false; previousPresent = false;
       els.module.textContent = 'BRIDGE OFFLINE';
       els.module.classList.remove('ready'); els.module.classList.add('standby');
       els.reader.textContent = 'Waiting for bridge'; els.card.textContent = 'No card detected'; els.uid.textContent = '—';
-      els.hint.innerHTML = 'Run <b>NFC-Bridge\\Start-NFC-Bridge.bat</b>. Keep the black PowerShell window open.';
+      els.hint.innerHTML = `
+        <div style="display:grid;gap:10px">
+          <span>Edge is blocking the installed PWA from reaching the local reader. Keep the bridge window open, then use the local NFC writer.</span>
+          <button id="nfcOpenLocalWriter" type="button" style="border:0;border-radius:10px;padding:11px 14px;font-weight:800;background:#173b7a;color:#fff;cursor:pointer">Open Local NFC Writer</button>
+        </div>`;
+      const openButton = document.getElementById('nfcOpenLocalWriter');
+      if (openButton) openButton.onclick = () => window.open('http://127.0.0.1:8765/studio', '_blank', 'noopener');
     }
     setButtons();
   }
