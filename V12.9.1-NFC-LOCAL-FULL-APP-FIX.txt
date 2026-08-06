@@ -1,0 +1,9 @@
+Tabaja Solution V12.9.1
+
+Real NFC integration fix:
+- The NFC buttons are no longer decorative.
+- Start-NFC-Bridge.bat opens the complete Tabaja application from http://127.0.0.1:8766/.
+- The full application and the NFC API now share the same local origin, avoiding Edge Private Network/CORS blocking.
+- Read NFC Card, Write Website Link, Verify Written Card and Auto-write operate directly from the main NFC Studio page.
+- The cloud/PWA copy shows a clear local-app requirement instead of pretending the buttons are connected.
+- No Card Designer, printing, batch, Zebra or template logic was changed.

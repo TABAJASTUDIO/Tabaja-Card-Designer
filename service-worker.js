@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'tabaja-v12-9-0-iframe-bridge';
+const CACHE_VERSION = 'tabaja-v12-9-1-local-integrated';
 const APP_SHELL = [
   './',
   './index.html',
@@ -10,7 +10,7 @@ const APP_SHELL = [
   './activity-store.js?v=12.7.0',
   './command-center.js?v=12.7.0',
   './pwa.js?v=12.7.0',
-  './nfc-studio.js?v=12.9.0-iframe-bridge',
+  './nfc-studio.js?v=12.9.1-local-integrated',
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',

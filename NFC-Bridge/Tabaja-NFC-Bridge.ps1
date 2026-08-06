@@ -179,6 +179,42 @@ function Send-Html($context, [int]$status, [string]$html) {
   $context.Response.OutputStream.Close()
 }
 
+
+function Get-ContentType([string]$Path) {
+  switch ([IO.Path]::GetExtension($Path).ToLowerInvariant()) {
+    '.html' { return 'text/html; charset=utf-8' }
+    '.css' { return 'text/css; charset=utf-8' }
+    '.js' { return 'application/javascript; charset=utf-8' }
+    '.json' { return 'application/json; charset=utf-8' }
+    '.webmanifest' { return 'application/manifest+json; charset=utf-8' }
+    '.png' { return 'image/png' }
+    '.jpg' { return 'image/jpeg' }
+    '.jpeg' { return 'image/jpeg' }
+    '.ico' { return 'image/x-icon' }
+    '.svg' { return 'image/svg+xml' }
+    '.txt' { return 'text/plain; charset=utf-8' }
+    default { return 'application/octet-stream' }
+  }
+}
+
+function Send-StaticFile($context, [string]$Root, [string]$RequestPath) {
+  $relative = [Uri]::UnescapeDataString($RequestPath.TrimStart('/'))
+  if ([string]::IsNullOrWhiteSpace($relative)) { $relative = 'index.html' }
+  $candidate = [IO.Path]::GetFullPath((Join-Path $Root $relative.Replace('/', [IO.Path]::DirectorySeparatorChar)))
+  $rootFull = [IO.Path]::GetFullPath($Root)
+  if (-not $candidate.StartsWith($rootFull, [StringComparison]::OrdinalIgnoreCase) -or -not (Test-Path -LiteralPath $candidate -PathType Leaf)) {
+    return $false
+  }
+  $bytes = [IO.File]::ReadAllBytes($candidate)
+  $context.Response.StatusCode = 200
+  $context.Response.ContentType = Get-ContentType $candidate
+  $context.Response.Headers.Set('Cache-Control', 'no-store')
+  $context.Response.ContentLength64 = $bytes.Length
+  $context.Response.OutputStream.Write($bytes, 0, $bytes.Length)
+  $context.Response.OutputStream.Close()
+  return $true
+}
+
 function Normalize-Url([string]$value) {
   if ([string]::IsNullOrWhiteSpace($value)) { return '' }
   try {
@@ -207,15 +243,14 @@ const $=id=>document.getElementById(id);let present=false,previous=false,busy=fa
 async function api(path,opt={}){const r=await fetch(path,{...opt,headers:{'Content-Type':'application/json',...(opt.headers||{})},cache:'no-store'});const d=await r.json();if(!r.ok||d.ok===false)throw new Error(d.error||'Bridge error');return d}
 function buttons(){const e=present&&!busy;$('read').disabled=!e;$('write').disabled=!e;$('verify').disabled=!e}
 function log(t,ok=true){$('log').textContent=(ok?'✓ ':'! ')+t+' — '+new Date().toLocaleTimeString()}
-function controllerWindow(){if(window.parent&&window.parent!==window)return window.parent;if(window.opener&&!window.opener.closed)return window.opener;return null}
-function sendParent(message,target='*'){const c=controllerWindow();if(c)c.postMessage({channel:'tabaja-nfc-bridge',...message},target)}
+function sendParent(message,target='*'){if(window.opener&&!window.opener.closed)window.opener.postMessage({channel:'tabaja-nfc-bridge',...message},target)}
 async function status(push=true){try{const d=await api('/status');present=!!d.cardPresent;$('status').textContent=present?'CARD READY':'READER READY';$('status').className='status ok';$('reader').textContent='Reader: '+(d.reader||'Not connected');$('card').textContent=present?'Card detected':'Place one card in the center';$('uid').textContent=d.uid?'UID: '+d.uid:'';if(push)sendParent({type:'status',data:d});if($('auto').checked){if(!present)armed=true;if(present&&!previous&&armed&&!busy){armed=false;setTimeout(write,180)}}previous=present;return d}catch(e){present=false;$('status').textContent='BRIDGE ERROR';$('status').className='status bad';$('reader').textContent=e.message;throw e}finally{buttons()}}
 async function run(fn){if(busy)return;busy=true;buttons();try{return await fn()}catch(e){log(e.message,false);throw e}finally{busy=false;buttons();status().catch(()=>{})}}
 async function read(){return run(async()=>{const d=await api('/read');if(d.url)$('url').value=d.url;log(d.url?'Read: '+d.url:'Card UID: '+d.uid);return d})}
 async function write(customUrl){const u=(customUrl||$('url').value).trim();if(!/^https?:\/\//i.test(u)){const e=new Error('Link must start with https:// or http://');log(e.message,false);throw e}$('url').value=u;return run(async()=>{const d=await api('/write',{method:'POST',body:JSON.stringify({url:u})});log('Written and verified: '+d.url);return d})}
 async function verify(customUrl){const u=(customUrl||$('url').value).trim();return run(async()=>{const d=await api('/verify',{method:'POST',body:JSON.stringify({url:u})});log(d.match?'Verified: '+d.url:'Mismatch. Found: '+(d.url||'no URL'),d.match);return d})}
 $('read').onclick=()=>read().catch(()=>{});$('write').onclick=()=>write().catch(()=>{});$('verify').onclick=()=>verify().catch(()=>{});$('auto').onchange=()=>armed=true;
-window.addEventListener('message',async event=>{const m=event.data;const c=controllerWindow();if(!c||event.source!==c||!m||m.channel!=='tabaja-nfc-command')return;try{let data;if(m.action==='status')data=await status(false);else if(m.action==='read')data=await read();else if(m.action==='write')data=await write(m.payload&&m.payload.url);else if(m.action==='verify')data=await verify(m.payload&&m.payload.url);else throw new Error('Unknown NFC command');event.source.postMessage({channel:'tabaja-nfc-bridge',type:'response',id:m.id,ok:true,data},event.origin)}catch(e){event.source.postMessage({channel:'tabaja-nfc-bridge',type:'response',id:m.id,ok:false,error:e.message||String(e)},event.origin)}});
+window.addEventListener('message',async event=>{const m=event.data;if(event.source!==window.opener||!m||m.channel!=='tabaja-nfc-command')return;try{let data;if(m.action==='status')data=await status(false);else if(m.action==='read')data=await read();else if(m.action==='write')data=await write(m.payload&&m.payload.url);else if(m.action==='verify')data=await verify(m.payload&&m.payload.url);else throw new Error('Unknown NFC command');event.source.postMessage({channel:'tabaja-nfc-bridge',type:'response',id:m.id,ok:true,data},event.origin)}catch(e){event.source.postMessage({channel:'tabaja-nfc-bridge',type:'response',id:m.id,ok:false,error:e.message||String(e)},event.origin)}});
 sendParent({type:'ready'});status().catch(()=>{});setInterval(()=>status().catch(()=>{}),700);
 </script></body></html>
 '@
@@ -232,13 +267,15 @@ function Send-Json($context, [int]$status, $obj) {
   $context.Response.OutputStream.Close()
 }
 
+$appRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
+
 $listener=New-Object Net.HttpListener
 $listener.Prefixes.Add('http://127.0.0.1:8766/')
 $listener.Start()
 Write-Host 'Tabaja NFC Bridge is running.' -ForegroundColor Green
 Write-Host 'Reader: ACR122U via Windows PC/SC' -ForegroundColor Cyan
-Write-Host 'Keep this window open. Open Tabaja Solution > NFC Studio.'
-Write-Host 'Local writer: http://127.0.0.1:8766/studio' -ForegroundColor Yellow
+Write-Host 'Keep this window open. The complete Tabaja app runs locally.'
+Write-Host 'Local Tabaja app: http://127.0.0.1:8766/' -ForegroundColor Yellow
 
 while($listener.IsListening){
   $ctx=$listener.GetContext()
@@ -254,7 +291,6 @@ while($listener.IsListening){
     $body=@{}
     if($ctx.Request.HasEntityBody){ $reader=New-Object IO.StreamReader($ctx.Request.InputStream,$ctx.Request.ContentEncoding); $raw=$reader.ReadToEnd(); if($raw){$body=$raw|ConvertFrom-Json} }
     switch($path){
-      '/' { Send-Html $ctx 200 (Get-LocalStudioHtml) }
       '/studio' { Send-Html $ctx 200 (Get-LocalStudioHtml) }
       '/status' { Send-Json $ctx 200 (Get-Status) }
       '/read' {
@@ -267,7 +303,7 @@ while($listener.IsListening){
       '/verify' {
         $expected=[string]$body.url; $s=Open-Card; try { $uid=Get-Uid $s; $url=Parse-NdefUri (Read-Pages $s 4 256); Send-Json $ctx 200 @{ok=$true;uid=$uid;url=$url;match=((Normalize-Url $url) -eq (Normalize-Url $expected))} } finally { Close-Card $s }
       }
-      default { Send-Json $ctx 404 @{ok=$false;error='Unknown endpoint'} }
+      default { if (-not (Send-StaticFile $ctx $appRoot $path)) { Send-Json $ctx 404 @{ok=$false;error='Unknown endpoint'} } }
     }
   } catch { try { Send-Json $ctx 500 @{ok=$false;error=$_.Exception.Message} } catch {} }
 }
