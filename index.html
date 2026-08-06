@@ -347,8 +347,27 @@
     </section>
 
     <section id="nfcWorkspace" class="module-workspace">
-      <div class="module-head"><div><span class="v8-kicker">SMART IDENTITY</span><h2>NFC Studio</h2><p>Dedicated workspace for ACS ACR122U card reading and smart identity writing.</p></div><span class="module-status standby">READER STANDBY</span></div>
-      <div class="nfc-layout"><article class="nfc-reader-card"><div class="nfc-visual"><span>NFC</span></div><h3>ACS ACR122U</h3><p>Connect the reader, place an NFC card on it, then choose an operation.</p><div class="nfc-device-line"><span>Reader status</span><b>Waiting for device</b></div><div class="nfc-device-line"><span>Card status</span><b>No card detected</b></div></article><article class="nfc-actions-card"><span>QUICK OPERATIONS</span><h3>Card actions</h3><button type="button" disabled>Read NFC Card</button><button type="button" class="primary" disabled>Write Identity Link</button><button type="button" disabled>Verify Written Card</button><p>Hardware actions stay disabled until the local NFC reader bridge is connected.</p></article><article class="nfc-log-card"><span>ACTIVITY LOG</span><h3>Recent NFC operations</h3><div class="cc-empty-row"><span>◇</span><div><b>No NFC operations yet</b><small>Read and write activity will appear here.</small></div></div></article></div>
+      <div class="module-head"><div><span class="v8-kicker">SMART IDENTITY</span><h2>NFC Studio</h2><p>Dedicated workspace for ACS ACR122U card reading and website-link writing.</p></div><span id="nfcModuleStatus" class="module-status standby">BRIDGE OFFLINE</span></div>
+      <div class="nfc-layout">
+        <article class="nfc-reader-card">
+          <div class="nfc-visual"><span>NFC</span></div><h3>ACS ACR122U</h3>
+          <p>Start the local bridge, connect the reader, then place one NFC card in the center.</p>
+          <div class="nfc-device-line"><span>Reader status</span><b id="nfcReaderStatus">Waiting for bridge</b></div>
+          <div class="nfc-device-line"><span>Card status</span><b id="nfcCardStatus">No card detected</b></div>
+          <div class="nfc-device-line"><span>Card UID</span><b id="nfcCardUid">—</b></div>
+        </article>
+        <article class="nfc-actions-card">
+          <span>QUICK OPERATIONS</span><h3>Website link</h3>
+          <label for="nfcUrlInput" style="display:block;font-size:12px;font-weight:800;margin-bottom:7px">URL to write</label>
+          <input id="nfcUrlInput" type="url" value="https://www.dtasl.co" placeholder="https://www.example.com" style="width:100%;box-sizing:border-box;padding:13px;border:1px solid #d8e0ec;border-radius:12px;margin-bottom:8px">
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;margin:8px 0 12px"><input id="nfcAutoWrite" type="checkbox"> Auto-write the same link when the next card is placed</label>
+          <button id="nfcReadCardBtn" type="button" disabled>Read NFC Card</button>
+          <button id="nfcWriteCardBtn" type="button" class="primary" disabled>Write Website Link</button>
+          <button id="nfcVerifyCardBtn" type="button" disabled>Verify Written Card</button>
+          <p id="nfcBridgeHint">Run <b>NFC-Bridge\Start-NFC-Bridge.bat</b>. Keep the black PowerShell window open while writing cards.</p>
+        </article>
+        <article class="nfc-log-card"><span>ACTIVITY LOG</span><h3>Recent NFC operations</h3><div id="nfcActivityLog" class="cc-empty-row"><span>◇</span><div><b>No NFC operations yet</b><small>Read and write activity will appear here.</small></div></div></article>
+      </div>
     </section>
 
     <section id="employeeWorkspace" class="employee-workspace" aria-labelledby="employeeWorkspaceTitle">
@@ -683,6 +702,7 @@
   <script src="command-center.js?v=12.7.0"></script>
   
   <div id="appToast" class="app-toast" role="status" aria-live="polite"></div>
+<script src="nfc-studio.js?v=12.8-nfc-bridge-1"></script>
 <script src="pwa.js?v=12.7.0"></script>
 </body>
 </html>
