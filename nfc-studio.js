@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const BRIDGE = 'http://127.0.0.1:8765';
+  const LOCAL_WRITER = 'http://127.0.0.1:8765/studio';
   const $ = id => document.getElementById(id);
   const els = {
     module: $('nfcModuleStatus'), reader: $('nfcReaderStatus'), card: $('nfcCardStatus'), uid: $('nfcCardUid'),
@@ -10,125 +10,41 @@
   };
   if (!els.module) return;
 
-  let bridgeOnline = false;
-  let cardPresent = false;
-  let previousPresent = false;
-  let autoArmed = true;
-  let busy = false;
-  let lastWrittenUrl = '';
-
-  const setButtons = () => {
-    const enabled = bridgeOnline && cardPresent && !busy;
-    els.read.disabled = !enabled;
-    els.write.disabled = !enabled;
-    els.verify.disabled = !enabled;
+  // Chromium blocks an HTTPS GitHub/PWA page from directly calling a local HTTP
+  // loopback service on some installations. The reliable production workflow is
+  // therefore to launch the same-origin Local NFC Writer served by the bridge.
+  // This file intentionally does not poll 127.0.0.1, avoiding repeated CORS/PNA
+  // errors and leaving every other platform module untouched.
+  const disableRemoteActions = () => {
+    els.read.disabled = true;
+    els.write.disabled = true;
+    els.verify.disabled = true;
+    els.auto.disabled = true;
   };
 
-  const addLog = (title, detail = '', ok = true) => {
-    const time = new Date().toLocaleTimeString();
-    els.log.className = 'nfc-log-entry';
-    els.log.innerHTML = `<span style="display:inline-grid;place-items:center;width:32px;height:32px;border-radius:50%;background:${ok ? '#eaf8f1' : '#fff1f1'};color:${ok ? '#087443' : '#b42318'}">${ok ? '✓' : '!'}</span><div><b>${title}</b><small style="display:block;margin-top:4px;color:#7c8796">${detail}${detail ? ' · ' : ''}${time}</small></div>`;
+  const openLocalWriter = () => {
+    const win = window.open(LOCAL_WRITER, '_blank');
+    if (!win) window.location.href = LOCAL_WRITER;
   };
 
-  async function request(path, options = {}) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 2500);
-    try {
-      const requestOptions = {
-        ...options,
-        mode: 'cors',
-        headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
-        signal: controller.signal,
-        cache: 'no-store'
-      };
+  els.module.textContent = 'LOCAL WRITER';
+  els.module.classList.remove('standby');
+  els.module.classList.add('ready');
+  els.reader.textContent = 'ACR122U via local bridge';
+  els.card.textContent = 'Open the local writer to detect a card';
+  els.uid.textContent = 'Shown in Local Writer';
+  disableRemoteActions();
 
-      // Chromium Local Network Access: explicitly declare that this request targets
-      // the computer's loopback address. Older browsers safely ignore this option.
-      requestOptions.targetAddressSpace = 'loopback';
+  els.hint.innerHTML = `
+    <div style="display:grid;gap:10px">
+      <span><b>Step 1:</b> Run <b>NFC-Bridge\\Start-NFC-Bridge.bat</b> and keep the black window open.</span>
+      <button id="nfcOpenLocalWriter" type="button" style="border:0;border-radius:10px;padding:12px 14px;font-weight:800;background:#173b7a;color:#fff;cursor:pointer">Open Local NFC Writer</button>
+      <small style="color:#667085">The local writer reads, writes, verifies and supports Auto-write without Edge blocking the reader.</small>
+    </div>`;
 
-      const response = await fetch(BRIDGE + path, requestOptions);
-      const data = await response.json();
-      if (!response.ok || data.ok === false) throw new Error(data.error || `Bridge error ${response.status}`);
-      return data;
-    } finally { clearTimeout(timer); }
-  }
+  const openButton = document.getElementById('nfcOpenLocalWriter');
+  if (openButton) openButton.addEventListener('click', openLocalWriter);
 
-  async function refreshStatus() {
-    try {
-      const data = await request('/status');
-      bridgeOnline = true;
-      cardPresent = !!data.cardPresent;
-      els.module.textContent = cardPresent ? 'CARD READY' : 'READER READY';
-      els.module.classList.toggle('ready', true);
-      els.module.classList.toggle('standby', false);
-      els.reader.textContent = data.reader || 'ACR122U connected';
-      els.card.textContent = cardPresent ? 'Card detected' : 'Place a card on reader';
-      els.uid.textContent = data.uid || '—';
-      els.hint.innerHTML = cardPresent ? 'Reader and card are ready.' : 'Reader connected. Place one card in the center.';
-
-      if (els.auto.checked) {
-        if (!cardPresent) autoArmed = true;
-        if (cardPresent && !previousPresent && autoArmed && !busy) {
-          autoArmed = false;
-          setTimeout(writeUrl, 180);
-        }
-      }
-      previousPresent = cardPresent;
-    } catch (error) {
-      bridgeOnline = false; cardPresent = false; previousPresent = false;
-      els.module.textContent = 'BRIDGE OFFLINE';
-      els.module.classList.remove('ready'); els.module.classList.add('standby');
-      els.reader.textContent = 'Waiting for bridge'; els.card.textContent = 'No card detected'; els.uid.textContent = '—';
-      els.hint.innerHTML = `
-        <div style="display:grid;gap:10px">
-          <span>Edge is blocking the installed PWA from reaching the local reader. Keep the bridge window open, then use the local NFC writer.</span>
-          <button id="nfcOpenLocalWriter" type="button" style="border:0;border-radius:10px;padding:11px 14px;font-weight:800;background:#173b7a;color:#fff;cursor:pointer">Open Local NFC Writer</button>
-        </div>`;
-      const openButton = document.getElementById('nfcOpenLocalWriter');
-      if (openButton) openButton.onclick = () => window.open('http://127.0.0.1:8765/studio', '_blank', 'noopener');
-    }
-    setButtons();
-  }
-
-  async function withBusy(fn) {
-    if (busy) return;
-    busy = true; setButtons();
-    try { await fn(); } catch (e) { addLog('Operation failed', e.message || String(e), false); }
-    finally { busy = false; setButtons(); refreshStatus(); }
-  }
-
-  async function readCard() {
-    await withBusy(async () => {
-      const data = await request('/read');
-      addLog('Card read successfully', data.url ? `URL: ${data.url}` : `UID: ${data.uid || 'unknown'}`);
-      if (data.url) els.url.value = data.url;
-    });
-  }
-
-  async function writeUrl() {
-    const url = els.url.value.trim();
-    if (!/^https?:\/\//i.test(url)) {
-      addLog('Invalid website link', 'The link must begin with https:// or http://', false); return;
-    }
-    await withBusy(async () => {
-      const data = await request('/write', { method: 'POST', body: JSON.stringify({ url }) });
-      lastWrittenUrl = url;
-      addLog('Website link written', `${url} · UID ${data.uid || ''}`);
-    });
-  }
-
-  async function verifyCard() {
-    const expected = els.url.value.trim() || lastWrittenUrl;
-    await withBusy(async () => {
-      const data = await request('/verify', { method: 'POST', body: JSON.stringify({ url: expected }) });
-      addLog(data.match ? 'Card verified successfully' : 'Verification mismatch', data.match ? data.url : `Found: ${data.url || 'no URL'}`, !!data.match);
-    });
-  }
-
-  els.read.addEventListener('click', readCard);
-  els.write.addEventListener('click', writeUrl);
-  els.verify.addEventListener('click', verifyCard);
-  els.auto.addEventListener('change', () => { autoArmed = true; });
-  refreshStatus();
-  setInterval(refreshStatus, 900);
+  els.log.className = 'nfc-log-entry';
+  els.log.innerHTML = '<span style="display:inline-grid;place-items:center;width:32px;height:32px;border-radius:50%;background:#eaf2ff;color:#173b7a">↗</span><div><b>Local NFC Writer ready</b><small style="display:block;margin-top:4px;color:#7c8796">Start the bridge, then press Open Local NFC Writer.</small></div>';
 })();
