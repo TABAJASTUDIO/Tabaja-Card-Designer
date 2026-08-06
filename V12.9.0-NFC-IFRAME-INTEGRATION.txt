@@ -1,0 +1,7 @@
+Tabaja Solution V12.9.0 — NFC iframe integration
+
+- Loads the localhost NFC bridge inside a hidden iframe.
+- Read, Write, Verify, status and Auto-write operate from the main NFC Studio page.
+- No popup/window.opener dependency.
+- No direct fetch from GitHub/PWA to localhost.
+- Changes are limited to NFC Studio, NFC Bridge and cache version.

@@ -1,4 +1,4 @@
-$ErrorActionPreference = 'Stop'
+﻿$ErrorActionPreference = 'Stop'
 
 Add-Type -TypeDefinition @"
 using System;
@@ -207,14 +207,15 @@ const $=id=>document.getElementById(id);let present=false,previous=false,busy=fa
 async function api(path,opt={}){const r=await fetch(path,{...opt,headers:{'Content-Type':'application/json',...(opt.headers||{})},cache:'no-store'});const d=await r.json();if(!r.ok||d.ok===false)throw new Error(d.error||'Bridge error');return d}
 function buttons(){const e=present&&!busy;$('read').disabled=!e;$('write').disabled=!e;$('verify').disabled=!e}
 function log(t,ok=true){$('log').textContent=(ok?'✓ ':'! ')+t+' — '+new Date().toLocaleTimeString()}
-function sendParent(message,target='*'){if(window.opener&&!window.opener.closed)window.opener.postMessage({channel:'tabaja-nfc-bridge',...message},target)}
+function controllerWindow(){if(window.parent&&window.parent!==window)return window.parent;if(window.opener&&!window.opener.closed)return window.opener;return null}
+function sendParent(message,target='*'){const c=controllerWindow();if(c)c.postMessage({channel:'tabaja-nfc-bridge',...message},target)}
 async function status(push=true){try{const d=await api('/status');present=!!d.cardPresent;$('status').textContent=present?'CARD READY':'READER READY';$('status').className='status ok';$('reader').textContent='Reader: '+(d.reader||'Not connected');$('card').textContent=present?'Card detected':'Place one card in the center';$('uid').textContent=d.uid?'UID: '+d.uid:'';if(push)sendParent({type:'status',data:d});if($('auto').checked){if(!present)armed=true;if(present&&!previous&&armed&&!busy){armed=false;setTimeout(write,180)}}previous=present;return d}catch(e){present=false;$('status').textContent='BRIDGE ERROR';$('status').className='status bad';$('reader').textContent=e.message;throw e}finally{buttons()}}
 async function run(fn){if(busy)return;busy=true;buttons();try{return await fn()}catch(e){log(e.message,false);throw e}finally{busy=false;buttons();status().catch(()=>{})}}
 async function read(){return run(async()=>{const d=await api('/read');if(d.url)$('url').value=d.url;log(d.url?'Read: '+d.url:'Card UID: '+d.uid);return d})}
 async function write(customUrl){const u=(customUrl||$('url').value).trim();if(!/^https?:\/\//i.test(u)){const e=new Error('Link must start with https:// or http://');log(e.message,false);throw e}$('url').value=u;return run(async()=>{const d=await api('/write',{method:'POST',body:JSON.stringify({url:u})});log('Written and verified: '+d.url);return d})}
 async function verify(customUrl){const u=(customUrl||$('url').value).trim();return run(async()=>{const d=await api('/verify',{method:'POST',body:JSON.stringify({url:u})});log(d.match?'Verified: '+d.url:'Mismatch. Found: '+(d.url||'no URL'),d.match);return d})}
 $('read').onclick=()=>read().catch(()=>{});$('write').onclick=()=>write().catch(()=>{});$('verify').onclick=()=>verify().catch(()=>{});$('auto').onchange=()=>armed=true;
-window.addEventListener('message',async event=>{const m=event.data;if(event.source!==window.opener||!m||m.channel!=='tabaja-nfc-command')return;try{let data;if(m.action==='status')data=await status(false);else if(m.action==='read')data=await read();else if(m.action==='write')data=await write(m.payload&&m.payload.url);else if(m.action==='verify')data=await verify(m.payload&&m.payload.url);else throw new Error('Unknown NFC command');event.source.postMessage({channel:'tabaja-nfc-bridge',type:'response',id:m.id,ok:true,data},event.origin)}catch(e){event.source.postMessage({channel:'tabaja-nfc-bridge',type:'response',id:m.id,ok:false,error:e.message||String(e)},event.origin)}});
+window.addEventListener('message',async event=>{const m=event.data;const c=controllerWindow();if(!c||event.source!==c||!m||m.channel!=='tabaja-nfc-command')return;try{let data;if(m.action==='status')data=await status(false);else if(m.action==='read')data=await read();else if(m.action==='write')data=await write(m.payload&&m.payload.url);else if(m.action==='verify')data=await verify(m.payload&&m.payload.url);else throw new Error('Unknown NFC command');event.source.postMessage({channel:'tabaja-nfc-bridge',type:'response',id:m.id,ok:true,data},event.origin)}catch(e){event.source.postMessage({channel:'tabaja-nfc-bridge',type:'response',id:m.id,ok:false,error:e.message||String(e)},event.origin)}});
 sendParent({type:'ready'});status().catch(()=>{});setInterval(()=>status().catch(()=>{}),700);
 </script></body></html>
 '@
