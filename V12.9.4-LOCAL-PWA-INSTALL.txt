@@ -1,0 +1,15 @@
+Tabaja Solution V12.9.4 — Local PWA Final
+
+1. Run NFC-Bridge\Start-NFC-Bridge.bat.
+2. Edge opens http://127.0.0.1:8766/.
+3. Wait a few seconds for PWA registration.
+4. In Edge: ... > Apps > Install Tabaja Solution.
+5. This is a NEW local PWA identity (not the old GitHub PWA).
+
+Fixed in this build:
+- NFC remains same-origin and hardware-enabled.
+- FILE / EXPORT / PRINT ghost rectangles are removed from NFC Studio.
+- Edge Window Controls Overlay is detected and content is moved below it, protecting Cloud / Logout.
+- Verify treats https://www.dtasl.co, www.dtasl.co and dtasl.co as the same effective URL.
+
+No Zebra / Card Designer / Batch print logic was changed.

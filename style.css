@@ -589,3 +589,35 @@ body[data-v8-view="nfc"] #designerTopActions{display:none!important}
 /* When installed as a regular standalone PWA the browser title bar stays outside
    the document instead of overlaying Cloud / Logout. */
 html[data-pwa="installed"] .ts-header{top:0!important}
+
+
+/* ===== V12.9.4 Local PWA final layout fixes ===== */
+/* NFC Studio has no designer toolbar. Remove the FILE / EXPORT / PRINT shells themselves,
+   not only their child buttons. */
+body[data-v8-view="nfc"] #designerTopActions,
+body[data-v8-view="nfc"] .ts-header > #designerTopActions,
+body[data-v8-view="nfc"] .ts-toolbar#designerTopActions {
+  display:none!important;
+  visibility:hidden!important;
+  height:0!important;
+  min-height:0!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  overflow:hidden!important;
+}
+
+/* If Edge exposes Window Controls Overlay, move the document header below it.
+   This protects Cloud / Logout / Settings instead of letting the black title bar cover them. */
+html.wco-visible body { padding-top:var(--wco-height, 0px)!important; }
+html.wco-visible .ts-header { top:var(--wco-height, 0px)!important; }
+html.wco-visible .v8-nav { padding-top:calc(112px + var(--wco-height, 0px))!important; }
+@media(max-width:850px){
+  html.wco-visible .v8-nav{padding-top:9px!important}
+}
+
+/* Standard standalone PWA: browser chrome stays outside the document; no artificial overlay. */
+@media (display-mode: standalone) {
+  html:not(.wco-visible) body { padding-top:0!important; }
+  html:not(.wco-visible) .ts-header { top:0!important; }
+}

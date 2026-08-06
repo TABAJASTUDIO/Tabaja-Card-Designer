@@ -1,16 +1,16 @@
-const CACHE_VERSION = 'tabaja-v12-9-3-local-pwa-final';
+const CACHE_VERSION = 'tabaja-v12-9-4-local-pwa-final';
 const APP_SHELL = [
   './',
   './index.html',
-  './style.css?v=12.9.3-pwa-polish',
+  './style.css?v=12.9.4-local-pwa-final',
   './app.js?v=12.7.0',
   './cloud.js?v=12.7.0',
   './v8-ui.js?v=12.7.0',
   './employee-manager.js?v=12.7.0',
   './activity-store.js?v=12.7.0',
   './command-center.js?v=12.7.0',
-  './pwa.js?v=12.9.3-local-pwa',
-  './nfc-studio.js?v=12.9.3-local-pwa',
+  './pwa.js?v=12.9.4-local-pwa-final',
+  './nfc-studio.js?v=12.9.4-local-pwa-final',
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',

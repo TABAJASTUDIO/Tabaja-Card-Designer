@@ -29,18 +29,12 @@
   let lastWrittenUrl = '';
 
   const normalizeUrl = value => {
-    try {
-      const u = new URL(value);
-      const host = u.hostname.replace(/^www\./i, '').toLowerCase();
-      const path = u.pathname === '/' ? '' : u.pathname.replace(/\/$/, '');
-      return `${u.protocol.toLowerCase()}//${host}${path}${u.search}${u.hash}`;
-    } catch (_) {
-      return String(value || '')
-        .trim()
-        .replace(/^https?:\/\/(?:www\.)?/i, '')
-        .replace(/\/$/, '')
-        .toLowerCase();
-    }
+    const raw = String(value || '').trim().toLowerCase();
+    if (!raw) return '';
+    return raw
+      .replace(/^https?:\/\//i, '')
+      .replace(/^www\./i, '')
+      .replace(/\/$/, '');
   };
 
   const addLog = (title, detail = '', ok = true) => {

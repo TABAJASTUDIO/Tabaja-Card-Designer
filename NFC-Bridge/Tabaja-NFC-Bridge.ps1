@@ -281,7 +281,7 @@ Write-Host 'Reader: ACR122U via Windows PC/SC' -ForegroundColor Cyan
 Write-Host 'Keep this window open while using NFC.'
 Write-Host 'Local Tabaja app: http://127.0.0.1:8766/' -ForegroundColor Yellow
 Start-Sleep -Milliseconds 300
-try { Start-Process 'http://127.0.0.1:8766/?nfc-local=1' } catch {}
+try { Start-Process 'http://127.0.0.1:8766/?source=local-pwa-v12.9.4&nfc-local=1' } catch {}
 
 while($listener.IsListening){
   $ctx=$listener.GetContext()

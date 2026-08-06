@@ -10,6 +10,21 @@
   const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
   document.documentElement.dataset.pwa = standalone ? 'installed' : 'browser';
 
+  // Edge may keep Window Controls Overlay enabled for an installed app.
+  // Reserve the overlay height so Cloud / Logout and the account controls are never covered.
+  const applyWindowControlsInset = () => {
+    const wco = navigator.windowControlsOverlay;
+    const visible = !!(wco && wco.visible);
+    document.documentElement.classList.toggle('wco-visible', visible);
+    let height = 0;
+    if (visible) {
+      try { height = Math.max(0, Math.round(wco.getTitlebarAreaRect().height || 0)); } catch (_) {}
+    }
+    document.documentElement.style.setProperty('--wco-height', `${height}px`);
+  };
+  applyWindowControlsInset();
+  navigator.windowControlsOverlay?.addEventListener?.('geometrychange', applyWindowControlsInset);
+
   function setInstallState(text, enabled) {
     if (!installButton) return;
     installButton.textContent = text;

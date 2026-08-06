@@ -1,12 +1,12 @@
 {
-  "id": "./",
-  "name": "Tabaja Solution — Smart Identity Platform",
+  "id": "/tabaja-solution-local-v12-9-4",
+  "name": "Tabaja Solution — Smart Identity Platform (Local)",
   "short_name": "Tabaja Solution",
   "description": "Professional identity, card design, NFC and Zebra printing platform.",
   "lang": "en",
   "dir": "ltr",
-  "start_url": "./?source=pwa",
-  "scope": "./",
+  "start_url": "/?source=local-pwa-v12.9.4",
+  "scope": "/",
   "display": "standalone",
   "display_override": [
     "standalone"
@@ -39,5 +39,11 @@
       "type": "image/png",
       "purpose": "maskable"
     }
-  ]
+  ],
+  "launch_handler": {
+    "client_mode": [
+      "navigate-existing",
+      "auto"
+    ]
+  }
 }
