@@ -1,4 +1,5 @@
-﻿$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = 'Stop'
+$ProjectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 
 Add-Type -TypeDefinition @"
 using System;
@@ -179,42 +180,6 @@ function Send-Html($context, [int]$status, [string]$html) {
   $context.Response.OutputStream.Close()
 }
 
-
-function Get-ContentType([string]$Path) {
-  switch ([IO.Path]::GetExtension($Path).ToLowerInvariant()) {
-    '.html' { return 'text/html; charset=utf-8' }
-    '.css' { return 'text/css; charset=utf-8' }
-    '.js' { return 'application/javascript; charset=utf-8' }
-    '.json' { return 'application/json; charset=utf-8' }
-    '.webmanifest' { return 'application/manifest+json; charset=utf-8' }
-    '.png' { return 'image/png' }
-    '.jpg' { return 'image/jpeg' }
-    '.jpeg' { return 'image/jpeg' }
-    '.ico' { return 'image/x-icon' }
-    '.svg' { return 'image/svg+xml' }
-    '.txt' { return 'text/plain; charset=utf-8' }
-    default { return 'application/octet-stream' }
-  }
-}
-
-function Send-StaticFile($context, [string]$Root, [string]$RequestPath) {
-  $relative = [Uri]::UnescapeDataString($RequestPath.TrimStart('/'))
-  if ([string]::IsNullOrWhiteSpace($relative)) { $relative = 'index.html' }
-  $candidate = [IO.Path]::GetFullPath((Join-Path $Root $relative.Replace('/', [IO.Path]::DirectorySeparatorChar)))
-  $rootFull = [IO.Path]::GetFullPath($Root)
-  if (-not $candidate.StartsWith($rootFull, [StringComparison]::OrdinalIgnoreCase) -or -not (Test-Path -LiteralPath $candidate -PathType Leaf)) {
-    return $false
-  }
-  $bytes = [IO.File]::ReadAllBytes($candidate)
-  $context.Response.StatusCode = 200
-  $context.Response.ContentType = Get-ContentType $candidate
-  $context.Response.Headers.Set('Cache-Control', 'no-store')
-  $context.Response.ContentLength64 = $bytes.Length
-  $context.Response.OutputStream.Write($bytes, 0, $bytes.Length)
-  $context.Response.OutputStream.Close()
-  return $true
-}
-
 function Normalize-Url([string]$value) {
   if ([string]::IsNullOrWhiteSpace($value)) { return '' }
   try {
@@ -256,6 +221,49 @@ sendParent({type:'ready'});status().catch(()=>{});setInterval(()=>status().catch
 '@
 }
 
+
+function Get-MimeType([string]$path) {
+  switch ([IO.Path]::GetExtension($path).ToLowerInvariant()) {
+    '.html' { 'text/html; charset=utf-8' }
+    '.css' { 'text/css; charset=utf-8' }
+    '.js' { 'application/javascript; charset=utf-8' }
+    '.json' { 'application/json; charset=utf-8' }
+    '.webmanifest' { 'application/manifest+json; charset=utf-8' }
+    '.png' { 'image/png' }
+    '.jpg' { 'image/jpeg' }
+    '.jpeg' { 'image/jpeg' }
+    '.gif' { 'image/gif' }
+    '.svg' { 'image/svg+xml' }
+    '.ico' { 'image/x-icon' }
+    '.txt' { 'text/plain; charset=utf-8' }
+    default { 'application/octet-stream' }
+  }
+}
+
+function Send-StaticFile($context, [string]$requestPath) {
+  $relative = [Uri]::UnescapeDataString($requestPath).TrimStart('/')
+  if ([string]::IsNullOrWhiteSpace($relative)) { $relative = 'index.html' }
+  $relative = $relative -replace '/', [IO.Path]::DirectorySeparatorChar
+  $fullPath = [IO.Path]::GetFullPath((Join-Path $ProjectRoot $relative))
+  if (-not $fullPath.StartsWith($ProjectRoot, [StringComparison]::OrdinalIgnoreCase)) {
+    Send-Json $context 403 @{ok=$false;error='Forbidden'}
+    return
+  }
+  if ([IO.Directory]::Exists($fullPath)) { $fullPath = Join-Path $fullPath 'index.html' }
+  if (-not [IO.File]::Exists($fullPath)) {
+    Send-Json $context 404 @{ok=$false;error='File not found'}
+    return
+  }
+  [byte[]]$bytes = [IO.File]::ReadAllBytes($fullPath)
+  $context.Response.StatusCode = 200
+  $context.Response.ContentType = Get-MimeType $fullPath
+  $context.Response.Headers.Set('Cache-Control','no-store, no-cache, must-revalidate')
+  $context.Response.Headers.Set('Pragma','no-cache')
+  $context.Response.ContentLength64 = $bytes.Length
+  $context.Response.OutputStream.Write($bytes,0,$bytes.Length)
+  $context.Response.OutputStream.Close()
+}
+
 function Send-Json($context, [int]$status, $obj) {
   $json=$obj|ConvertTo-Json -Compress -Depth 5
   $bytes=[Text.Encoding]::UTF8.GetBytes($json)
@@ -267,15 +275,15 @@ function Send-Json($context, [int]$status, $obj) {
   $context.Response.OutputStream.Close()
 }
 
-$appRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
-
 $listener=New-Object Net.HttpListener
 $listener.Prefixes.Add('http://127.0.0.1:8766/')
 $listener.Start()
 Write-Host 'Tabaja NFC Bridge is running.' -ForegroundColor Green
 Write-Host 'Reader: ACR122U via Windows PC/SC' -ForegroundColor Cyan
-Write-Host 'Keep this window open. The complete Tabaja app runs locally.'
+Write-Host 'Keep this window open while using NFC.'
 Write-Host 'Local Tabaja app: http://127.0.0.1:8766/' -ForegroundColor Yellow
+Start-Sleep -Milliseconds 300
+try { Start-Process 'http://127.0.0.1:8766/?nfc-local=1' } catch {}
 
 while($listener.IsListening){
   $ctx=$listener.GetContext()
@@ -303,7 +311,7 @@ while($listener.IsListening){
       '/verify' {
         $expected=[string]$body.url; $s=Open-Card; try { $uid=Get-Uid $s; $url=Parse-NdefUri (Read-Pages $s 4 256); Send-Json $ctx 200 @{ok=$true;uid=$uid;url=$url;match=((Normalize-Url $url) -eq (Normalize-Url $expected))} } finally { Close-Card $s }
       }
-      default { if (-not (Send-StaticFile $ctx $appRoot $path)) { Send-Json $ctx 404 @{ok=$false;error='Unknown endpoint'} } }
+      default { Send-StaticFile $ctx $path }
     }
   } catch { try { Send-Json $ctx 500 @{ok=$false;error=$_.Exception.Message} } catch {} }
 }

@@ -5,6 +5,7 @@
   const updateToast = document.getElementById('pwaUpdateToast');
   const updateButton = document.getElementById('pwaUpdateBtn');
   const status = document.getElementById('pwaInstallStatus');
+  const localNfcApp = ['127.0.0.1', 'localhost'].includes(window.location.hostname) && window.location.port === '8766';
 
   const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
   document.documentElement.dataset.pwa = standalone ? 'installed' : 'browser';
@@ -53,6 +54,13 @@
     setInstallState('✓ App Installed', false);
     if (status) status.textContent = 'Installed successfully';
   });
+
+  if (localNfcApp) {
+    if (status) status.textContent = 'Local NFC mode — hardware enabled';
+    setInstallState('Local NFC Mode', false);
+    if ('serviceWorker' in navigator) navigator.serviceWorker.getRegistrations().then(items => items.forEach(item => item.unregister()));
+    return;
+  }
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {

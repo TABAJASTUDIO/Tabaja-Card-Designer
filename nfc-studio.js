@@ -1,14 +1,23 @@
 (() => {
   'use strict';
 
-  const LOCAL_ORIGIN = 'http://127.0.0.1:8766';
-  const IS_LOCAL_APP = window.location.origin === LOCAL_ORIGIN;
-  const API_BASE = IS_LOCAL_APP ? '' : LOCAL_ORIGIN;
+  const BRIDGE_ORIGIN = 'http://127.0.0.1:8766';
+  const IS_LOCAL_BRIDGE_APP = ['127.0.0.1', 'localhost'].includes(window.location.hostname)
+    && window.location.port === '8766';
+
   const $ = id => document.getElementById(id);
   const els = {
-    module: $('nfcModuleStatus'), reader: $('nfcReaderStatus'), card: $('nfcCardStatus'), uid: $('nfcCardUid'),
-    url: $('nfcUrlInput'), auto: $('nfcAutoWrite'), read: $('nfcReadCardBtn'), write: $('nfcWriteCardBtn'),
-    verify: $('nfcVerifyCardBtn'), log: $('nfcActivityLog'), hint: $('nfcBridgeHint')
+    module: $('nfcModuleStatus'),
+    reader: $('nfcReaderStatus'),
+    card: $('nfcCardStatus'),
+    uid: $('nfcCardUid'),
+    url: $('nfcUrlInput'),
+    auto: $('nfcAutoWrite'),
+    read: $('nfcReadCardBtn'),
+    write: $('nfcWriteCardBtn'),
+    verify: $('nfcVerifyCardBtn'),
+    log: $('nfcActivityLog'),
+    hint: $('nfcBridgeHint')
   };
   if (!els.module) return;
 
@@ -22,9 +31,15 @@
   const normalizeUrl = value => {
     try {
       const u = new URL(value);
-      return `${u.protocol}//${u.hostname.replace(/^www\./i, '').toLowerCase()}${u.pathname.replace(/\/$/, '')}${u.search}${u.hash}`;
+      const host = u.hostname.replace(/^www\./i, '').toLowerCase();
+      const path = u.pathname === '/' ? '' : u.pathname.replace(/\/$/, '');
+      return `${u.protocol.toLowerCase()}//${host}${path}${u.search}${u.hash}`;
     } catch (_) {
-      return String(value || '').trim().replace(/^https?:\/\/(?:www\.)?/i, '').replace(/\/$/, '').toLowerCase();
+      return String(value || '')
+        .trim()
+        .replace(/^https?:\/\/(?:www\.)?/i, '')
+        .replace(/\/$/, '')
+        .toLowerCase();
     }
   };
 
@@ -34,42 +49,51 @@
     els.log.innerHTML = `<span style="display:inline-grid;place-items:center;width:32px;height:32px;border-radius:50%;background:${ok ? '#eaf8f1' : '#fff1f1'};color:${ok ? '#087443' : '#b42318'}">${ok ? '✓' : '!'}</span><div><b>${title}</b><small style="display:block;margin-top:4px;color:#7c8796">${detail}${detail ? ' · ' : ''}${time}</small></div>`;
   };
 
-  const api = async (path, options = {}) => {
-    const response = await fetch(`${API_BASE}${path}`, {
-      ...options,
-      cache: 'no-store',
-      headers: { 'Content-Type': 'application/json', ...(options.headers || {}) }
-    });
-    const data = await response.json();
-    if (!response.ok || data.ok === false) throw new Error(data.error || 'NFC Bridge error');
-    return data;
-  };
-
   const setButtons = () => {
-    const enabled = IS_LOCAL_APP && bridgeOnline && cardPresent && !busy;
+    const enabled = IS_LOCAL_BRIDGE_APP && bridgeOnline && cardPresent && !busy;
     els.read.disabled = !enabled;
     els.write.disabled = !enabled;
     els.verify.disabled = !enabled;
+    els.auto.disabled = !IS_LOCAL_BRIDGE_APP || !bridgeOnline;
   };
 
-  const showHostedMessage = () => {
+  const showPublicMode = () => {
     bridgeOnline = false;
     cardPresent = false;
-    els.module.textContent = 'LOCAL NFC APP REQUIRED';
+    els.module.textContent = 'LOCAL APP REQUIRED';
     els.module.classList.remove('ready');
     els.module.classList.add('standby');
-    els.reader.textContent = 'Open Tabaja from the local NFC Bridge';
-    els.card.textContent = 'Reader access is blocked in the cloud/PWA page';
+    els.reader.textContent = 'NFC hardware is available in the local Tabaja app';
+    els.card.textContent = 'Start the NFC Bridge to open it';
     els.uid.textContent = '—';
-    els.hint.innerHTML = `<div style="display:grid;gap:10px"><span>Run <b>NFC-Bridge\\Start-NFC-Bridge.bat</b>. It will open the complete Tabaja app locally, where these buttons work directly.</span><button id="openLocalNfcAppBtn" type="button" style="border:0;border-radius:10px;padding:11px 14px;font-weight:800;background:#173b7a;color:#fff;cursor:pointer">Open Local Tabaja NFC App</button></div>`;
-    const button = $('openLocalNfcAppBtn');
-    if (button) button.addEventListener('click', () => window.open(`${LOCAL_ORIGIN}/?source=nfc`, '_blank'));
+    els.hint.innerHTML = `<div style="display:grid;gap:10px"><span>For security, Edge blocks the online PWA from controlling USB card readers. Run <b>NFC-Bridge\\Start-NFC-Bridge.bat</b>; it opens the complete Tabaja app locally with these same buttons fully active.</span><button id="openLocalTabajaBtn" type="button" style="border:0;border-radius:10px;padding:11px 14px;font-weight:800;background:#173b7a;color:#fff;cursor:pointer">Open Local Tabaja NFC App</button></div>`;
+    $('openLocalTabajaBtn')?.addEventListener('click', () => window.open(`${BRIDGE_ORIGIN}/`, '_blank'));
     setButtons();
   };
+
+  async function api(path, options = {}) {
+    const response = await fetch(path, {
+      ...options,
+      cache: 'no-store',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options.headers || {})
+      }
+    });
+    let data;
+    try {
+      data = await response.json();
+    } catch (_) {
+      throw new Error(`Bridge returned an invalid response (${response.status}).`);
+    }
+    if (!response.ok || data.ok === false) throw new Error(data.error || 'NFC Bridge error.');
+    return data;
+  }
 
   const applyStatus = data => {
     bridgeOnline = !!(data && data.ok !== false);
     cardPresent = !!(data && data.cardPresent);
+
     els.module.textContent = cardPresent ? 'CARD READY' : 'BRIDGE ONLINE';
     els.module.classList.add('ready');
     els.module.classList.remove('standby');
@@ -84,33 +108,38 @@
       if (!cardPresent) autoArmed = true;
       if (cardPresent && !previousPresent && autoArmed && !busy) {
         autoArmed = false;
-        setTimeout(writeUrl, 250);
+        window.setTimeout(writeUrl, 250);
       }
     }
     previousPresent = cardPresent;
     setButtons();
   };
 
+  const showBridgeError = message => {
+    bridgeOnline = false;
+    cardPresent = false;
+    previousPresent = false;
+    els.module.textContent = 'BRIDGE OFFLINE';
+    els.module.classList.remove('ready');
+    els.module.classList.add('standby');
+    els.reader.textContent = 'Waiting for NFC Bridge';
+    els.card.textContent = 'No card detected';
+    els.uid.textContent = '—';
+    els.hint.textContent = message || 'Keep the black NFC Bridge window open.';
+    setButtons();
+  };
+
   async function refreshStatus() {
-    if (!IS_LOCAL_APP || busy) return;
+    if (!IS_LOCAL_BRIDGE_APP || busy) return;
     try {
       applyStatus(await api('/status'));
     } catch (error) {
-      bridgeOnline = false;
-      cardPresent = false;
-      els.module.textContent = 'BRIDGE OFFLINE';
-      els.module.classList.remove('ready');
-      els.module.classList.add('standby');
-      els.reader.textContent = 'Local bridge is not responding';
-      els.card.textContent = 'No card detected';
-      els.uid.textContent = '—';
-      els.hint.textContent = error.message || 'Start the NFC Bridge.';
-      setButtons();
+      showBridgeError(error.message);
     }
   }
 
   async function withBusy(fn) {
-    if (busy) return;
+    if (busy || !IS_LOCAL_BRIDGE_APP) return;
     busy = true;
     setButtons();
     try {
@@ -119,7 +148,8 @@
       addLog('Operation failed', error.message || String(error), false);
     } finally {
       busy = false;
-      await refreshStatus();
+      setButtons();
+      window.setTimeout(refreshStatus, 150);
     }
   }
 
@@ -140,17 +170,29 @@
     await withBusy(async () => {
       const data = await api('/write', { method: 'POST', body: JSON.stringify({ url }) });
       lastWrittenUrl = url;
-      const verified = data.url && normalizeUrl(data.url) === normalizeUrl(url);
-      addLog(verified ? 'Website link written and verified' : 'Website link written', `${data.url || url} · UID ${data.uid || ''}`, true);
+      const verified = !!data.url && normalizeUrl(data.url) === normalizeUrl(url);
+      addLog(
+        verified ? 'Website link written and verified' : 'Website link written',
+        `${data.url || url}${data.uid ? ` · UID ${data.uid}` : ''}`,
+        true
+      );
     });
   }
 
   async function verifyCard() {
     const expected = els.url.value.trim() || lastWrittenUrl;
+    if (!expected) {
+      addLog('Nothing to verify', 'Enter the expected website link first.', false);
+      return;
+    }
     await withBusy(async () => {
       const data = await api('/verify', { method: 'POST', body: JSON.stringify({ url: expected }) });
-      const match = data.match || (data.url && normalizeUrl(data.url) === normalizeUrl(expected));
-      addLog(match ? 'Card verified successfully' : 'Verification mismatch', match ? data.url : `Found: ${data.url || 'no URL'}`, !!match);
+      const match = !!data.match || (!!data.url && normalizeUrl(data.url) === normalizeUrl(expected));
+      addLog(
+        match ? 'Card verified successfully' : 'Verification mismatch',
+        match ? data.url : `Found: ${data.url || 'no URL'}`,
+        match
+      );
     });
   }
 
@@ -159,12 +201,13 @@
   els.verify.addEventListener('click', verifyCard);
   els.auto.addEventListener('change', () => { autoArmed = true; });
 
-  if (!IS_LOCAL_APP) {
-    showHostedMessage();
+  if (!IS_LOCAL_BRIDGE_APP) {
+    showPublicMode();
     return;
   }
 
-  els.hint.textContent = 'Checking the local NFC Bridge…';
+  els.hint.textContent = 'Connecting to the local NFC Bridge…';
+  setButtons();
   refreshStatus();
-  setInterval(refreshStatus, 700);
+  window.setInterval(refreshStatus, 700);
 })();
