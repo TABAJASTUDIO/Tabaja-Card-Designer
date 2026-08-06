@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'tabaja-v12-8-4-nfc-local-writer-stable';
+const CACHE_VERSION = 'tabaja-v12-8-3-nfc-local-writer';
 const APP_SHELL = [
   './',
   './index.html',
@@ -10,7 +10,7 @@ const APP_SHELL = [
   './activity-store.js?v=12.7.0',
   './command-center.js?v=12.7.0',
   './pwa.js?v=12.7.0',
-  './nfc-studio.js?v=12.8.4-local-writer-stable',
+  './nfc-studio.js?v=12.8.3-local-writer',
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',
