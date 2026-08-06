@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const BRIDGE = 'http://127.0.0.1:8765';
+  const BRIDGE = 'http://127.0.0.1:8766';
   const $ = id => document.getElementById(id);
   const els = {
     module: $('nfcModuleStatus'), reader: $('nfcReaderStatus'), card: $('nfcCardStatus'), uid: $('nfcCardUid'),
@@ -85,7 +85,7 @@
           <button id="nfcOpenLocalWriter" type="button" style="border:0;border-radius:10px;padding:11px 14px;font-weight:800;background:#173b7a;color:#fff;cursor:pointer">Open Local NFC Writer</button>
         </div>`;
       const openButton = document.getElementById('nfcOpenLocalWriter');
-      if (openButton) openButton.onclick = () => window.open('http://127.0.0.1:8765/studio', '_blank', 'noopener');
+      if (openButton) openButton.onclick = () => window.open('http://127.0.0.1:8766/studio', '_blank', 'noopener');
     }
     setButtons();
   }

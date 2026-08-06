@@ -9,4 +9,4 @@ TABAJA NFC BRIDGE - ACR122U
 7. For 500 cards, enable Auto-write. Remove each completed card and place the next one.
 
 The bridge changes no printer, designer, batch-printing, employee, or template files.
-It listens locally on 127.0.0.1:8765 only.
+It listens locally on 127.0.0.1:8766 only.

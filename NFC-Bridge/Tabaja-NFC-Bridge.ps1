@@ -216,12 +216,12 @@ function Send-Json($context, [int]$status, $obj) {
 }
 
 $listener=New-Object Net.HttpListener
-$listener.Prefixes.Add('http://127.0.0.1:8765/')
+$listener.Prefixes.Add('http://127.0.0.1:8766/')
 $listener.Start()
 Write-Host 'Tabaja NFC Bridge is running.' -ForegroundColor Green
 Write-Host 'Reader: ACR122U via Windows PC/SC' -ForegroundColor Cyan
 Write-Host 'Keep this window open. Open Tabaja Solution > NFC Studio.'
-Write-Host 'Local writer: http://127.0.0.1:8765/studio' -ForegroundColor Yellow
+Write-Host 'Local writer: http://127.0.0.1:8766/studio' -ForegroundColor Yellow
 
 while($listener.IsListening){
   $ctx=$listener.GetContext()
@@ -245,27 +245,10 @@ while($listener.IsListening){
       }
       '/write' {
         $url=[string]$body.url; if($url-notmatch'^https?://'){throw'Link must start with https:// or http://'}
-        $s = Open-Card
-        try {
-          $uid = Get-Uid $s
-          Write-NdefUri $s $url
-          $verify = Parse-NdefUri (Read-Pages $s 4 256)
-          if ($verify -ne $url) { throw "Write verification failed. Read back: $verify" }
-          Send-Json $ctx 200 @{ ok=$true; uid=$uid; url=$verify }
-        } finally {
-          Close-Card $s
-        }
+        $s=Open-Card; try { $uid=Get-Uid $s; Write-NdefUri $s $url; $verify=Parse-NdefUri (Read-Pages $s 4 256); if ($verify -ne $url) { throw "Write verification failed. Read back: $verify" }; Send-Json $ctx 200 @{ok=$true;uid=$uid;url=$verify} } finally { Close-Card $s }
       }
       '/verify' {
-        $expected = [string]$body.url
-        $s = Open-Card
-        try {
-          $uid = Get-Uid $s
-          $url = Parse-NdefUri (Read-Pages $s 4 256)
-          Send-Json $ctx 200 @{ ok=$true; uid=$uid; url=$url; match=($url -eq $expected) }
-        } finally {
-          Close-Card $s
-        }
+        $expected=[string]$body.url; $s=Open-Card; try { $uid=Get-Uid $s; $url=Parse-NdefUri (Read-Pages $s 4 256); Send-Json $ctx 200 @{ok=$true;uid=$uid;url=$url;match=($url-eq$expected)} } finally { Close-Card $s }
       }
       default { Send-Json $ctx 404 @{ok=$false;error='Unknown endpoint'} }
     }
