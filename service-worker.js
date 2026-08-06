@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'tabaja-v12-8-2-nfc-bridge-2';
+const CACHE_VERSION = 'tabaja-v12-8-2-nfc-pna-fix-3';
 const APP_SHELL = [
   './',
   './index.html',

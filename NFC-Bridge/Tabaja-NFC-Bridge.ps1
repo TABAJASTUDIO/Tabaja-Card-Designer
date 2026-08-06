@@ -154,16 +154,26 @@ function Get-Status {
   } finally { [PcscNative]::SCardReleaseContext($ctx)|Out-Null }
 }
 
+function Add-BridgeHeaders($context) {
+  # Allow the installed PWA / GitHub Pages app to call this loopback-only bridge.
+  # New Chromium versions require explicit Local/Private Network permission headers.
+  $origin = [string]$context.Request.Headers['Origin']
+  if ([string]::IsNullOrWhiteSpace($origin)) { $origin = '*' }
+  $context.Response.Headers.Set('Access-Control-Allow-Origin', $origin)
+  $context.Response.Headers.Set('Vary', 'Origin')
+  $context.Response.Headers.Set('Access-Control-Allow-Headers', 'Content-Type')
+  $context.Response.Headers.Set('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
+  $context.Response.Headers.Set('Access-Control-Allow-Private-Network', 'true')
+  $context.Response.Headers.Set('Access-Control-Max-Age', '600')
+  $context.Response.Headers.Set('Cache-Control', 'no-store')
+}
+
 function Send-Json($context, [int]$status, $obj) {
   $json=$obj|ConvertTo-Json -Compress -Depth 5
   $bytes=[Text.Encoding]::UTF8.GetBytes($json)
   $context.Response.StatusCode=$status
   $context.Response.ContentType='application/json; charset=utf-8'
-  $context.Response.Headers.Add('Access-Control-Allow-Origin','*')
-  $context.Response.Headers.Add('Access-Control-Allow-Headers','Content-Type')
-  $context.Response.Headers.Add('Access-Control-Allow-Methods','GET,POST,OPTIONS')
-  $context.Response.Headers.Add('Access-Control-Allow-Private-Network','true')
-  $context.Response.Headers.Add('Cache-Control','no-store, no-cache, must-revalidate')
+  Add-BridgeHeaders $context
   $context.Response.ContentLength64=$bytes.Length
   $context.Response.OutputStream.Write($bytes,0,$bytes.Length)
   $context.Response.OutputStream.Close()
@@ -180,7 +190,13 @@ Write-Host 'Local address: http://127.0.0.1:8765' -ForegroundColor DarkGray
 while($listener.IsListening){
   $ctx=$listener.GetContext()
   try {
-    if($ctx.Request.HttpMethod-eq'OPTIONS'){ Send-Json $ctx 200 @{ok=$true}; continue }
+    if($ctx.Request.HttpMethod-eq'OPTIONS'){
+      Add-BridgeHeaders $ctx
+      $ctx.Response.StatusCode=204
+      $ctx.Response.ContentLength64=0
+      $ctx.Response.OutputStream.Close()
+      continue
+    }
     $path=$ctx.Request.Url.AbsolutePath
     $body=@{}
     if($ctx.Request.HasEntityBody){ $reader=New-Object IO.StreamReader($ctx.Request.InputStream,$ctx.Request.ContentEncoding); $raw=$reader.ReadToEnd(); if($raw){$body=$raw|ConvertFrom-Json} }

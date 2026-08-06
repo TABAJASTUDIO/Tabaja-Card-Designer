@@ -1,8 +1,7 @@
 (() => {
   'use strict';
 
-  const BRIDGES = ['http://localhost:8765', 'http://127.0.0.1:8765'];
-  let activeBridge = BRIDGES[0];
+  const BRIDGE = 'http://127.0.0.1:8765';
   const $ = id => document.getElementById(id);
   const els = {
     module: $('nfcModuleStatus'), reader: $('nfcReaderStatus'), card: $('nfcCardStatus'), uid: $('nfcCardUid'),
@@ -35,26 +34,22 @@
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 2500);
     try {
-      let lastError;
-      for (const bridge of [activeBridge, ...BRIDGES.filter(item => item !== activeBridge)]) {
-        try {
-          const response = await fetch(bridge + path, {
+      const requestOptions = {
         ...options,
+        mode: 'cors',
         headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
         signal: controller.signal,
-        cache: 'no-store',
-        mode: 'cors',
-        credentials: 'omit'
-          });
-          const data = await response.json();
-          if (!response.ok || data.ok === false) throw new Error(data.error || `Bridge error ${response.status}`);
-          activeBridge = bridge;
-          return data;
-        } catch (error) {
-          lastError = error;
-        }
-      }
-      throw lastError || new Error('Local NFC bridge is unavailable.');
+        cache: 'no-store'
+      };
+
+      // Chromium Local Network Access: explicitly declare that this request targets
+      // the computer's loopback address. Older browsers safely ignore this option.
+      requestOptions.targetAddressSpace = 'loopback';
+
+      const response = await fetch(BRIDGE + path, requestOptions);
+      const data = await response.json();
+      if (!response.ok || data.ok === false) throw new Error(data.error || `Bridge error ${response.status}`);
+      return data;
     } finally { clearTimeout(timer); }
   }
 
