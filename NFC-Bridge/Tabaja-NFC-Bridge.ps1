@@ -162,6 +162,8 @@ function Send-Json($context, [int]$status, $obj) {
   $context.Response.Headers.Add('Access-Control-Allow-Origin','*')
   $context.Response.Headers.Add('Access-Control-Allow-Headers','Content-Type')
   $context.Response.Headers.Add('Access-Control-Allow-Methods','GET,POST,OPTIONS')
+  $context.Response.Headers.Add('Access-Control-Allow-Private-Network','true')
+  $context.Response.Headers.Add('Cache-Control','no-store, no-cache, must-revalidate')
   $context.Response.ContentLength64=$bytes.Length
   $context.Response.OutputStream.Write($bytes,0,$bytes.Length)
   $context.Response.OutputStream.Close()
